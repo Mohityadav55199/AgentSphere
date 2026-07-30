@@ -2,14 +2,15 @@ services:
   - type: web
     name: agentsphere
     runtime: node
-    buildCommand: pnpm install && npx prisma db push && pnpm build
-    startCommand: pnpm start
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npx prisma db push && npm run start
     envVars:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        value: file:./dev.db
-      - key: JWT_SECRET
-        generateValue: true
+        sync: false
+      - key: GOOGLE_GENERATIVE_AI_API_KEY
+        sync: false
       - key: GROQ_API_KEY
         sync: false
