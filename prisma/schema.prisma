@@ -1,0 +1,45 @@
+// Prisma schema
+// Run: pnpm dlx prisma generate && pnpm dlx prisma migrate dev --name init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Thread {
+  id        String   @id @default(uuid())
+  title     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MCPServer {
+  id        String            @id @default(uuid())
+  name      String            @unique
+  type      MCPServerType
+  enabled   Boolean           @default(true)
+  // For stdio servers
+  command   String?
+  args      Json?
+  env       Json?
+  // For http servers
+  url       String?
+  headers   Json?
+  // OAuth fields (for http servers)
+  requiresAuth  Boolean?      @default(false)
+  authTokens    Json?         // OAuthTokens: { access_token, refresh_token, expires_at, token_type, scope }
+  clientInfo    Json?         // OAuthClientInformation: { client_id, client_secret, ... }
+  codeVerifier  String?       // PKCE code verifier for ongoing OAuth flow
+  oauthStatus   String?       @default("UNKNOWN") // UNKNOWN | NOT_REQUIRED | REQUIRED | CONNECTED | EXPIRED
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+}
+
+enum MCPServerType {
+  stdio
+  http
+}
