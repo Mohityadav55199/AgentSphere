@@ -23,7 +23,7 @@ export const SettingsPanel = ({
   return (
     <div className="border-b border-gray-200 dark:border-gray-700">
       {/* Settings Header */}
-      <button
+      <button suppressHydrationWarning
         type="button"
         onClick={onToggle}
         className="flex w-full items-center justify-between px-4 py-2 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"

@@ -167,14 +167,14 @@ export function MCPServerList({ isOpen, onClose }: MCPServerListProps) {
           <div className="flex items-center justify-between border-b border-gray-200 p-4">
             <h2 className="text-lg font-semibold text-gray-900">MCP Servers</h2>
             <div className="flex items-center gap-2">
-              <button
+              <button suppressHydrationWarning
                 onClick={() => setShowForm(true)}
                 className="bg-primary text-primary-foreground hover:bg-primary/90 flex cursor-pointer items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors"
               >
                 <Plus size={16} />
                 Add Server
               </button>
-              <button
+              <button suppressHydrationWarning
                 onClick={fetchServers}
                 disabled={loading}
                 className="flex cursor-pointer items-center gap-1 px-2 py-1.5 text-sm text-gray-600 transition-colors hover:text-gray-800"
@@ -186,7 +186,7 @@ export function MCPServerList({ isOpen, onClose }: MCPServerListProps) {
                   <RefreshCcw size={16} />
                 )}
               </button>
-              <button
+              <button suppressHydrationWarning
                 onClick={onClose}
                 className="cursor-pointer text-gray-400 transition-colors hover:text-gray-600"
               >
@@ -247,7 +247,7 @@ export function MCPServerList({ isOpen, onClose }: MCPServerListProps) {
                         (server.oauthStatus === "REQUIRED" ||
                           server.oauthStatus === "EXPIRED" ||
                           server.oauthStatus === "UNKNOWN") && (
-                          <button
+                          <button suppressHydrationWarning
                             onClick={() => checkAndConnectOAuth(server.id)}
                             disabled={connectingId === server.id}
                             className="flex cursor-pointer items-center gap-1.5 rounded-md bg-blue-500 px-2.5 py-1 text-xs font-medium text-white transition-colors hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
@@ -272,7 +272,7 @@ export function MCPServerList({ isOpen, onClose }: MCPServerListProps) {
                         <div className="peer peer-checked:bg-primary peer-focus:ring-ring/40 h-5 w-9 rounded-full bg-gray-200 peer-focus:ring-4 peer-focus:outline-none after:absolute after:top-[2px] after:left-[2px] after:h-4 after:w-4 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white"></div>
                       </label>
 
-                      <button
+                      <button suppressHydrationWarning
                         onClick={() => {
                           setEditingServer(server);
                           setShowForm(true);
@@ -283,7 +283,7 @@ export function MCPServerList({ isOpen, onClose }: MCPServerListProps) {
                         <Edit size={16} />
                       </button>
 
-                      <button
+                      <button suppressHydrationWarning
                         onClick={() => deleteServer(server.id, server.name)}
                         disabled={deletingId === server.id}
                         className="cursor-pointer p-1.5 text-red-400 transition-colors hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-50"

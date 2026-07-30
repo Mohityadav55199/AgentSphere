@@ -30,7 +30,7 @@ const ToolCallItem: React.FC<{
 
   return (
     <div className="rounded-r border-l-4 border-gray-200 bg-gray-200/30 p-3">
-      <button
+      <button suppressHydrationWarning
         className="-m-1 flex w-full cursor-pointer items-center gap-2 rounded p-1 text-left hover:bg-gray-200/50"
         onClick={() => setIsExpanded(!isExpanded)}
       >
@@ -52,7 +52,7 @@ const ToolCallItem: React.FC<{
 
       {showApprovalButtons && id && approvalCallbacks && !responded && (
         <div className="mt-3 flex justify-end gap-2">
-          <button
+          <button suppressHydrationWarning
             onClick={() => {
               setResponded(true);
               approvalCallbacks.onDeny(id);
@@ -62,7 +62,7 @@ const ToolCallItem: React.FC<{
             <X className="h-3 w-3" />
             Deny
           </button>
-          <button
+          <button suppressHydrationWarning
             onClick={() => {
               setResponded(true);
               approvalCallbacks.onApprove(id);

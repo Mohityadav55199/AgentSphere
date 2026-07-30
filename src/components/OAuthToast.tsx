@@ -71,7 +71,7 @@ export function OAuthToast() {
           <XCircle size={20} className="flex-shrink-0 text-red-600" />
         )}
         <p className="text-sm font-medium">{toast.message}</p>
-        <button
+        <button suppressHydrationWarning
           onClick={() => setToast(null)}
           className="ml-2 flex-shrink-0 cursor-pointer text-current opacity-60 transition-opacity hover:opacity-100"
         >

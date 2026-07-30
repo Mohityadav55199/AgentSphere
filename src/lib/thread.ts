@@ -26,9 +26,14 @@ export async function ensureThread(threadId: string, titleSeed?: string, userId?
   const smartTitle = titleSeed ? generateSmartTitle(titleSeed) : "New thread";
 
   if (existing) {
-    // If existing thread still has default title "New thread", update it with smart title
     const updateData: { userId?: string; title?: string } = {};
-    if (userId && !existing.userId) updateData.userId = userId;
+
+    // Only verify user against DB when we'd actually claim the thread
+    if (userId && !existing.userId) {
+      const dbUser = await prisma.user.findUnique({ where: { id: userId } });
+      if (dbUser) updateData.userId = dbUser.id;
+    }
+
     if (existing.title === "New thread" && titleSeed) {
       updateData.title = smartTitle;
     }
@@ -41,11 +46,18 @@ export async function ensureThread(threadId: string, titleSeed?: string, userId?
     return existing;
   }
 
+  // For new threads, verify user exists before associating
+  let verifiedUserId: string | null = null;
+  if (userId) {
+    const dbUser = await prisma.user.findUnique({ where: { id: userId } });
+    verifiedUserId = dbUser?.id ?? null;
+  }
+
   return prisma.thread.create({
     data: {
       id: threadId,
       title: smartTitle,
-      userId: userId || null,
+      userId: verifiedUserId,
     },
   });
 }

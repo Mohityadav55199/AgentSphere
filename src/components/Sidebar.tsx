@@ -34,7 +34,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle, children }) => {
       >
         <div className="flex h-full w-64 flex-shrink-0 flex-col overflow-hidden p-5">
           <div className="mb-6 flex items-center justify-between">
-            <button
+            <button suppressHydrationWarning
               onClick={toggle}
               className="cursor-pointer rounded-full p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 md:hidden"
               aria-label="Close sidebar"
@@ -48,7 +48,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle, children }) => {
       </motion.div>
 
       {/* Menu Toggle Button - Only show on mobile */}
-      <button
+      <button suppressHydrationWarning
         onClick={toggle}
         className={`fixed top-4 left-4 z-40 cursor-pointer rounded-md p-2 transition-all duration-300 md:hidden ${
           isOpen

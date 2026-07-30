@@ -65,7 +65,7 @@ export const Header = ({ toggleSidebar }: HeaderProps) => {
     <header className="sticky top-0 z-10 flex items-center border-b border-gray-200/60 bg-white/75 px-4 py-2.5 backdrop-blur-md dark:border-gray-800/60 dark:bg-gray-900/75">
       <div className="flex w-full items-center justify-between">
         <div className="flex items-center gap-3">
-          <button
+          <button suppressHydrationWarning
             onClick={toggleSidebar}
             className="cursor-pointer rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
             aria-label="Toggle navigation"
@@ -97,7 +97,7 @@ export const Header = ({ toggleSidebar }: HeaderProps) => {
 
         <div className="flex items-center gap-2">
           {/* Dark / Light Theme Toggle */}
-          <button
+          <button suppressHydrationWarning
             onClick={toggleTheme}
             className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 shadow-xs transition-colors hover:bg-gray-100 hover:text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white"
             title={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
@@ -107,7 +107,7 @@ export const Header = ({ toggleSidebar }: HeaderProps) => {
           </button>
 
           {currentThreadId && (
-            <button
+            <button suppressHydrationWarning
               onClick={handleExportMarkdown}
               disabled={exporting}
               className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-xs transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
@@ -118,7 +118,7 @@ export const Header = ({ toggleSidebar }: HeaderProps) => {
             </button>
           )}
 
-          <button
+          <button suppressHydrationWarning
             onClick={handleNewChat}
             className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-all hover:brightness-110 active:scale-95"
           >
@@ -129,7 +129,7 @@ export const Header = ({ toggleSidebar }: HeaderProps) => {
           {/* User Auth Profile / Buttons */}
           {user ? (
             <div className="flex items-center gap-2 border-l border-gray-200 pl-2 dark:border-gray-800">
-              <button
+              <button suppressHydrationWarning
                 onClick={() => setProfileOpen(true)}
                 className="flex cursor-pointer items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-750"
                 title="Account Profile & Password Settings"
@@ -139,7 +139,7 @@ export const Header = ({ toggleSidebar }: HeaderProps) => {
                 </span>
                 <span className="max-w-[100px] truncate">{user.name}</span>
               </button>
-              <button
+              <button suppressHydrationWarning
                 onClick={() => logout()}
                 className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 hover:text-red-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-red-400"
                 title="Sign out"
@@ -149,14 +149,14 @@ export const Header = ({ toggleSidebar }: HeaderProps) => {
             </div>
           ) : (
             <div className="flex items-center gap-1.5 border-l border-gray-200 pl-2 dark:border-gray-800">
-              <button
+              <button suppressHydrationWarning
                 onClick={() => openAuthModal("login")}
                 className="flex cursor-pointer items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
               >
                 <LogIn size={14} />
                 <span>Sign In</span>
               </button>
-              <button
+              <button suppressHydrationWarning
                 onClick={() => openAuthModal("register")}
                 className="flex cursor-pointer items-center gap-1 rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-800 shadow-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-750"
               >

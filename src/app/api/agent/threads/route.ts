@@ -41,10 +41,18 @@ export async function GET() {
 
 export async function POST() {
   const user = await getCurrentUser();
+
+  // Verify the user actually exists in DB — session may be stale after a DB reset
+  let userId: string | null = null;
+  if (user?.id) {
+    const dbUser = await prisma.user.findUnique({ where: { id: user.id } });
+    userId = dbUser?.id ?? null;
+  }
+
   const created = await prisma.thread.create({
     data: {
       title: "New thread",
-      userId: user?.id || null,
+      userId,
     },
   });
   const thread: Thread = {

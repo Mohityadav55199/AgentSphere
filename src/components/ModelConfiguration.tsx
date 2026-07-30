@@ -57,7 +57,7 @@ export const ModelConfiguration = ({
         </label>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {Object.values(PERSONAS).map((p) => (
-            <button
+            <button suppressHydrationWarning
               key={p.id}
               type="button"
               onClick={() => setPersona(p.id)}
@@ -179,7 +179,7 @@ export const ModelConfiguration = ({
               </div>
             ) : (
               <div className="relative" ref={mcpTooltipRef}>
-                <button
+                <button suppressHydrationWarning
                   type="button"
                   onClick={() => setShowMCPTooltip(!showMCPTooltip)}
                   className="flex items-center gap-2 rounded border border-gray-300 px-3 py-1.5 text-sm transition-colors hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700"

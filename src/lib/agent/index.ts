@@ -12,6 +12,9 @@ import { AgentBuilder } from "./builder";
 
 let setupPromise: Promise<void> | null = null;
 
+// Cache agent by serialized config — recreate only when settings change
+let agentCache: { agent: Awaited<ReturnType<typeof createAgent>>; key: string } | null = null;
+
 /**
  * One-time initialization for the Postgres checkpointer.
  * Ensures the underlying table/extension are ready before any agent runs.
@@ -66,7 +69,21 @@ async function createAgent(cfg?: AgentConfigOptions) {
 export async function ensureAgent(cfg?: AgentConfigOptions) {
   // Ensure checkpointer is ready before returning an agent instance.
   await setupOnce();
-  return createAgent(cfg);
+
+  // Serialize config for cache key (exclude non-deterministic fields)
+  const key = JSON.stringify({
+    model: cfg?.model,
+    provider: cfg?.provider,
+    tools: cfg?.tools,
+    approveAllTools: cfg?.approveAllTools,
+    temperature: cfg?.temperature,
+    systemPrompt: cfg?.systemPrompt,
+  });
+
+  if (!agentCache || agentCache.key !== key) {
+    agentCache = { agent: await createAgent(cfg), key };
+  }
+  return agentCache.agent;
 }
 
 // Named export to explicitly fetch a configured agent.

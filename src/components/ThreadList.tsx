@@ -114,7 +114,7 @@ export function ThreadList({ onOpenMCPConfig }: ThreadListProps) {
     <nav className="flex h-full flex-col border-r border-gray-200 bg-white/60 backdrop-blur-sm dark:border-gray-800 dark:bg-gray-900/60">
       <div className="space-y-2 px-3 pt-3 pb-2">
         <div className="flex gap-2">
-          <button
+          <button suppressHydrationWarning
             onClick={handleCreateThread}
             disabled={isCreating}
             className="bg-primary text-primary-foreground inline-flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-md px-3 py-2 text-xs font-medium transition-colors hover:brightness-110 disabled:opacity-50"
@@ -126,7 +126,7 @@ export function ThreadList({ onOpenMCPConfig }: ThreadListProps) {
             )}
             New
           </button>
-          <button
+          <button suppressHydrationWarning
             onClick={handleRefresh}
             className="border-border text-muted-foreground hover:bg-accent hover:text-accent-foreground inline-flex items-center justify-center rounded-md border px-2 py-2"
             title="Refresh"
@@ -144,6 +144,7 @@ export function ThreadList({ onOpenMCPConfig }: ThreadListProps) {
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             placeholder="Search threads..."
+            suppressHydrationWarning
             className="w-full rounded-md border border-gray-300/70 bg-white/40 py-1.5 pr-2 pl-8 text-xs focus:ring-2 focus:ring-blue-500/40 focus:outline-none dark:border-gray-700/70 dark:bg-gray-800/40"
           />
         </div>
@@ -184,7 +185,7 @@ export function ThreadList({ onOpenMCPConfig }: ThreadListProps) {
                     <span className="truncate">{thread.title || `Thread ${thread.id.slice(0, 8)}`}</span>
                   </div>
                   <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
-                    <button
+                    <button suppressHydrationWarning
                       onClick={(e) => {
                         e.stopPropagation();
                         handleTogglePin(thread.id, thread.isPinned);
@@ -198,7 +199,7 @@ export function ThreadList({ onOpenMCPConfig }: ThreadListProps) {
                         }`}
                       />
                     </button>
-                    <button
+                    <button suppressHydrationWarning
                       onClick={(e) => {
                         e.stopPropagation();
                         startRename(thread.id, thread.title);
@@ -208,7 +209,7 @@ export function ThreadList({ onOpenMCPConfig }: ThreadListProps) {
                     >
                       <Pencil className="h-3.5 w-3.5 text-gray-400 hover:text-blue-500" />
                     </button>
-                    <button
+                    <button suppressHydrationWarning
                       onClick={(e) => {
                         e.stopPropagation();
                         handleDeleteThread(thread.id);
@@ -236,9 +237,10 @@ export function ThreadList({ onOpenMCPConfig }: ThreadListProps) {
                       if (e.key === "Enter") saveRename();
                       if (e.key === "Escape") cancelRename();
                     }}
+                    suppressHydrationWarning
                     className="bg-background border-input focus:ring-ring/40 flex-1 rounded border px-2 py-1 text-xs focus:ring-2 focus:outline-none"
                   />
-                  <button
+                  <button suppressHydrationWarning
                     disabled={savingRename}
                     onClick={saveRename}
                     className="bg-primary text-primary-foreground inline-flex h-6 w-6 items-center justify-center rounded hover:brightness-110 disabled:opacity-50"
@@ -249,7 +251,7 @@ export function ThreadList({ onOpenMCPConfig }: ThreadListProps) {
                       <Check className="h-3.5 w-3.5" />
                     )}
                   </button>
-                  <button
+                  <button suppressHydrationWarning
                     onClick={cancelRename}
                     className="bg-muted text-muted-foreground inline-flex h-6 w-6 items-center justify-center rounded hover:brightness-110"
                   >
@@ -272,7 +274,7 @@ export function ThreadList({ onOpenMCPConfig }: ThreadListProps) {
 
       {/* MCP Configuration Button */}
       <div className="border-t border-gray-200 p-3">
-        <button
+        <button suppressHydrationWarning
           onClick={onOpenMCPConfig}
           className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-md bg-gray-50 px-3 py-2 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100"
         >

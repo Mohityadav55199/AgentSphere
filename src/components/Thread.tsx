@@ -153,7 +153,7 @@ export const Thread = ({ threadId, onFirstMessageSent }: ThreadProps) => {
             {/* Prompt Suggestion Cards */}
             <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
               {PROMPT_SUGGESTIONS.map((item, idx) => (
-                <button
+                <button suppressHydrationWarning
                   key={idx}
                   onClick={() => handleSendMessage(item.prompt)}
                   disabled={isSending}

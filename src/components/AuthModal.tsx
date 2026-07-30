@@ -36,7 +36,7 @@ export function AuthModal() {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-fade-in">
       <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-gray-200 bg-white/95 p-6 shadow-2xl dark:border-gray-800 dark:bg-gray-900/95">
-        <button
+        <button suppressHydrationWarning
           onClick={closeAuthModal}
           className="absolute right-4 top-4 rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-200"
         >
@@ -118,7 +118,7 @@ export function AuthModal() {
             </div>
           </div>
 
-          <button
+          <button suppressHydrationWarning
             type="submit"
             disabled={loading}
             className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:brightness-110 active:scale-95"
@@ -132,7 +132,7 @@ export function AuthModal() {
           {mode === "login" ? (
             <p>
               Don't have an account?{" "}
-              <button
+              <button suppressHydrationWarning
                 type="button"
                 onClick={() => setMode("register")}
                 className="font-semibold text-blue-600 hover:underline dark:text-blue-400"
@@ -143,7 +143,7 @@ export function AuthModal() {
           ) : (
             <p>
               Already have an account?{" "}
-              <button
+              <button suppressHydrationWarning
                 type="button"
                 onClick={() => setMode("login")}
                 className="font-semibold text-blue-600 hover:underline dark:text-blue-400"

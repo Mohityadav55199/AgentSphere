@@ -98,24 +98,31 @@ export async function createMCPClient(): Promise<MultiServerMCPClient | null> {
   }
 }
 
+type SanitizedTool = ReturnType<typeof sanitizeTool>;
+let mcpToolsCache: { tools: SanitizedTool[]; ts: number } | null = null;
+const MCP_CACHE_TTL_MS = 60_000; // 60 seconds
+
 /**
  * Gets tools from the MCP client if available.
  * Sanitizes tool schemas to be compatible with Google Gemini's function calling API.
+ * Results are cached for 60s to avoid DB + network overhead on every message.
  */
 export async function getMCPTools() {
+  if (mcpToolsCache && Date.now() - mcpToolsCache.ts < MCP_CACHE_TTL_MS) {
+    return mcpToolsCache.tools;
+  }
+
   try {
     const client = await createMCPClient();
     if (!client) {
+      mcpToolsCache = { tools: [], ts: Date.now() };
       return [];
     }
 
     const tools = await client.getTools();
-
-    // Sanitize tool schemas to remove unsupported JSON Schema keywords
-    // that would cause errors with Google Gemini
     const sanitizedTools = tools.map((tool) => sanitizeTool(tool));
-
     console.log(`Loaded ${sanitizedTools.length} tools from MCP servers`);
+    mcpToolsCache = { tools: sanitizedTools, ts: Date.now() };
     return sanitizedTools;
   } catch (error) {
     console.error("Failed to get MCP tools:", error);

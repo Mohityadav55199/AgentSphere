@@ -202,7 +202,7 @@ export const MessageInput = ({
                   <span className="text-xs text-gray-500">
                     ({attachment.size < 1024 ? "<1KB" : `${(attachment.size / 1024).toFixed(0)}KB`})
                   </span>
-                  <button
+                  <button suppressHydrationWarning
                     type="button"
                     onClick={() => removeAttachment(attachment.key)}
                     className="ml-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
@@ -264,7 +264,7 @@ export const MessageInput = ({
               </label>
 
               {/* Tool messages toggle */}
-              <button
+              <button suppressHydrationWarning
                 type="button"
                 onClick={toggleToolMessages}
                 className="inline-flex cursor-pointer items-center gap-1 rounded px-2 py-1 text-xs transition-colors hover:bg-gray-200 dark:hover:bg-gray-700"

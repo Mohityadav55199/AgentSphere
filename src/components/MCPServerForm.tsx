@@ -234,7 +234,7 @@ export function MCPServerForm({ isOpen, onClose, onSaved, server }: MCPServerFor
           <h2 className="text-lg font-semibold text-gray-900">
             {server ? "Edit MCP Server" : "Configure MCP Servers"}
           </h2>
-          <button
+          <button suppressHydrationWarning
             onClick={onClose}
             className="cursor-pointer text-gray-400 transition-colors hover:text-gray-600"
           >
@@ -249,7 +249,7 @@ export function MCPServerForm({ isOpen, onClose, onSaved, server }: MCPServerFor
                 <label className="block text-sm font-medium text-gray-700">
                   MCP Server Configuration (JSON)
                 </label>
-                <button
+                <button suppressHydrationWarning
                   type="button"
                   onClick={formatJson}
                   className="flex items-center gap-1.5 rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-200"
@@ -301,13 +301,13 @@ export function MCPServerForm({ isOpen, onClose, onSaved, server }: MCPServerFor
         </div>
 
         <div className="flex items-center justify-end gap-3 border-t border-gray-200 bg-gray-50 p-4">
-          <button
+          <button suppressHydrationWarning
             onClick={onClose}
             className="cursor-pointer rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
           >
             Cancel
           </button>
-          <button
+          <button suppressHydrationWarning
             onClick={handleSave}
             disabled={saving}
             className="bg-primary text-primary-foreground hover:bg-primary/90 flex cursor-pointer items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50"
