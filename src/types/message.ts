@@ -22,6 +22,7 @@ export interface MessageOptions {
   attachments?: FileAttachment[];
   temperature?: number;
   systemPrompt?: string;
+  userId?: string;
 }
 
 export interface MessageRequest {

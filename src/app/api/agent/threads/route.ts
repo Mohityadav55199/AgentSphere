@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import type { Thread } from "@/types/message";
 import prisma from "@/lib/database/prisma";
 import { UpdateThreadBody, DeleteThreadBody } from "./schema";
+import { getCurrentUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -12,8 +13,21 @@ type ThreadEntity = {
   createdAt: Date;
   updatedAt: Date;
 };
+
 export async function GET() {
-  const dbThreads = await prisma.thread.findMany({ orderBy: { updatedAt: "desc" }, take: 50 });
+  const user = await getCurrentUser();
+
+  // If user logged in, fetch their threads or unassigned guest threads
+  const whereCondition = user
+    ? { OR: [{ userId: user.id }, { userId: null }] }
+    : { userId: null };
+
+  const dbThreads = await prisma.thread.findMany({
+    where: whereCondition,
+    orderBy: { updatedAt: "desc" },
+    take: 50,
+  });
+
   const threads: Thread[] = dbThreads.map((t: ThreadEntity) => ({
     id: t.id,
     title: t.title,
@@ -24,7 +38,13 @@ export async function GET() {
 }
 
 export async function POST() {
-  const created = await prisma.thread.create({ data: { title: "New thread" } });
+  const user = await getCurrentUser();
+  const created = await prisma.thread.create({
+    data: {
+      title: "New thread",
+      userId: user?.id || null,
+    },
+  });
   const thread: Thread = {
     id: created.id,
     title: created.title,

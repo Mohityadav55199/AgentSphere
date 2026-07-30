@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { PanelLeftClose, Sparkles, Plus, Download, Loader2, Sun, Moon } from "lucide-react";
+import { PanelLeftClose, Sparkles, Plus, Download, Loader2, Sun, Moon, LogIn, LogOut, User as UserIcon } from "lucide-react";
 import Link from "next/link";
 import { useUISettings } from "@/contexts/UISettingsContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useThreads } from "@/hooks/useThreads";
 import { useRouter, usePathname } from "next/navigation";
 
@@ -11,6 +12,7 @@ interface HeaderProps {
 
 export const Header = ({ toggleSidebar }: HeaderProps) => {
   const { provider, model, activePersona, theme, toggleTheme } = useUISettings();
+  const { user, logout, openAuthModal } = useAuth();
   const { createThread } = useThreads();
   const router = useRouter();
   const pathname = usePathname();
@@ -121,6 +123,42 @@ export const Header = ({ toggleSidebar }: HeaderProps) => {
             <Plus size={15} />
             <span>New Chat</span>
           </button>
+
+          {/* User Auth Profile / Buttons */}
+          {user ? (
+            <div className="flex items-center gap-2 border-l border-gray-200 pl-2 dark:border-gray-800">
+              <div className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white uppercase">
+                  {user.name.charAt(0)}
+                </span>
+                <span className="max-w-[100px] truncate">{user.name}</span>
+              </div>
+              <button
+                onClick={() => logout()}
+                className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 hover:text-red-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-red-400"
+                title="Sign out"
+              >
+                <LogOut size={15} />
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 border-l border-gray-200 pl-2 dark:border-gray-800">
+              <button
+                onClick={() => openAuthModal("login")}
+                className="flex cursor-pointer items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
+              >
+                <LogIn size={14} />
+                <span>Sign In</span>
+              </button>
+              <button
+                onClick={() => openAuthModal("register")}
+                className="flex cursor-pointer items-center gap-1 rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-800 shadow-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-750"
+              >
+                <UserIcon size={14} />
+                <span>Sign Up</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </header>

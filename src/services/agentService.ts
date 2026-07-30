@@ -22,7 +22,7 @@ export async function streamResponse(params: {
   opts?: MessageOptions;
 }) {
   const { threadId, userText, opts } = params;
-  await ensureThread(threadId, userText);
+  await ensureThread(threadId, userText, opts?.userId);
 
   // If allowTool is present, use Command with resume action instead of regular inputs
   if (opts?.allowTool) {

@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { streamResponse } from "@/services/agentService";
 import type { MessageResponse, FileAttachment } from "@/types/message";
+import { getCurrentUser } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -43,7 +44,7 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // Thread existence handled in service.
+  const user = await getCurrentUser();
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream<Uint8Array>({
@@ -70,6 +71,7 @@ export async function GET(req: NextRequest) {
               attachments,
               temperature,
               systemPrompt,
+              userId: user?.id,
             },
           });
           for await (const chunk of iterable) {
