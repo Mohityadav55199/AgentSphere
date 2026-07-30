@@ -10,6 +10,7 @@ export const runtime = "nodejs";
 type ThreadEntity = {
   id: string;
   title: string;
+  isPinned: boolean;
   createdAt: Date;
   updatedAt: Date;
 };
@@ -24,13 +25,14 @@ export async function GET() {
 
   const dbThreads = await prisma.thread.findMany({
     where: whereCondition,
-    orderBy: { updatedAt: "desc" },
+    orderBy: [{ isPinned: "desc" }, { updatedAt: "desc" }],
     take: 50,
   });
 
   const threads: Thread[] = dbThreads.map((t: ThreadEntity) => ({
     id: t.id,
     title: t.title,
+    isPinned: t.isPinned,
     createdAt: t.createdAt.toISOString(),
     updatedAt: t.updatedAt.toISOString(),
   }));
@@ -48,6 +50,7 @@ export async function POST() {
   const thread: Thread = {
     id: created.id,
     title: created.title,
+    isPinned: created.isPinned,
     createdAt: created.createdAt.toISOString(),
     updatedAt: created.updatedAt.toISOString(),
   };
@@ -58,14 +61,23 @@ export async function PATCH(req: NextRequest) {
   try {
     const parsed = UpdateThreadBody.safeParse(await req.json());
     if (!parsed.success) {
-      return NextResponse.json({ error: "id and title required" }, { status: 400 });
+      return NextResponse.json({ error: "id required" }, { status: 400 });
     }
-    const { id, title } = parsed.data;
-    const updated = await prisma.thread.update({ where: { id }, data: { title } });
+    const { id, title, isPinned } = parsed.data;
+
+    const updateData: { title?: string; isPinned?: boolean } = {};
+    if (title !== undefined) updateData.title = title;
+    if (isPinned !== undefined) updateData.isPinned = isPinned;
+
+    const updated = await prisma.thread.update({
+      where: { id },
+      data: updateData,
+    });
     return NextResponse.json(
       {
         id: updated.id,
         title: updated.title,
+        isPinned: updated.isPinned,
         createdAt: updated.createdAt.toISOString(),
         updatedAt: updated.updatedAt.toISOString(),
       },

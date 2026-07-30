@@ -92,3 +92,22 @@ export async function deleteThread(threadId: string): Promise<void> {
     throw new Error(errorData.error || "Failed to delete thread");
   }
 }
+
+export async function updateThread(params: {
+  id: string;
+  title?: string;
+  isPinned?: boolean;
+}): Promise<Thread> {
+  const response = await fetch(getUrl("threads"), {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      ...config.headers,
+    },
+    body: JSON.stringify(params),
+  });
+  if (!response.ok) {
+    throw new Error("Failed to update thread");
+  }
+  return await response.json();
+}

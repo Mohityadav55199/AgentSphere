@@ -15,7 +15,8 @@ export const ThreadResponse = z
 export const UpdateThreadBody = z
   .object({
     id: z.string(),
-    title: z.string(),
+    title: z.string().optional(),
+    isPinned: z.boolean().optional(),
   })
   .openapi("UpdateThreadBody");
 

@@ -5,6 +5,7 @@ import { useUISettings } from "@/contexts/UISettingsContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useThreads } from "@/hooks/useThreads";
 import { useRouter, usePathname } from "next/navigation";
+import { ProfileModal } from "@/components/ProfileModal";
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -12,11 +13,12 @@ interface HeaderProps {
 
 export const Header = ({ toggleSidebar }: HeaderProps) => {
   const { provider, model, activePersona, theme, toggleTheme } = useUISettings();
-  const { user, logout, openAuthModal } = useAuth();
+  const { user, logout, openAuthModal, checkAuth } = useAuth();
   const { createThread } = useThreads();
   const router = useRouter();
   const pathname = usePathname();
   const [exporting, setExporting] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
 
   const currentThreadId = pathname?.startsWith("/thread/") ? pathname.replace("/thread/", "") : null;
 
@@ -127,12 +129,16 @@ export const Header = ({ toggleSidebar }: HeaderProps) => {
           {/* User Auth Profile / Buttons */}
           {user ? (
             <div className="flex items-center gap-2 border-l border-gray-200 pl-2 dark:border-gray-800">
-              <div className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200">
+              <button
+                onClick={() => setProfileOpen(true)}
+                className="flex cursor-pointer items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-750"
+                title="Account Profile & Password Settings"
+              >
                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white uppercase">
                   {user.name.charAt(0)}
                 </span>
                 <span className="max-w-[100px] truncate">{user.name}</span>
-              </div>
+              </button>
               <button
                 onClick={() => logout()}
                 className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 hover:text-red-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-red-400"
@@ -161,6 +167,15 @@ export const Header = ({ toggleSidebar }: HeaderProps) => {
           )}
         </div>
       </div>
+
+      <ProfileModal
+        isOpen={profileOpen}
+        onClose={() => setProfileOpen(false)}
+        currentUser={user}
+        onUserUpdated={() => {
+          checkAuth();
+        }}
+      />
     </header>
   );
 };

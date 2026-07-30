@@ -12,6 +12,7 @@ import {
   RefreshCcw,
   Settings,
   Trash2,
+  Star,
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 
@@ -20,7 +21,7 @@ interface ThreadListProps {
 }
 
 export function ThreadList({ onOpenMCPConfig }: ThreadListProps) {
-  const { threads, createThread, deleteThread, refetchThreads } = useThreads();
+  const { threads, createThread, deleteThread, togglePinThread, refetchThreads } = useThreads();
   const [isCreating, setIsCreating] = useState(false);
   const [filter, setFilter] = useState("");
   const [renamingId, setRenamingId] = useState<string | null>(null);
@@ -93,12 +94,19 @@ export function ThreadList({ onOpenMCPConfig }: ThreadListProps) {
     setDeletingId(threadId);
     try {
       await deleteThread(threadId);
-      // Navigation will be handled by the useThreads hook if we're deleting the active thread
     } catch (e) {
       console.error("Delete failed", e);
       alert("Failed to delete thread. Please try again.");
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handleTogglePin = async (threadId: string, currentPinned: boolean | undefined) => {
+    try {
+      await togglePinThread(threadId, !currentPinned);
+    } catch (e) {
+      console.error("Pin failed", e);
     }
   };
 
@@ -162,10 +170,34 @@ export function ThreadList({ onOpenMCPConfig }: ThreadListProps) {
               )}
               {!isRenaming && (
                 <div className="flex items-center justify-between gap-2">
-                  <div className="truncate text-sm font-medium" title={thread.title || thread.id}>
-                    {thread.title || `Thread ${thread.id.slice(0, 8)}`}
+                  <div
+                    onDoubleClick={(e) => {
+                      e.stopPropagation();
+                      startRename(thread.id, thread.title);
+                    }}
+                    className="flex flex-1 items-center gap-1.5 truncate text-sm font-medium"
+                    title="Double-click to rename"
+                  >
+                    {thread.isPinned && (
+                      <Star className="h-3.5 w-3.5 flex-shrink-0 fill-amber-400 text-amber-500" />
+                    )}
+                    <span className="truncate">{thread.title || `Thread ${thread.id.slice(0, 8)}`}</span>
                   </div>
-                  <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                  <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleTogglePin(thread.id, thread.isPinned);
+                      }}
+                      className="hover:bg-muted inline-flex h-5 w-5 items-center justify-center rounded"
+                      title={thread.isPinned ? "Unpin thread" : "Pin thread"}
+                    >
+                      <Star
+                        className={`h-3.5 w-3.5 ${
+                          thread.isPinned ? "fill-amber-400 text-amber-500" : "text-gray-400 hover:text-amber-500"
+                        }`}
+                      />
+                    </button>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -174,7 +206,7 @@ export function ThreadList({ onOpenMCPConfig }: ThreadListProps) {
                       className="hover:bg-muted inline-flex h-5 w-5 items-center justify-center rounded"
                       title="Rename"
                     >
-                      <Pencil className="h-3.5 w-3.5" />
+                      <Pencil className="h-3.5 w-3.5 text-gray-400 hover:text-blue-500" />
                     </button>
                     <button
                       onClick={(e) => {
@@ -188,7 +220,7 @@ export function ThreadList({ onOpenMCPConfig }: ThreadListProps) {
                       {deletingId === thread.id ? (
                         <Loader2 className="h-3.5 w-3.5 animate-spin" />
                       ) : (
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <Trash2 className="h-3.5 w-3.5 text-gray-400 hover:text-red-500" />
                       )}
                     </button>
                   </div>

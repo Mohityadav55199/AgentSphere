@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import type { Thread } from "@/types/message";
-import { fetchThreads, createNewThread, deleteThread } from "@/services/chatService";
+import { fetchThreads, createNewThread, deleteThread, updateThread } from "@/services/chatService";
 import { useThreadContext } from "@/contexts/ThreadContext";
 
 export interface UseThreadsReturn {
@@ -11,6 +11,8 @@ export interface UseThreadsReturn {
   threadError: Error | null;
   createThread: () => Promise<Thread>;
   deleteThread: (threadId: string) => Promise<void>;
+  renameThread: (threadId: string, title: string) => Promise<void>;
+  togglePinThread: (threadId: string, isPinned: boolean) => Promise<void>;
   switchThread: (threadId: string) => void;
   refetchThreads: () => Promise<unknown>;
 }
@@ -54,6 +56,27 @@ export function useThreads(): UseThreadsReturn {
     [queryClient, setActiveThreadId, activeThreadId],
   );
 
+  const renameThread = useCallback(
+    async (threadId: string, title: string) => {
+      const updated = await updateThread({ id: threadId, title });
+      queryClient.setQueryData(["threads"], (old: Thread[] = []) =>
+        old.map((t) => (t.id === threadId ? updated : t)),
+      );
+    },
+    [queryClient],
+  );
+
+  const togglePinThread = useCallback(
+    async (threadId: string, isPinned: boolean) => {
+      const updated = await updateThread({ id: threadId, isPinned });
+      queryClient.setQueryData(["threads"], (old: Thread[] = []) => {
+        const next = old.map((t) => (t.id === threadId ? updated : t));
+        return next.sort((a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0));
+      });
+    },
+    [queryClient],
+  );
+
   const switchThread = useCallback(
     (threadId: string) => {
       setActiveThreadId(threadId);
@@ -68,6 +91,8 @@ export function useThreads(): UseThreadsReturn {
     threadError: threadError as Error | null,
     createThread,
     deleteThread: deleteThreadCallback,
+    renameThread,
+    togglePinThread,
     switchThread,
     refetchThreads: refetchThreadsQuery,
   };
