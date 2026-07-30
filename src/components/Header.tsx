@@ -13,7 +13,7 @@ interface HeaderProps {
 
 export const Header = ({ toggleSidebar }: HeaderProps) => {
   const { provider, model, activePersona, theme, toggleTheme } = useUISettings();
-  const { user, logout, openAuthModal, checkUser } = useAuth();
+  const { user, logout, openAuthModal, checkAuth } = useAuth();
   const { createThread } = useThreads();
   const router = useRouter();
   const pathname = usePathname();
@@ -173,7 +173,7 @@ export const Header = ({ toggleSidebar }: HeaderProps) => {
         onClose={() => setProfileOpen(false)}
         currentUser={user}
         onUserUpdated={() => {
-          checkUser();
+          checkAuth();
         }}
       />
     </header>
