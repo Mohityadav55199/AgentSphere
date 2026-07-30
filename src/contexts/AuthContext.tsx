@@ -15,6 +15,7 @@ interface AuthContextType {
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   checkUser: () => Promise<void>;
+  checkAuth: () => Promise<void>;
   showAuthModal: boolean;
   openAuthModal: (mode?: "login" | "register") => void;
   closeAuthModal: () => void;
@@ -102,6 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         register,
         logout,
         checkUser,
+        checkAuth: checkUser,
         showAuthModal,
         openAuthModal,
         closeAuthModal,

@@ -13,6 +13,17 @@ function loadSettings(): Record<string, unknown> {
   }
 }
 
+function saveSetting(key: string, value: unknown) {
+  if (typeof window === "undefined") return;
+  try {
+    const current = loadSettings();
+    current[key] = value;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
+  } catch {
+    // ignore
+  }
+}
+
 export interface Persona {
   id: string;
   name: string;
