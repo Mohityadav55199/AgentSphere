@@ -107,7 +107,7 @@ export const Thread = ({ threadId, onFirstMessageSent }: ThreadProps) => {
       onDragLeave={handleDragLeave}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
-      className="relative absolute inset-0 flex flex-col bg-gradient-to-b from-gray-50/50 via-white to-gray-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950"
+      className="relative flex h-full w-full flex-col overflow-hidden bg-gradient-to-b from-gray-50/50 via-white to-gray-50/30 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950"
     >
       {/* Drag & Drop Visual Overlay */}
       {isDragging && (
@@ -120,7 +120,7 @@ export const Thread = ({ threadId, onFirstMessageSent }: ThreadProps) => {
         </div>
       )}
       {messages.length > 0 ? (
-        <>
+        <div className="flex flex-1 flex-col overflow-hidden">
           <div className="min-h-0 flex-1">
             <ScrollArea className="h-full">
               <div className="mx-auto max-w-4xl space-y-6 px-4 py-6">
@@ -128,49 +128,47 @@ export const Thread = ({ threadId, onFirstMessageSent }: ThreadProps) => {
               </div>
             </ScrollArea>
           </div>
-          <div className="flex-shrink-0">
-            <div className="w-full p-4 pb-6">
-              <div className="mx-auto max-w-3xl">
-                <MessageInput onSendMessage={handleSendMessage} isLoading={isSending} />
-              </div>
+          <div className="flex-shrink-0 border-t border-gray-200/50 p-3 backdrop-blur-xs sm:p-4 dark:border-gray-800/50 dark:bg-gray-950/40">
+            <div className="mx-auto max-w-3xl">
+              <MessageInput onSendMessage={handleSendMessage} isLoading={isSending} />
             </div>
           </div>
-        </>
+        </div>
       ) : (
-        <div className="flex flex-1 flex-col items-center justify-center p-4">
-          <div className="w-full max-w-3xl space-y-8">
+        <div className="flex flex-1 flex-col items-center justify-center overflow-y-auto px-4 py-4 sm:py-6">
+          <div className="my-auto w-full max-w-3xl space-y-4 sm:space-y-6">
             {/* Hero Header */}
-            <div className="text-center space-y-3">
-              <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200/80 bg-gradient-to-r from-indigo-50 to-blue-50 px-4 py-1.5 text-xs font-semibold text-indigo-700 shadow-sm dark:border-indigo-800/40 dark:from-indigo-950/60 dark:to-blue-950/60 dark:text-indigo-300">
+            <div className="space-y-2 text-center">
+              <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200/80 bg-gradient-to-r from-indigo-50 to-blue-50 px-4 py-1.5 text-xs font-semibold text-indigo-700 shadow-xs dark:border-indigo-800/40 dark:from-indigo-950/60 dark:to-blue-950/60 dark:text-indigo-300">
                 <span>✨</span> Powered by LangGraph & Groq
               </div>
-              <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl dark:text-white">
+              <h1 className="text-2xl font-extrabold tracking-tight text-gray-900 sm:text-4xl dark:text-white">
                 What would you like to build today?
               </h1>
-              <p className="mx-auto max-w-lg text-sm text-gray-500 dark:text-gray-400">
+              <p className="mx-auto max-w-lg text-xs text-gray-500 sm:text-sm dark:text-gray-400">
                 AgentSphere is ready to assist with coding, analysis, creative writing, and autonomous tool workflows.
               </p>
             </div>
 
             {/* Prompt Suggestion Cards */}
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
               {PROMPT_SUGGESTIONS.map((item, idx) => (
                 <button
                   key={idx}
                   onClick={() => handleSendMessage(item.prompt)}
                   disabled={isSending}
-                  className="group flex flex-col gap-1.5 rounded-xl border border-gray-200/80 bg-white/80 p-4 text-left shadow-sm backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-blue-300 hover:bg-gradient-to-br hover:from-white hover:to-blue-50/40 hover:shadow-md dark:border-gray-800/80 dark:bg-gray-900/80 dark:hover:border-blue-700 dark:hover:from-gray-900 dark:hover:to-blue-950/30"
+                  className="group flex flex-col gap-1 rounded-xl border border-gray-200/80 bg-white/80 p-3 text-left shadow-xs backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-blue-300 hover:bg-gradient-to-br hover:from-white hover:to-blue-50/40 hover:shadow-md dark:border-gray-800/80 dark:bg-gray-900/80 dark:hover:border-blue-700 dark:hover:from-gray-900 dark:hover:to-blue-950/30"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-lg">{item.icon}</span>
+                    <span className="text-base">{item.icon}</span>
                     <span className="text-xs font-semibold text-gray-400 opacity-0 transition-opacity group-hover:opacity-100 dark:text-gray-500">
                       Send ↵
                     </span>
                   </div>
-                  <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                  <div className="text-xs font-semibold text-gray-900 sm:text-sm dark:text-gray-100">
                     {item.title}
                   </div>
-                  <div className="line-clamp-2 text-xs text-gray-500 dark:text-gray-400">
+                  <div className="line-clamp-2 text-[11px] text-gray-500 dark:text-gray-400">
                     "{item.prompt}"
                   </div>
                 </button>
@@ -178,7 +176,9 @@ export const Thread = ({ threadId, onFirstMessageSent }: ThreadProps) => {
             </div>
 
             {/* Input Box */}
-            <MessageInput onSendMessage={handleSendMessage} isLoading={isSending} />
+            <div className="pt-1">
+              <MessageInput onSendMessage={handleSendMessage} isLoading={isSending} />
+            </div>
           </div>
         </div>
       )}

@@ -30,7 +30,7 @@ export function MainLayout({ children }: MainLayoutProps) {
         </div>
 
         {/* Main content */}
-        <div className="relative h-[calc(100vh-4rem)] flex-1">{children}</div>
+        <div className="relative flex-1 min-h-0 overflow-hidden">{children}</div>
       </div>
 
       {/* MCP Configuration Modal */}
