@@ -1,13 +1,22 @@
 # ⚡ AgentSphere - Next-Gen Autonomous AI Agent Platform
 
-> **AgentSphere** is a state-of-the-art fullstack AI Agent application built with Next.js 15, React 19, LangGraph.js, Groq API, and Model Context Protocol (MCP). It features interactive agent personas, voice-to-text, text-to-speech read aloud, temperature tuning, drag-and-drop uploads, and 1-click Markdown export.
+> **AgentSphere** is a state-of-the-art fullstack AI Agent application built with Next.js 16, React 19, LangGraph.js, Prisma, and Model Context Protocol (MCP). It features interactive agent personas, voice-to-text, text-to-speech read aloud, temperature tuning, drag-and-drop file uploads, and 1-click Markdown export.
+
+---
+
+## 🌐 Live Demos
+
+| Platform | Status | Live Link |
+| --- | --- | --- |
+| **Vercel** | 🟢 Live | [https://agent-sphere-self.vercel.app](https://agent-sphere-self.vercel.app/) |
+| **Render** | 🟢 Live | [https://agentsphere.onrender.com](https://agentsphere.onrender.com/) |
 
 ---
 
 ## ✨ Features at a Glance
 
-### ⚡ Powered by Groq Ultra-Fast Inference
-- Integrated with Groq's high-speed Llama 3.3 70B Versatile model (`llama-3.3-70b-versatile`).
+### ⚡ Powered by Multi-Provider LLM & Fast Inference
+- Integrated with **Groq**, **Google Gemini**, **OpenAI**, and **Anthropic**.
 - Real-time Server-Sent Events (SSE) streaming for zero-latency AI responses.
 
 ### 🎭 Specialized Agent Personas & System Instructions
@@ -45,9 +54,9 @@
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS, Lucide Icons, UIW Markdown Editor.
-- **AI Engine**: LangGraph.js, `@langchain/openai` (Groq provider mode).
-- **Backend & Database**: Node.js, Prisma ORM, SQLite / PostgreSQL.
+- **Frontend**: Next.js 16, React 19, TypeScript, Tailwind CSS v4, Lucide Icons, UIW Markdown Editor.
+- **AI Engine**: LangGraph.js, `@langchain/google-genai`, `@langchain/openai`, `@langchain/anthropic`.
+- **Backend & Database**: Node.js, Prisma ORM, PostgreSQL (`NeonDB`).
 - **Audio & Media**: Web Speech API (`SpeechRecognition` & `SpeechSynthesis`).
 
 ---
@@ -56,7 +65,7 @@
 
 ### Prerequisites
 - **Node.js**: v18 or higher
-- **Groq API Key**: Obtain a free key from [Groq Console](https://console.groq.com/)
+- **API Keys**: Google Gemini API Key or Groq API Key
 
 ### 1. Clone Repository
 
@@ -76,10 +85,9 @@ npm install
 Create a `.env` file in the project root:
 
 ```env
-DATABASE_URL="file:./dev.db"
+DATABASE_URL="postgresql://<user>:<password>@<host>/<dbname>?sslmode=require"
+GOOGLE_GENERATIVE_AI_API_KEY="your_gemini_api_key_here"
 GROQ_API_KEY="gsk_your_groq_api_key_here"
-DEFAULT_MODEL_PROVIDER="groq"
-DEFAULT_MODEL_NAME="llama-3.3-70b-versatile"
 ```
 
 ### 4. Initialize Database
