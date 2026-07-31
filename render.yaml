@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: free
     buildCommand: npm install --include=dev && npm run build
-    startCommand: npx prisma db push && npm run start
+    startCommand: npx prisma db push --accept-data-loss && npm run start
     envVars:
       - key: NPM_CONFIG_PRODUCTION
         value: "false"
