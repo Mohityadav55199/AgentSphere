@@ -108,4 +108,4 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to experienc
 
 ## 📜 License
 
-Distributed under the MIT License. See `LICENSE` for details.
+Distributed under the IIIT License. See `LICENSE` for details.
