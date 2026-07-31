@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "prisma generate && next build",
+    "build": "node -e \"if(!process.env.DATABASE_URL) process.env.DATABASE_URL='postgresql://dummy:dummy@localhost:5432/dummy'\" && prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "format": "prettier --write .",
