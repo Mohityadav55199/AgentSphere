@@ -6,6 +6,8 @@ services:
     buildCommand: npm install --include=dev && npm run build
     startCommand: npx prisma db push && npm run start
     envVars:
+      - key: NPM_CONFIG_PRODUCTION
+        value: "false"
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
@@ -14,3 +16,4 @@ services:
         sync: false
       - key: GROQ_API_KEY
         sync: false
+
