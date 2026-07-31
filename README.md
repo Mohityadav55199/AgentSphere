@@ -104,8 +104,3 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser to experience **AgentSphere**!
 
----
-
-## 📜 License
-
-Distributed under the IIIT License. See `LICENSE` for details.
