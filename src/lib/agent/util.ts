@@ -10,43 +10,54 @@ export interface CreateChatModelOptions {
   temperature?: number;
 }
 
+function isValidKey(key?: string): boolean {
+  if (!key) return false;
+  const trimmed = key.trim();
+  return trimmed !== "" && !trimmed.startsWith("your_") && trimmed !== "missing-api-key";
+}
+
 /**
  * Central factory for creating a chat model based on provider + model name.
  */
 export function createChatModel({
-  provider = "google",
+  provider = getDefaultProvider(),
   model,
   temperature = 1,
 }: CreateChatModelOptions): BaseChatModel {
   switch (provider) {
-    case "groq":
+    case "groq": {
+      // Fix deprecated or non-existent llama-3.3-70b-versatile model name
+      const groqModel = !model || model === "llama-3.3-70b-versatile" ? "openai/gpt-oss-120b" : model;
       return new ChatOpenAI({
-        model: model || "llama-3.3-70b-versatile",
+        model: groqModel,
         temperature,
         apiKey: process.env.GROQ_API_KEY || "missing-api-key",
         configuration: {
           baseURL: "https://api.groq.com/openai/v1",
         },
       });
+    }
     case "openai":
       return new ChatOpenAI({
-        model,
+        model: model || "gpt-4o",
         temperature,
         apiKey: process.env.OPENAI_API_KEY || "missing-api-key",
       });
     case "anthropic":
       return new ChatAnthropic({
-        model,
+        model: model || "claude-3-5-sonnet-latest",
         temperature,
         apiKey: process.env.ANTHROPIC_API_KEY || "missing-api-key",
       });
     case "google":
-    default:
+    default: {
+      const googleModel = !model || model === "gemini-3-flash-preview" ? "gemini-2.5-flash" : model;
       return new ChatGoogleGenerativeAI({
-        model,
+        model: googleModel,
         temperature,
         apiKey: process.env.GOOGLE_API_KEY || "missing-api-key",
       });
+    }
   }
 }
 export interface AgentConfigOptions {
@@ -236,5 +247,29 @@ export function sanitizeTool(tool: DynamicStructuredTool): DynamicStructuredTool
 
   return tool;
 }
-export const DEFAULT_MODEL_PROVIDER = process.env.GROQ_API_KEY ? "groq" : "google";
-export const DEFAULT_MODEL_NAME = process.env.GROQ_API_KEY ? "llama-3.3-70b-versatile" : "gemini-3-flash-preview";
+
+export function getDefaultProvider(): string {
+  if (isValidKey(process.env.GROQ_API_KEY)) return "groq";
+  if (isValidKey(process.env.GOOGLE_API_KEY)) return "google";
+  if (isValidKey(process.env.OPENAI_API_KEY)) return "openai";
+  if (isValidKey(process.env.ANTHROPIC_API_KEY)) return "anthropic";
+  return "google";
+}
+
+export function getDefaultModel(provider?: string): string {
+  const p = provider || getDefaultProvider();
+  switch (p) {
+    case "groq":
+      return "openai/gpt-oss-120b";
+    case "openai":
+      return "gpt-4o";
+    case "anthropic":
+      return "claude-3-5-sonnet-latest";
+    case "google":
+    default:
+      return "gemini-2.5-flash";
+  }
+}
+
+export const DEFAULT_MODEL_PROVIDER = getDefaultProvider();
+export const DEFAULT_MODEL_NAME = getDefaultModel(DEFAULT_MODEL_PROVIDER);

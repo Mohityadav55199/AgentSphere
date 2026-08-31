@@ -26,8 +26,15 @@ export const ModelConfiguration = ({
   const editContainerRef = useRef<HTMLDivElement | null>(null);
   const mcpTooltipRef = useRef<HTMLDivElement | null>(null);
 
-  const { persona, setPersona, temperature, setTemperature, systemPrompt, setSystemPrompt } =
-    useUISettings();
+  const {
+    persona,
+    setPersona,
+    temperature,
+    setTemperature,
+    systemPrompt,
+    setSystemPrompt,
+    availableProviders,
+  } = useUISettings();
 
   // Fetch MCP tools data
   const { data: mcpToolsData, isLoading: mcpToolsLoading } = useMCPTools();
@@ -47,6 +54,9 @@ export const ModelConfiguration = ({
     window.addEventListener("mousedown", handler);
     return () => window.removeEventListener("mousedown", handler);
   }, [showMCPTooltip]);
+
+  const currentProviderInfo = availableProviders[provider];
+  const modelOptions = currentProviderInfo?.models || [];
 
   return (
     <div className="space-y-4" ref={editContainerRef}>
@@ -101,20 +111,29 @@ export const ModelConfiguration = ({
               const newProvider = e.target.value;
               setImgError(false);
               setProvider(newProvider);
+              const info = availableProviders[newProvider];
               const defaults: Record<string, string> = {
-                groq: "llama-3.3-70b-versatile",
-                google: "gemini-3-flash-preview",
+                groq: "openai/gpt-oss-120b",
+                google: "gemini-2.5-flash",
                 openai: "gpt-4o",
-                anthropic: "claude-sonnet-4-5",
+                anthropic: "claude-3-5-sonnet-latest",
               };
-              setModel(defaults[newProvider] ?? "");
+              setModel(info?.defaultModel || defaults[newProvider] || "");
             }}
             className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
           >
-            <option value="groq">Groq</option>
-            <option value="google">Google</option>
-            <option value="openai">OpenAI</option>
-            <option value="anthropic">Anthropic</option>
+            <option value="groq">
+              Groq {availableProviders.groq?.available ? "✓ (Configured)" : ""}
+            </option>
+            <option value="google">
+              Google {availableProviders.google?.available ? "✓ (Configured)" : ""}
+            </option>
+            <option value="openai">
+              OpenAI {availableProviders.openai?.available ? "✓ (Configured)" : ""}
+            </option>
+            <option value="anthropic">
+              Anthropic {availableProviders.anthropic?.available ? "✓ (Configured)" : ""}
+            </option>
           </select>
         </div>
       </div>
@@ -122,12 +141,41 @@ export const ModelConfiguration = ({
       {/* Model Selection */}
       <div className="space-y-2">
         <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">Model</label>
-        <input
-          value={model}
-          onChange={(e) => setModel(e.target.value)}
-          placeholder="Enter model name"
-          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
-        />
+        {modelOptions.length > 0 ? (
+          <div className="space-y-1.5">
+            <select
+              value={modelOptions.includes(model) ? model : "custom"}
+              onChange={(e) => {
+                if (e.target.value !== "custom") {
+                  setModel(e.target.value);
+                }
+              }}
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+            >
+              {modelOptions.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+              <option value="custom">Custom Model Name...</option>
+            </select>
+            {(!modelOptions.includes(model) || model === "") && (
+              <input
+                value={model}
+                onChange={(e) => setModel(e.target.value)}
+                placeholder="Enter custom model identifier"
+                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-mono focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+              />
+            )}
+          </div>
+        ) : (
+          <input
+            value={model}
+            onChange={(e) => setModel(e.target.value)}
+            placeholder="Enter model name"
+            className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+          />
+        )}
       </div>
 
       {/* Temperature Slider */}

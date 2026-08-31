@@ -70,6 +70,12 @@ export const PERSONAS: Record<string, Persona> = {
   },
 };
 
+export interface ProviderInfo {
+  available: boolean;
+  defaultModel: string;
+  models: string[];
+}
+
 interface UISettingsContextType {
   hideToolMessages: boolean;
   toggleToolMessages: () => void;
@@ -77,6 +83,8 @@ interface UISettingsContextType {
   setProvider: (provider: string) => void;
   model: string;
   setModel: (model: string) => void;
+  availableProviders: Record<string, ProviderInfo>;
+  isLoadingModels: boolean;
   approveAllTools: boolean;
   setApproveAllTools: (v: boolean) => void;
   persona: string;
@@ -99,18 +107,74 @@ interface UISettingsProviderProps {
 export const UISettingsProvider = ({ children }: UISettingsProviderProps) => {
   const [hideToolMessages, setHideToolMessages] = useState(false);
   const [provider, setProviderState] = useState<string>("groq");
-  const [model, setModelState] = useState<string>("llama-3.3-70b-versatile");
+  const [model, setModelState] = useState<string>("openai/gpt-oss-120b");
+  const [availableProviders, setAvailableProviders] = useState<Record<string, ProviderInfo>>({});
+  const [isLoadingModels, setIsLoadingModels] = useState<boolean>(true);
   const [approveAllTools, setApproveAllToolsState] = useState<boolean>(false);
   const [persona, setPersonaState] = useState<string>("default");
   const [temperature, setTemperatureState] = useState<number>(0.7);
   const [systemPrompt, setSystemPromptState] = useState<string>(PERSONAS.default.prompt);
   const [theme, setThemeState] = useState<"light" | "dark">("light");
 
+  // Fetch available models from backend based on API keys
+  useEffect(() => {
+    let isMounted = true;
+    async function loadModels() {
+      try {
+        const res = await fetch("/api/agent/models");
+        if (res.ok) {
+          const data = await res.json();
+          if (isMounted && data?.providers) {
+            setAvailableProviders(data.providers);
+
+            const saved = loadSettings();
+            let activeProv = typeof saved.provider === "string" ? saved.provider : data.defaultProvider;
+            let activeMod = typeof saved.model === "string" ? saved.model : "";
+
+            // Sanitize invalid or deprecated cached model names
+            if (!activeMod || activeMod === "llama-3.3-70b-versatile" || activeMod === "gemini-3-flash-preview") {
+              activeMod = data.providers[activeProv]?.defaultModel || data.defaultModel;
+              saveSetting("model", activeMod);
+            }
+
+            // If selected provider isn't available, fallback to available default
+            if (!data.providers[activeProv]?.available && data.defaultProvider) {
+              activeProv = data.defaultProvider;
+              activeMod = data.defaultModel;
+              saveSetting("provider", activeProv);
+              saveSetting("model", activeMod);
+            }
+
+            setProviderState(activeProv);
+            setModelState(activeMod);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load models configuration:", err);
+      } finally {
+        if (isMounted) setIsLoadingModels(false);
+      }
+    }
+
+    loadModels();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   // Sync settings from localStorage after client hydration
   useEffect(() => {
     const saved = loadSettings();
     if (typeof saved.provider === "string") setProviderState(saved.provider);
-    if (typeof saved.model === "string") setModelState(saved.model);
+    if (typeof saved.model === "string") {
+      const sanitized =
+        saved.model === "llama-3.3-70b-versatile"
+          ? "openai/gpt-oss-120b"
+          : saved.model === "gemini-3-flash-preview"
+            ? "gemini-2.5-flash"
+            : saved.model;
+      setModelState(sanitized);
+    }
     if (typeof saved.approveAllTools === "boolean") setApproveAllToolsState(saved.approveAllTools);
     if (typeof saved.persona === "string" && PERSONAS[saved.persona]) {
       setPersonaState(saved.persona);
@@ -183,6 +247,8 @@ export const UISettingsProvider = ({ children }: UISettingsProviderProps) => {
         setProvider,
         model,
         setModel,
+        availableProviders,
+        isLoadingModels,
         approveAllTools,
         setApproveAllTools,
         persona,
