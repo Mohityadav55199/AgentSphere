@@ -1,5 +1,5 @@
-{
+﻿{
   "framework": "nextjs",
   "installCommand": "pnpm install --no-frozen-lockfile",
-  "buildCommand": "node -e "if(!process.env.DATABASE_URL) process.env.DATABASE_URL='file:./dev.db'" && prisma generate && next build"
+  "buildCommand": "prisma generate && next build"
 }
