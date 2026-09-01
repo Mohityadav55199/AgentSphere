@@ -6,8 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -33,24 +33,23 @@ model Thread {
 model MCPServer {
   id        String            @id @default(uuid())
   name      String            @unique
-  type      String
+  type      MCPServerType
   enabled   Boolean           @default(true)
-  // For stdio servers
   command   String?
-  args      String?
-  env       String?
-  // For http servers
+  args      Json?
+  env       Json?
   url       String?
-  headers   String?
-  // OAuth fields (for http servers)
+  headers   Json?
   requiresAuth  Boolean?      @default(false)
-  authTokens    String?         // OAuthTokens: { access_token, refresh_token, expires_at, token_type, scope }
-  clientInfo    String?         // OAuthClientInformation: { client_id, client_secret, ... }
-  codeVerifier  String?       // PKCE code verifier for ongoing OAuth flow
-  oauthStatus   String?       @default("UNKNOWN") // UNKNOWN | NOT_REQUIRED | REQUIRED | CONNECTED | EXPIRED
+  authTokens    Json?
+  clientInfo    Json?
+  codeVerifier  String?
+  oauthStatus   String?       @default("UNKNOWN")
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
 }
 
-
-
+enum MCPServerType {
+  stdio
+  http
+}

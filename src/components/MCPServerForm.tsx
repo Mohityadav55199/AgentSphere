@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { X, Loader2, Check, Wand2 } from "lucide-react";
-import { MCPServerType } from "@/types/mcp";
+import { MCPServerType } from "@prisma/client";
 
 interface MCPServer {
   id?: string;
@@ -329,3 +329,4 @@ export function MCPServerForm({ isOpen, onClose, onSaved, server }: MCPServerFor
     </div>
   );
 }
+
