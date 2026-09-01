@@ -49,3 +49,5 @@ scratches
 *.db
 *.db-journal
 prisma/*.db
+
+[0-9][0-9]_*.md
