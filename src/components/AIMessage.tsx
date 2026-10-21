@@ -26,9 +26,10 @@ export const AIMessage = ({
   const hasTools = hasToolCalls(message);
   const toolCalls = getToolCalls(message);
   const { hideToolMessages, theme } = useUISettings();
-  const activeNode = (message.data as Record<string, unknown>)?.additional_kwargs
-    ? ((message.data as Record<string, unknown>).additional_kwargs as Record<string, unknown>)?.agentNode as string | undefined
-    : undefined;
+  const activeNode =
+    "additional_kwargs" in message.data && message.data.additional_kwargs
+      ? (message.data.additional_kwargs.agentNode as string | undefined)
+      : undefined;
 
   // Word count and reading time analytics
   const wordCount = messageContent ? messageContent.trim().split(/\s+/).filter(Boolean).length : 0;
