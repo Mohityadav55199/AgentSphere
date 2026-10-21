@@ -104,3 +104,15 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser to experience **AgentSphere**!
 
+---
+
+## ⚡ Render Free Tier Keep-Alive & Automated Backups
+
+When deployed on Render's free tier:
+- **Free Tier Wake-up Banner**: Embedded across all screens to notify visitors of cold-start wake-up times with live status polling.
+- **Automated Keep-Alive Ping**: Runs every 14 minutes via [`.github/workflows/keep-alive.yml`](file:///c:/Projects/AgentSphere/.github/workflows/keep-alive.yml) to keep the instance warm.
+- **Daily Automated Database Backups**: Runs daily via [`.github/workflows/db-backup.yml`](file:///c:/Projects/AgentSphere/.github/workflows/db-backup.yml) with 30-day artifact retention and optional S3/R2 storage upload.
+
+📖 See [`docs/KEEP-ALIVE-AND-BACKUPS.md`](file:///c:/Projects/AgentSphere/docs/KEEP-ALIVE-AND-BACKUPS.md) for full configuration details.
+
+

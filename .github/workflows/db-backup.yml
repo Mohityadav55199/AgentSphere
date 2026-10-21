@@ -1,0 +1,90 @@
+name: Database Backup Cronjob
+
+on:
+  schedule:
+    # Runs automatically every day at 02:00 UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    # Allows manual trigger at any time from GitHub Actions UI
+
+jobs:
+  backup-database:
+    name: Backup PostgreSQL Database
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Install PostgreSQL Client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client
+
+      - name: Run Database Dump
+        id: dump
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::error::DATABASE_URL secret is missing! Please configure DATABASE_URL in repository Secrets."
+            exit 1
+          fi
+
+          mkdir -p backups
+          TIMESTAMP=$(date -u +"%Y%m%d_%H%M%S")
+          BACKUP_FILE="backups/agentsphere-backup-${TIMESTAMP}.sql.gz"
+
+          echo "Initiating pg_dump to $BACKUP_FILE..."
+          # Dump schema and data, stripping ownership and privileges for universal restore, and gzip compress
+          pg_dump "$DATABASE_URL" --no-owner --no-acl | gzip -9 > "$BACKUP_FILE"
+
+          FILE_SIZE=$(ls -lh "$BACKUP_FILE" | awk '{print $5}')
+          echo "backup_file=$BACKUP_FILE" >> $GITHUB_OUTPUT
+          echo "file_name=agentsphere-backup-${TIMESTAMP}.sql.gz" >> $GITHUB_OUTPUT
+          echo "file_size=$FILE_SIZE" >> $GITHUB_OUTPUT
+          echo "timestamp=$TIMESTAMP" >> $GITHUB_OUTPUT
+          echo "✅ Backup successfully created: $BACKUP_FILE ($FILE_SIZE)"
+
+      - name: Store Backup in GitHub Actions Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.dump.outputs.file_name }}
+          path: ${{ steps.dump.outputs.backup_file }}
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Optional S3/R2 Cloud Storage Upload
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: ${{ secrets.S3_REGION || 'us-east-1' }}
+          S3_BUCKET: ${{ secrets.S3_BUCKET_NAME }}
+          S3_ENDPOINT: ${{ secrets.S3_ENDPOINT }}
+          BACKUP_FILE: ${{ steps.dump.outputs.backup_file }}
+        run: |
+          if [ -n "$AWS_ACCESS_KEY_ID" ] && [ -n "$S3_BUCKET" ]; then
+            echo "Uploading backup to S3 storage bucket: $S3_BUCKET..."
+            ENDPOINT_FLAG=""
+            if [ -n "$S3_ENDPOINT" ]; then
+              ENDPOINT_FLAG="--endpoint-url $S3_ENDPOINT"
+            fi
+            aws s3 cp "$BACKUP_FILE" "s3://${S3_BUCKET}/database-backups/" $ENDPOINT_FLAG
+            echo "✅ Successfully uploaded backup to S3 bucket."
+          else
+            echo "ℹ️ S3 credentials not configured in secrets; backup safely stored in GitHub Artifacts."
+          fi
+
+      - name: Generate Run Summary
+        run: |
+          echo "### 🗄️ Database Backup Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **File Name**: \`${{ steps.dump.outputs.file_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Archive Size**: \`${{ steps.dump.outputs.file_size }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Timestamp**: \`${{ steps.dump.outputs.timestamp }} UTC\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Artifact Retention**: 30 Days (Downloadable from GitHub Actions run page)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### How to restore:" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "gunzip -c ${{ steps.dump.outputs.file_name }} | psql \"\$DATABASE_URL\"" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY

@@ -4,6 +4,7 @@ import { ThreadList } from "./ThreadList";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import { MCPServerList } from "./MCPServerList";
+import { FreeTierBanner } from "./FreeTierBanner";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -25,6 +26,7 @@ export function MainLayout({ children }: MainLayoutProps) {
 
       {/* Main content area */}
       <div className="bg-gray-150 flex min-w-0 flex-1 flex-col">
+        <FreeTierBanner />
         <div className="z-10">
           <Header toggleSidebar={toggleSidebar} />
         </div>
