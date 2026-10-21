@@ -121,7 +121,7 @@ export class AgentBuilder {
   }
 
   private async callModel(state: typeof MessagesAnnotation.State) {
-    if (!this.model || !this.model.bindTools) {
+    if (!this.model) {
       throw new Error("Invalid or missing language model (llm)");
     }
     const messages = [
@@ -129,7 +129,10 @@ export class AgentBuilder {
       new SystemMessage(this.systemPrompt),
       ...state.messages,
     ];
-    const modelInvoker = this.model.bindTools(this.tools);
+    const modelInvoker =
+      this.tools.length > 0 && "bindTools" in this.model && typeof this.model.bindTools === "function"
+        ? this.model.bindTools(this.tools)
+        : this.model;
     const response = await modelInvoker.invoke(messages);
     return { messages: response };
   }

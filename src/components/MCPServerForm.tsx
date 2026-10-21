@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { X, Loader2, Wand2, Sparkles, Server, Globe, Terminal, Code2, Plus, Trash2 } from "lucide-react";
-import { MCPServerType } from "@prisma/client";
+import { MCPServerType } from "@/types/mcp";
 
 interface MCPServer {
   id?: string;
