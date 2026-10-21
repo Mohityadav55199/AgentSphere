@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { PanelLeftClose, Sparkles, Plus, Download, Loader2, Sun, Moon, LogIn, LogOut, User as UserIcon, Server, Users, Bot } from "lucide-react";
+import { PanelLeftClose, Sparkles, Plus, Download, Loader2, Sun, Moon, LogIn, LogOut, User as UserIcon, Server, Users, Bot, Sliders } from "lucide-react";
 import Link from "next/link";
 import { useUISettings } from "@/contexts/UISettingsContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -7,6 +7,8 @@ import { useThreads } from "@/hooks/useThreads";
 import { useRouter, usePathname } from "next/navigation";
 import { ProfileModal } from "@/components/ProfileModal";
 import { useMCPTools } from "@/hooks/useMCPTools";
+import { ExportStudioModal } from "@/components/ExportStudioModal";
+import { AgentStudioModal } from "@/components/AgentStudioModal";
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -22,6 +24,8 @@ export const Header = ({ toggleSidebar, onOpenMCPConfig }: HeaderProps) => {
   const pathname = usePathname();
   const [exporting, setExporting] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [exportStudioOpen, setExportStudioOpen] = useState(false);
+  const [agentStudioOpen, setAgentStudioOpen] = useState(false);
 
   const currentThreadId = pathname?.startsWith("/thread/") ? pathname.replace("/thread/", "") : null;
 
@@ -100,32 +104,46 @@ export const Header = ({ toggleSidebar, onOpenMCPConfig }: HeaderProps) => {
 
         <div className="flex items-center gap-2">
           {/* Multi-Agent vs Single Agent Mode Toggle */}
-          <button
-            suppressHydrationWarning
-            onClick={() => setAgentMode(agentMode === "multi" ? "single" : "multi")}
-            className={`flex cursor-pointer items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all ${
-              agentMode === "multi"
-                ? "border-purple-300 bg-purple-50 text-purple-700 shadow-xs dark:border-purple-800 dark:bg-purple-950/50 dark:text-purple-300"
-                : "border-gray-200 bg-white text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-750"
-            }`}
-            title={
-              agentMode === "multi"
-                ? "5-Agent Council Mode: Supervisor, Researcher, Developer, Analyst, and Auditor collaborate on every task"
-                : "Single-Agent Mode: Direct conversation with selected persona"
-            }
-          >
-            {agentMode === "multi" ? (
-              <>
-                <Users size={14} className="text-purple-600 dark:text-purple-400" />
-                <span className="font-semibold">5-Agent Council</span>
-              </>
-            ) : (
-              <>
-                <Bot size={14} className="text-gray-500 dark:text-gray-400" />
-                <span className="hidden sm:inline">Single Agent</span>
-              </>
+          <div className="flex items-center gap-1">
+            <button
+              suppressHydrationWarning
+              onClick={() => setAgentMode(agentMode === "multi" ? "single" : "multi")}
+              className={`flex cursor-pointer items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all ${
+                agentMode === "multi"
+                  ? "border-purple-300 bg-purple-50 text-purple-700 shadow-xs dark:border-purple-800 dark:bg-purple-950/50 dark:text-purple-300"
+                  : "border-gray-200 bg-white text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-750"
+              }`}
+              title={
+                agentMode === "multi"
+                  ? "5-Agent Council Mode: Supervisor, Researcher, Developer, Analyst, and Auditor collaborate on every task"
+                  : "Single-Agent Mode: Direct conversation with selected persona"
+              }
+            >
+              {agentMode === "multi" ? (
+                <>
+                  <Users size={14} className="text-purple-600 dark:text-purple-400" />
+                  <span className="font-semibold">5-Agent Council</span>
+                </>
+              ) : (
+                <>
+                  <Bot size={14} className="text-gray-500 dark:text-gray-400" />
+                  <span className="hidden sm:inline">Single Agent</span>
+                </>
+              )}
+            </button>
+
+            {agentMode === "multi" && (
+              <button
+                suppressHydrationWarning
+                onClick={() => setAgentStudioOpen(true)}
+                className="flex cursor-pointer items-center gap-1 rounded-lg border border-purple-200 bg-purple-50/70 px-2 py-1.5 text-xs font-medium text-purple-700 shadow-xs transition-colors hover:bg-purple-100 dark:border-purple-800/60 dark:bg-purple-950/40 dark:text-purple-300 dark:hover:bg-purple-900/50"
+                title="Configure 5-Agent Council Personas, Temperature & System Directives"
+              >
+                <Sliders size={13} className="text-purple-600 dark:text-purple-400" />
+                <span className="hidden lg:inline">Studio</span>
+              </button>
             )}
-          </button>
+          </div>
 
           {/* MCP Servers Button */}
           {onOpenMCPConfig && (
@@ -157,12 +175,11 @@ export const Header = ({ toggleSidebar, onOpenMCPConfig }: HeaderProps) => {
 
           {currentThreadId && (
             <button suppressHydrationWarning
-              onClick={handleExportMarkdown}
-              disabled={exporting}
+              onClick={() => setExportStudioOpen(true)}
               className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-xs transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
-              title="Export chat as Markdown"
+              title="Open Export & Presentation Studio (Markdown, PDF, JSON)"
             >
-              {exporting ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+              <Download size={14} />
               <span>Export</span>
             </button>
           )}
@@ -224,6 +241,17 @@ export const Header = ({ toggleSidebar, onOpenMCPConfig }: HeaderProps) => {
         onUserUpdated={() => {
           checkAuth();
         }}
+      />
+
+      <ExportStudioModal
+        isOpen={exportStudioOpen}
+        onClose={() => setExportStudioOpen(false)}
+        threadId={currentThreadId}
+      />
+
+      <AgentStudioModal
+        isOpen={agentStudioOpen}
+        onClose={() => setAgentStudioOpen(false)}
       />
     </header>
   );

@@ -13,6 +13,8 @@ import { MultiAgentBuilder } from "./multiAgent";
 
 let setupPromise: Promise<void> | null = null;
 
+import { createWebSearchTool } from "./tools/webSearch";
+
 // Cache agent by serialized config — recreate only when settings change
 let agentCache: { agent: Awaited<ReturnType<typeof createAgent>>; key: string } | null = null;
 
@@ -50,10 +52,11 @@ async function createAgent(cfg?: AgentConfigOptions) {
   const temperature = cfg?.temperature ?? 0.7;
   const llm = createChatModel({ provider, model: modelName, temperature });
 
-  // Load MCP tools
+  // Load MCP tools & built-in web search tool
   const mcpTools = await getMCPTools();
   const configTools = (cfg?.tools || []) as StructuredToolInterface[];
-  const allTools = [...configTools, ...mcpTools] as DynamicTool[];
+  const builtinTools = [createWebSearchTool()] as DynamicTool[];
+  const allTools = [...builtinTools, ...configTools, ...mcpTools] as DynamicTool[];
 
   const isMultiAgent = cfg?.agentMode === "multi";
 

@@ -10,6 +10,7 @@ import MDEditor from "@uiw/react-md-editor";
 import { AgentCouncilTimeline } from "./AgentCouncilTimeline";
 import { MermaidRenderer } from "./MermaidRenderer";
 import { AgentThoughtAccordion } from "./AgentThoughtAccordion";
+import { TelemetryBar } from "./TelemetryBar";
 
 interface AIMessageProps {
   message: MessageResponse;
@@ -108,7 +109,7 @@ export const AIMessage = ({
   const messageContent = getMessageContent(message);
   const hasTools = hasToolCalls(message);
   const toolCalls = getToolCalls(message);
-  const { hideToolMessages, theme } = useUISettings();
+  const { hideToolMessages, theme, model, provider } = useUISettings();
   const activeNode =
     "additional_kwargs" in message.data && message.data.additional_kwargs
       ? (message.data.additional_kwargs.agentNode as string | undefined)
@@ -295,6 +296,13 @@ export const AIMessage = ({
                 }}
               />
             </div>
+
+            {/* Real-Time Token, Cost & Latency Telemetry */}
+            <TelemetryBar
+              content={messageContent}
+              modelName={model}
+              provider={provider}
+            />
 
             {/* Quick Actions & Analytics Bar */}
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-gray-100 pt-2.5 text-xs text-gray-400 dark:border-gray-800">
