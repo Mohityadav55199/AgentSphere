@@ -163,12 +163,22 @@ Format:
   }
 
   /**
+   * Helper to safely bind tools to model if supported
+   */
+  private getInvoker(tools: DynamicTool[]) {
+    if (tools.length > 0 && "bindTools" in this.model && typeof this.model.bindTools === "function") {
+      return this.model.bindTools(tools);
+    }
+    return this.model;
+  }
+
+  /**
    * 2. 🔍 Researcher Node:
    * Gathers external intelligence, documentation, and references.
    */
   private async researcherNode(state: typeof MessagesAnnotation.State) {
     const rTools = this.getResearcherTools();
-    const invoker = rTools.length > 0 ? this.model.bindTools(rTools) : this.model;
+    const invoker = this.getInvoker(rTools);
 
     const researcherPrompt = new SystemMessage(
       `You are the 🔍 Lead Researcher in the AgentSphere Council.
@@ -193,7 +203,7 @@ Format your response starting with:
    */
   private async developerNode(state: typeof MessagesAnnotation.State) {
     const dTools = this.getDeveloperTools();
-    const invoker = dTools.length > 0 ? this.model.bindTools(dTools) : this.model;
+    const invoker = this.getInvoker(dTools);
 
     const devPrompt = new SystemMessage(
       `${this.systemPrompt}
@@ -220,7 +230,7 @@ Format your response starting with:
    */
   private async analystNode(state: typeof MessagesAnnotation.State) {
     const aTools = this.getAnalystTools();
-    const invoker = aTools.length > 0 ? this.model.bindTools(aTools) : this.model;
+    const invoker = this.getInvoker(aTools);
 
     const analystPrompt = new SystemMessage(
       `You are the 📊 Lead Data Scientist & Architecture Analyst in the AgentSphere Council.
