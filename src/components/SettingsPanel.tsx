@@ -94,14 +94,40 @@ export const SettingsPanel = ({
                   }`}
                 >
                   <Users size={15} className="text-purple-600 dark:text-purple-400" />
-                  <span>Multi-Agent Team</span>
+                  <span>5-Agent Council</span>
                 </button>
               </div>
               <p className="text-[11px] text-gray-500 dark:text-gray-400">
                 {agentMode === "multi"
-                  ? "👥 Supervisor decomposes tasks, Specialist executes code/MCP tools, and Critic verifies."
+                  ? "👥 5-Agent Autonomous Swarm: Supervisor (Strategy), Researcher (Web/Docs), Developer (Code/MCP), Analyst (Data/Mermaid), Auditor (Security/QA)."
                   : "⚡ Standard direct conversation with selected single persona."}
               </p>
+
+              {agentMode === "multi" && (
+                <div className="mt-2 rounded-lg border border-purple-100 bg-purple-50/50 p-2.5 text-xs dark:border-purple-900/40 dark:bg-purple-950/20">
+                  <div className="font-semibold text-purple-900 dark:text-purple-300 flex items-center gap-1.5 mb-1.5">
+                    <Sparkles className="h-3.5 w-3.5" />
+                    <span>Active 5-Agent Council Members</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px]">
+                    <div className="flex items-center gap-1.5 text-purple-800 dark:text-purple-300">
+                      <span>🎯</span> <span className="font-medium">Supervisor:</span> Planning & DAG Routing
+                    </div>
+                    <div className="flex items-center gap-1.5 text-sky-800 dark:text-sky-300">
+                      <span>🔍</span> <span className="font-medium">Researcher:</span> Live Docs, Web, APIs
+                    </div>
+                    <div className="flex items-center gap-1.5 text-emerald-800 dark:text-emerald-300">
+                      <span>💻</span> <span className="font-medium">Developer:</span> Code Engineering & MCP
+                    </div>
+                    <div className="flex items-center gap-1.5 text-amber-800 dark:text-amber-300">
+                      <span>📊</span> <span className="font-medium">Analyst:</span> Stats & Mermaid Diagrams
+                    </div>
+                    <div className="flex items-center gap-1.5 text-rose-800 dark:text-rose-300 sm:col-span-2">
+                      <span>🛡️</span> <span className="font-medium">Auditor:</span> OWASP Security & Quality Audit
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Model Configuration */}

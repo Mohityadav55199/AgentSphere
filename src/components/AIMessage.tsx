@@ -7,6 +7,7 @@ import { getMessageContent, hasToolCalls, getToolCalls } from "@/services/messag
 import { ToolCallDisplay } from "./ToolCallDisplay";
 import { useUISettings } from "@/contexts/UISettingsContext";
 import MDEditor from "@uiw/react-md-editor";
+import { AgentCouncilTimeline } from "./AgentCouncilTimeline";
 
 interface AIMessageProps {
   message: MessageResponse;
@@ -25,6 +26,9 @@ export const AIMessage = ({
   const hasTools = hasToolCalls(message);
   const toolCalls = getToolCalls(message);
   const { hideToolMessages, theme } = useUISettings();
+  const activeNode = (message.data as Record<string, unknown>)?.additional_kwargs
+    ? ((message.data as Record<string, unknown>).additional_kwargs as Record<string, unknown>)?.agentNode as string | undefined
+    : undefined;
 
   // Word count and reading time analytics
   const wordCount = messageContent ? messageContent.trim().split(/\s+/).filter(Boolean).length : 0;
@@ -93,6 +97,9 @@ export const AIMessage = ({
               "backdrop-blur-sm",
             )}
           >
+            {/* 5-Agent Council Stepper & Pipeline */}
+            <AgentCouncilTimeline content={messageContent} activeNode={activeNode} />
+
             <div
               data-color-mode={theme}
               className="[&_hr]:!my-1 [&_hr]:h-px [&_hr]:border-0 [&_hr]:border-t [&_hr]:border-gray-300 [&_li]:my-1 [&_ol]:ml-6 [&_ol]:list-decimal [&_ul]:ml-6 [&_ul]:list-disc"

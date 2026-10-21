@@ -80,24 +80,24 @@ export const Thread = ({ threadId, onFirstMessageSent }: ThreadProps) => {
 
   const PROMPT_SUGGESTIONS = [
     {
-      icon: "💻",
-      title: "Write Code",
-      prompt: "Write a Python script to parse JSON data and log key metrics.",
+      icon: "👥",
+      title: "5-Agent Swarm",
+      prompt: "Design and implement a rate-limited API gateway in TypeScript with an architecture flowchart.",
     },
     {
-      icon: "⚡",
-      title: "Fast Analysis",
-      prompt: "Explain how transformer models work in simple terms.",
+      icon: "🛡️",
+      title: "Secure Engineering",
+      prompt: "Write a secure JWT auth middleware with refresh tokens and verify OWASP edge cases.",
     },
     {
-      icon: "✍️",
-      title: "Draft Content",
-      prompt: "Draft a professional product launch announcement email.",
+      icon: "📊",
+      title: "Architecture & Diagram",
+      prompt: "Compare PostgreSQL vs DynamoDB for real-time analytics with a Mermaid diagram.",
     },
     {
-      icon: "💡",
-      title: "Brainstorm Ideas",
-      prompt: "Give me 5 creative ideas for an AI side project.",
+      icon: "🔍",
+      title: "Deep Tech Research",
+      prompt: "Research and compare LangGraph, AutoGen, and CrewAI architectures for production multi-agent systems.",
     },
   ];
 
@@ -140,13 +140,13 @@ export const Thread = ({ threadId, onFirstMessageSent }: ThreadProps) => {
             {/* Hero Header */}
             <div className="space-y-2 text-center">
               <div className="inline-flex items-center gap-2 rounded-full border border-indigo-200/80 bg-gradient-to-r from-indigo-50 to-blue-50 px-4 py-1.5 text-xs font-semibold text-indigo-700 shadow-xs dark:border-indigo-800/40 dark:from-indigo-950/60 dark:to-blue-950/60 dark:text-indigo-300">
-                <span>✨</span> Powered by LangGraph & Groq
+                <span>✨</span> 5-Agent Council & Model Context Protocol (MCP)
               </div>
               <h1 className="text-2xl font-extrabold tracking-tight text-gray-900 sm:text-4xl dark:text-white">
                 What would you like to build today?
               </h1>
               <p className="mx-auto max-w-lg text-xs text-gray-500 sm:text-sm dark:text-gray-400">
-                AgentSphere is ready to assist with coding, analysis, creative writing, and autonomous tool workflows.
+                AgentSphere deploys a collaborative 5-agent council (Supervisor, Researcher, Developer, Analyst, and Auditor) with live MCP tool access.
               </p>
             </div>
 

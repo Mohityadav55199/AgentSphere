@@ -110,30 +110,38 @@ async function* generator(
         typeof chunkData === "object" &&
         !Array.isArray(chunkData)
       ) {
-        // Handle updates: ['updates', { agent: { messages: [Array] } }]
-        if (
-          "agent" in chunkData &&
-          chunkData.agent &&
-          typeof chunkData.agent === "object" &&
-          !Array.isArray(chunkData.agent) &&
-          "messages" in chunkData.agent
-        ) {
-          const messages = Array.isArray(chunkData.agent.messages)
-            ? chunkData.agent.messages
-            : [chunkData.agent.messages];
-          for (const message of messages) {
-            if (!message) continue;
+        // Handle updates from any node in single or multi-agent graph
+        for (const [nodeName, nodeOutput] of Object.entries(chunkData as Record<string, unknown>)) {
+          if (
+            nodeOutput &&
+            typeof nodeOutput === "object" &&
+            !Array.isArray(nodeOutput) &&
+            "messages" in nodeOutput
+          ) {
+            const nodeData = nodeOutput as { messages: unknown };
+            const messages = Array.isArray(nodeData.messages)
+              ? nodeData.messages
+              : [nodeData.messages];
 
-            const isAIMessage =
-              message?.constructor?.name === "AIMessageChunk" ||
-              message?.constructor?.name === "AIMessage";
+            for (const message of messages) {
+              if (!message) continue;
 
-            if (!isAIMessage) continue;
+              const isAIMessage =
+                (message as Record<string, unknown>)?.constructor?.name === "AIMessageChunk" ||
+                (message as Record<string, unknown>)?.constructor?.name === "AIMessage";
 
-            const messageWithTools = message as Record<string, unknown>;
-            const processedMessage = processAIMessage(messageWithTools);
-            if (processedMessage) {
-              yield processedMessage;
+              if (!isAIMessage) continue;
+
+              const messageWithTools = message as Record<string, unknown>;
+              if (!messageWithTools.additional_kwargs) {
+                messageWithTools.additional_kwargs = {};
+              }
+              (messageWithTools.additional_kwargs as Record<string, unknown>).agentNode = nodeName;
+
+              const processedMessage = processAIMessage(messageWithTools);
+              if (processedMessage) {
+                yield processedMessage;
+              }
             }
           }
         }
@@ -180,7 +188,11 @@ function processAIMessage(message: Record<string, unknown>): MessageResponse | n
     if (text.trim()) {
       return {
         type: "ai",
-        data: { id: (message.id as string) || Date.now().toString(), content: text },
+        data: {
+          id: (message.id as string) || Date.now().toString(),
+          content: text,
+          additional_kwargs: (message.additional_kwargs as Record<string, unknown>) || undefined,
+        },
       };
     }
   }

@@ -14,13 +14,14 @@ import { ToolCall } from "@langchain/core/messages/tool";
 import { DynamicTool } from "@langchain/core/tools";
 
 /**
- * MultiAgentBuilder
+ * 5-Agent Council Architecture:
  * 
- * Implements a true Multi-Agent collaborative architecture in LangGraph:
- * 
- * 1. 🎯 Supervisor (Orchestrator): Assesses complexity, outlines goals, and plans delegation.
- * 2. 💻 Specialist (Execution Agent): Implements solution, binds and executes MCP tools.
- * 3. 🛡️ Critic (Verifier & Synthesizer): Validates against edge cases and produces final polished delivery.
+ * 1. 🎯 Supervisor (Strategist & Dispatcher): Decomposes objectives, plans steps, and dispatches to specialists.
+ * 2. 🔍 Researcher (Knowledge & Retrieval): Gathers context, documentation, web queries, and references.
+ * 3. 💻 Developer (Code & Systems Engineer): Focuses on implementation, coding, database queries, and MCP tool execution.
+ * 4. 📊 Analyst (Data & Diagram Specialist): Transforms raw data, statistical analysis, and generates Mermaid architecture/flowcharts.
+ * 5. 🛡️ Auditor (Security & Quality Critic): Scans for OWASP flaws, edge-case bugs, verifies accuracy, and synthesizes final delivery.
+ * + 🚦 Safety Governor (HITL): Human-in-the-loop tool approval for high-risk actions.
  */
 export class MultiAgentBuilder {
   private toolNode: ToolNode;
@@ -55,35 +56,89 @@ export class MultiAgentBuilder {
   }
 
   /**
-   * Supervisor Node:
-   * Analyzes user request, forms execution strategy, and initiates multi-agent collaboration.
+   * Filter tools scoped for specific agent roles
+   */
+  private getResearcherTools(): DynamicTool[] {
+    return this.tools.filter((t) => {
+      const name = t.name.toLowerCase();
+      return (
+        name.includes("search") ||
+        name.includes("fetch") ||
+        name.includes("web") ||
+        name.includes("browse") ||
+        name.includes("doc") ||
+        name.includes("arxiv")
+      );
+    });
+  }
+
+  private getDeveloperTools(): DynamicTool[] {
+    return this.tools.filter((t) => {
+      const name = t.name.toLowerCase();
+      return (
+        name.includes("file") ||
+        name.includes("code") ||
+        name.includes("exec") ||
+        name.includes("sqlite") ||
+        name.includes("postgres") ||
+        name.includes("git") ||
+        name.includes("terminal") ||
+        (!name.includes("search") && !name.includes("calc"))
+      );
+    });
+  }
+
+  private getAnalystTools(): DynamicTool[] {
+    return this.tools.filter((t) => {
+      const name = t.name.toLowerCase();
+      return (
+        name.includes("calc") ||
+        name.includes("math") ||
+        name.includes("stat") ||
+        name.includes("chart") ||
+        name.includes("analyze") ||
+        name.includes("sqlite")
+      );
+    });
+  }
+
+  /**
+   * 1. 🎯 Supervisor Node:
+   * Analyzes the goal, decomposes it, and selects the optimal specialist route.
    */
   private async supervisorNode(state: typeof MessagesAnnotation.State) {
     const messages = state.messages;
     const lastMessage = messages[messages.length - 1];
 
-    // Only run supervisor planning on initial user turn
-    const isFirstTurn = messages.filter((m) => m instanceof HumanMessage).length <= 1 &&
+    const isFirstTurn =
+      messages.filter((m) => m instanceof HumanMessage).length <= 1 &&
       messages.filter((m) => m instanceof AIMessage).length === 0;
 
     if (!isFirstTurn) {
-      // If continuing conversation, delegate directly to specialist
       return { messages: [] };
     }
 
     const supervisorPrompt = new SystemMessage(
-      `You are the Orchestration Supervisor in the AgentSphere Multi-Agent Team.
-Your role:
-1. Deconstruct the user's objective into clear execution steps.
-2. Formulate a brief, structured action plan.
-3. Identify which domain specialist (e.g., Code Engineer, Data Analyst, Researcher) and tools are needed.
+      `You are the 🎯 Orchestration Supervisor of the AgentSphere 5-Agent Council.
+Your council members:
+- 🔍 Researcher: Web retrieval, APIs, documentation search.
+- 💻 Developer: Implementation, code engineering, architecture, MCP execution.
+- 📊 Analyst: Quantitative data, statistics, Mermaid diagrams, charts.
+- 🛡️ Auditor: Security analysis, QA review, and final synthesis.
 
-Format your output starting with:
-### 🎯 Multi-Agent Plan
-**Goal:** [Brief statement of user goal]
-**Strategy:** [Numbered 2-3 step execution plan]
+Analyze the user's objective and provide a crisp 2-3 step plan.
+At the very end of your response, specify the next specialist on a new line using EXACTLY ONE of these tags:
+[ROUTE: RESEARCHER] (if the query requires looking up external docs, live web data, or APIs)
+[ROUTE: ANALYST] (if the query is primarily mathematical, data analysis, or visual diagramming)
+[ROUTE: DEVELOPER] (for coding, engineering, troubleshooting, or general technical requests)
 
-Keep it concise and ready for specialist execution.`
+Format:
+### 🎯 Supervisor Plan
+**Objective:** [Brief statement of user goal]
+**Strategy:** [Numbered 2-3 step plan]
+**Assigned Specialist:** [Specialist Name]
+
+[ROUTE: <TAG>]`
     );
 
     const response = await this.model.invoke([supervisorPrompt, lastMessage]);
@@ -91,36 +146,108 @@ Keep it concise and ready for specialist execution.`
   }
 
   /**
-   * Specialist Node:
-   * Carries out technical implementation and executes tools (including MCP servers).
+   * Evaluates Supervisor output to choose next node
    */
-  private async specialistNode(state: typeof MessagesAnnotation.State) {
-    const modelInvoker = this.tools.length > 0 ? this.model.bindTools(this.tools) : this.model;
+  private routeFromSupervisor(state: typeof MessagesAnnotation.State): "researcher" | "analyst" | "developer" {
+    const messages = state.messages;
+    const lastMessage = messages[messages.length - 1];
+    const content = typeof lastMessage?.content === "string" ? lastMessage.content : "";
 
-    const specialistPrompt = new SystemMessage(
-      `${this.systemPrompt}
+    if (content.includes("[ROUTE: RESEARCHER]")) {
+      return "researcher";
+    }
+    if (content.includes("[ROUTE: ANALYST]")) {
+      return "analyst";
+    }
+    return "developer";
+  }
 
-You are the Lead Specialist & Execution Agent in the AgentSphere Multi-Agent Team.
+  /**
+   * 2. 🔍 Researcher Node:
+   * Gathers external intelligence, documentation, and references.
+   */
+  private async researcherNode(state: typeof MessagesAnnotation.State) {
+    const rTools = this.getResearcherTools();
+    const invoker = rTools.length > 0 ? this.model.bindTools(rTools) : this.model;
+
+    const researcherPrompt = new SystemMessage(
+      `You are the 🔍 Lead Researcher in the AgentSphere Council.
 Your role:
-1. Follow the Supervisor's plan and execute the requested tasks.
-2. Leverage external MCP tools whenever data lookup, calculations, or external actions are required.
-3. Provide rigorous, production-grade implementation details with exact code or data answers.`
+1. Gather necessary facts, documentation, API signatures, or live web data required for the user's goal.
+2. If search/fetch tools are available, invoke them.
+3. Synthesize your research cleanly with sources, facts, and prerequisites.
+
+Format your response starting with:
+### 🔍 Research & Context Findings
+[Your synthesized facts, references, and prerequisites for the Developer and Analyst]`
     );
 
-    const messages = [specialistPrompt, ...state.messages];
-    const response = await modelInvoker.invoke(messages);
+    const messages = [researcherPrompt, ...state.messages];
+    const response = await invoker.invoke(messages);
     return { messages: [response] };
   }
 
   /**
-   * Critic & Synthesis Node:
-   * Reviews the specialist's response for accuracy, security, and edge cases.
+   * 3. 💻 Developer Node:
+   * Writes robust code, implementations, and calls system/developer MCP tools.
    */
-  private async criticNode(state: typeof MessagesAnnotation.State) {
+  private async developerNode(state: typeof MessagesAnnotation.State) {
+    const dTools = this.getDeveloperTools();
+    const invoker = dTools.length > 0 ? this.model.bindTools(dTools) : this.model;
+
+    const devPrompt = new SystemMessage(
+      `${this.systemPrompt}
+
+You are the 💻 Principal Software Engineer in the AgentSphere Council.
+Your role:
+1. Implement clean, modular, production-grade code adhering to best practices and TypeScript types.
+2. Use available MCP tools for filesystem or database interactions where needed.
+3. Build complete, runnable solutions with clear explanations and inline comments.
+
+Format your response starting with:
+### 💻 Developer Implementation
+[Your detailed implementation, code blocks, and system explanations]`
+    );
+
+    const messages = [devPrompt, ...state.messages];
+    const response = await invoker.invoke(messages);
+    return { messages: [response] };
+  }
+
+  /**
+   * 4. 📊 Analyst Node:
+   * Handles quantitative logic, structured data tables, and Mermaid architecture diagrams.
+   */
+  private async analystNode(state: typeof MessagesAnnotation.State) {
+    const aTools = this.getAnalystTools();
+    const invoker = aTools.length > 0 ? this.model.bindTools(aTools) : this.model;
+
+    const analystPrompt = new SystemMessage(
+      `You are the 📊 Lead Data Scientist & Architecture Analyst in the AgentSphere Council.
+Your role:
+1. Provide quantitative analysis, statistical reasoning, or performance tradeoffs.
+2. Whenever appropriate, generate a beautiful Mermaid diagram (flowchart, sequence, or class diagram) to visually explain the architecture or process.
+3. Structure complex information into clear comparison tables.
+
+Format your response starting with:
+### 📊 Data & Architecture Analysis
+[Your quantitative insights, comparison tables, and/or Mermaid visual diagram]`
+    );
+
+    const messages = [analystPrompt, ...state.messages];
+    const response = await invoker.invoke(messages);
+    return { messages: [response] };
+  }
+
+  /**
+   * 5. 🛡️ Auditor & Critic Node:
+   * Reviews the council's work for OWASP vulnerabilities, bugs, edge cases, and synthesizes final delivery.
+   */
+  private async auditorNode(state: typeof MessagesAnnotation.State) {
     const messages = state.messages;
     const lastMessage = messages[messages.length - 1];
 
-    // If specialist called tools, let the tool loop handle it first
+    // If last message has tool calls, let tools handle them
     if (
       "tool_calls" in lastMessage &&
       Array.isArray(lastMessage.tool_calls) &&
@@ -129,30 +256,33 @@ Your role:
       return { messages: [] };
     }
 
-    // If response is short or already finalized, return
     const content = typeof lastMessage.content === "string" ? lastMessage.content : "";
-    if (content.includes("### 🛡️ Review & Verification") || content.length < 50) {
+    if (content.includes("### 🛡️ Security Audit & Verification")) {
       return { messages: [] };
     }
 
-    const criticPrompt = new SystemMessage(
-      `You are the Quality & Security Critic in the AgentSphere Multi-Agent Team.
-Review the specialist's implementation above.
-If the solution is complete and accurate, append a brief verification note:
+    const auditorPrompt = new SystemMessage(
+      `You are the 🛡️ Chief Security Auditor & Quality Critic in the AgentSphere Council.
+Your role:
+1. Review all code and proposals produced by the team above.
+2. Check for security vulnerabilities (OWASP top 10, injection, credential leaks), performance bottlenecks, and edge cases.
+3. Provide a concise verification summary with actionable recommendations and conclude the solution.
 
-### 🛡️ Review & Verification
-- **Correctness & Edge Cases:** Verified.
-- **Recommendations:** [1 actionable bullet or "None, implementation is optimal."]
+Format your response starting with:
+### 🛡️ Security Audit & Verification
+- **Security Posture:** [Verified Safe / Identified Risk]
+- **Edge Cases Checked:** [List 1-2 edge cases verified]
+- **Council Verdict:** [Approved / Enhanced]
 
-If there are bugs or security flaws, fix them directly in this response.`
+[Conclude with final advice or a polished wrap-up summary]`
     );
 
-    const response = await this.model.invoke([criticPrompt, ...messages]);
+    const response = await this.model.invoke([auditorPrompt, ...messages]);
     return { messages: [response] };
   }
 
   /**
-   * Checks whether the specialist made tool calls requiring human approval.
+   * Checks whether developer or specialist made tool calls requiring approval
    */
   private shouldApproveTool(state: typeof MessagesAnnotation.State) {
     const { messages } = state;
@@ -164,11 +294,11 @@ If there are bugs or security flaws, fix them directly in this response.`
     ) {
       return "tool_approval";
     }
-    return "critic";
+    return "auditor";
   }
 
   /**
-   * Human-in-the-loop tool approval node
+   * Human-in-the-loop tool approval node (Safety Governor)
    */
   private async approveToolCall(state: typeof MessagesAnnotation.State) {
     if (this.approveAllTools) {
@@ -193,7 +323,7 @@ If there are bugs or security flaws, fix them directly in this response.`
           data: string | ContentBlock[];
         }
       >({
-        question: "Is this correct?",
+        question: `Agent wants to execute ${toolCall.name}. Approve action?`,
         toolCall: toolCall,
       });
 
@@ -225,7 +355,7 @@ If there are bugs or security flaws, fix them directly in this response.`
           tool_call_id: toolCall.id,
         });
         return new Command({
-          goto: "specialist",
+          goto: "developer",
           update: { messages: [toolMessage] },
         });
       }
@@ -236,25 +366,37 @@ If there are bugs or security flaws, fix them directly in this response.`
   build() {
     const stateGraph = new StateGraph(MessagesAnnotation);
     stateGraph
+      // 5 Council Nodes + Tools + Safety Governor
       .addNode("supervisor", this.supervisorNode.bind(this))
-      .addNode("specialist", this.specialistNode.bind(this))
+      .addNode("researcher", this.researcherNode.bind(this))
+      .addNode("developer", this.developerNode.bind(this))
+      .addNode("analyst", this.analystNode.bind(this))
+      .addNode("auditor", this.auditorNode.bind(this))
       .addNode("tools", this.toolNode)
       .addNode("tool_approval", this.approveToolCall.bind(this), {
-        ends: ["tools", "specialist"],
+        ends: ["tools", "developer"],
       })
-      .addNode("critic", this.criticNode.bind(this))
-      // Edges: START -> supervisor -> specialist
+      // START -> Supervisor
       .addEdge(START, "supervisor")
-      .addEdge("supervisor", "specialist")
-      // specialist -> tool_approval OR critic
-      .addConditionalEdges("specialist", this.shouldApproveTool.bind(this), [
-        "tool_approval",
-        "critic",
+      // Supervisor -> Conditional routing to Researcher, Developer, or Analyst
+      .addConditionalEdges("supervisor", this.routeFromSupervisor.bind(this), [
+        "researcher",
+        "developer",
+        "analyst",
       ])
-      // tools loop back to specialist
-      .addEdge("tools", "specialist")
-      // critic finishes the response
-      .addEdge("critic", END);
+      // Researcher hands off to Developer for technical implementation
+      .addEdge("researcher", "developer")
+      // Developer -> checks tool calls (tool_approval) or hands off to Auditor
+      .addConditionalEdges("developer", this.shouldApproveTool.bind(this), [
+        "tool_approval",
+        "auditor",
+      ])
+      // Tools loop back to Developer
+      .addEdge("tools", "developer")
+      // Analyst hands off to Auditor
+      .addEdge("analyst", "auditor")
+      // Auditor concludes the council's work
+      .addEdge("auditor", END);
 
     return stateGraph.compile({ checkpointer: this.checkpointer });
   }

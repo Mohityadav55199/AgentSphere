@@ -110,14 +110,14 @@ export const Header = ({ toggleSidebar, onOpenMCPConfig }: HeaderProps) => {
             }`}
             title={
               agentMode === "multi"
-                ? "Multi-Agent Mode: Supervisor, Specialist, and Critic collaborate on every task"
+                ? "5-Agent Council Mode: Supervisor, Researcher, Developer, Analyst, and Auditor collaborate on every task"
                 : "Single-Agent Mode: Direct conversation with selected persona"
             }
           >
             {agentMode === "multi" ? (
               <>
                 <Users size={14} className="text-purple-600 dark:text-purple-400" />
-                <span className="font-semibold">Multi-Agent</span>
+                <span className="font-semibold">5-Agent Council</span>
               </>
             ) : (
               <>
