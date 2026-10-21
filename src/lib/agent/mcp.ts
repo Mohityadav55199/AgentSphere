@@ -102,9 +102,12 @@ type SanitizedTool = ReturnType<typeof sanitizeTool>;
 let mcpToolsCache: { tools: SanitizedTool[]; ts: number } | null = null;
 const MCP_CACHE_TTL_MS = 60_000; // 60 seconds
 
+const MCP_TOOL_TIMEOUT_MS = 30_000; // 30s execution timeout per tool
+
 /**
  * Gets tools from the MCP client if available.
  * Sanitizes tool schemas to be compatible with Google Gemini's function calling API.
+ * Wraps tool execution with a 30s timeout guard to prevent hung child processes.
  * Results are cached for 60s to avoid DB + network overhead on every message.
  */
 export async function getMCPTools() {
@@ -120,8 +123,32 @@ export async function getMCPTools() {
     }
 
     const tools = await client.getTools();
-    const sanitizedTools = tools.map((tool) => sanitizeTool(tool));
-    console.log(`Loaded ${sanitizedTools.length} tools from MCP servers`);
+    const sanitizedTools = tools.map((tool) => {
+      const sanitized = sanitizeTool(tool);
+      // Attach 30-second execution timeout guard
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const originalCall = (sanitized as any).call?.bind(sanitized);
+      if (originalCall) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (sanitized as any).call = async (arg: any, config?: any) => {
+          let timer: NodeJS.Timeout | undefined;
+          const timeoutPromise = new Promise((_, reject) => {
+            timer = setTimeout(
+              () => reject(new Error(`MCP tool '${sanitized.name}' execution timed out after 30s`)),
+              MCP_TOOL_TIMEOUT_MS
+            );
+          });
+          try {
+            return await Promise.race([originalCall(arg, config), timeoutPromise]);
+          } finally {
+            if (timer) clearTimeout(timer);
+          }
+        };
+      }
+      return sanitized;
+    });
+
+    console.log(`Loaded ${sanitizedTools.length} tools from MCP servers with 30s timeout guards`);
     mcpToolsCache = { tools: sanitizedTools, ts: Date.now() };
     return sanitizedTools;
   } catch (error) {

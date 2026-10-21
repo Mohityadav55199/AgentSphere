@@ -46,6 +46,12 @@ export async function GET(req: NextRequest) {
   }
 
   const user = await getCurrentUser();
+  const abortController = new AbortController();
+
+  // If incoming request is aborted, cancel agent execution
+  req.signal?.addEventListener("abort", () => {
+    abortController.abort();
+  });
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream<Uint8Array>({
@@ -77,30 +83,38 @@ export async function GET(req: NextRequest) {
             },
           });
           for await (const chunk of iterable) {
+            if (abortController.signal.aborted) {
+              break;
+            }
             // Only forward AI/tool chunks; ignore human/system
             if (chunk.type === "ai" || chunk.type === "tool") {
               send(chunk);
             }
           }
 
-          // Signal completion
-          controller.enqueue(encoder.encode("event: done\n"));
-          controller.enqueue(encoder.encode("data: {}\n\n"));
+          if (!abortController.signal.aborted) {
+            // Signal completion
+            controller.enqueue(encoder.encode("event: done\n"));
+            controller.enqueue(encoder.encode("data: {}\n\n"));
+          }
         } catch (err: unknown) {
-          // Emit an error event (client onerror will capture general network; providing data for diagnostics)
-          controller.enqueue(encoder.encode("event: error\n"));
-          controller.enqueue(
-            encoder.encode(
-              `data: ${JSON.stringify({ message: (err as Error)?.message || "Stream error", threadId })}\n\n`,
-            ),
-          );
+          if (!abortController.signal.aborted) {
+            // Emit an error event
+            controller.enqueue(encoder.encode("event: error\n"));
+            controller.enqueue(
+              encoder.encode(
+                `data: ${JSON.stringify({ message: (err as Error)?.message || "Stream error", threadId })}\n\n`,
+              ),
+            );
+          }
         } finally {
           controller.close();
         }
       })();
     },
     cancel() {
-      // If client disconnects, nothing special yet (LangGraph stream will stop as iteration halts)
+      // Cleanly abort in-flight execution when client disconnects
+      abortController.abort();
     },
   });
 

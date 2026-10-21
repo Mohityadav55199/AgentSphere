@@ -17,17 +17,12 @@ function isValidKey(key?: string): boolean {
 }
 
 /**
- * Central factory for creating a chat model based on provider + model name.
+ * Instantiates a single chat model provider
  */
-export function createChatModel({
-  provider = getDefaultProvider(),
-  model,
-  temperature = 1,
-}: CreateChatModelOptions): BaseChatModel {
+function createSingleModel(provider: string, modelName: string, temperature: number): BaseChatModel {
   switch (provider) {
     case "groq": {
-      // Fix deprecated or non-existent llama-3.3-70b-versatile model name
-      const groqModel = !model || model === "llama-3.3-70b-versatile" ? "openai/gpt-oss-120b" : model;
+      const groqModel = !modelName || modelName === "llama-3.3-70b-versatile" ? "openai/gpt-oss-120b" : modelName;
       return new ChatOpenAI({
         model: groqModel,
         temperature,
@@ -39,19 +34,19 @@ export function createChatModel({
     }
     case "openai":
       return new ChatOpenAI({
-        model: model || "gpt-4o",
+        model: modelName || "gpt-4o",
         temperature,
         apiKey: process.env.OPENAI_API_KEY || "missing-api-key",
       });
     case "anthropic":
       return new ChatAnthropic({
-        model: model || "claude-3-5-sonnet-latest",
+        model: modelName || "claude-3-5-sonnet-latest",
         temperature,
         apiKey: process.env.ANTHROPIC_API_KEY || "missing-api-key",
       });
     case "google":
     default: {
-      const googleModel = !model || model === "gemini-3-flash-preview" ? "gemini-2.5-flash" : model;
+      const googleModel = !modelName || modelName === "gemini-3-flash-preview" ? "gemini-2.5-flash" : modelName;
       return new ChatGoogleGenerativeAI({
         model: googleModel,
         temperature,
@@ -59,6 +54,51 @@ export function createChatModel({
       });
     }
   }
+}
+
+/**
+ * Central factory for creating a chat model with zero-downtime fallback routing.
+ * If the primary provider hits a 429 rate limit or outage, it automatically retries with backup models.
+ */
+export function createChatModel({
+  provider = getDefaultProvider(),
+  model,
+  temperature = 1,
+}: CreateChatModelOptions): BaseChatModel {
+  const primaryModel = createSingleModel(provider, model, temperature);
+
+  // Build fallback candidates only for providers that have valid API keys
+  const fallbackCandidates: BaseChatModel[] = [];
+  const providersToCheck = ["google", "groq", "openai", "anthropic"].filter((p) => p !== provider);
+
+  for (const fbProvider of providersToCheck) {
+    const isConfigured =
+      (fbProvider === "google" && isValidKey(process.env.GOOGLE_API_KEY)) ||
+      (fbProvider === "groq" && isValidKey(process.env.GROQ_API_KEY)) ||
+      (fbProvider === "openai" && isValidKey(process.env.OPENAI_API_KEY)) ||
+      (fbProvider === "anthropic" && isValidKey(process.env.ANTHROPIC_API_KEY));
+
+    if (isConfigured) {
+      const fbModelName = getDefaultModel(fbProvider);
+      try {
+        const fbModel = createSingleModel(fbProvider, fbModelName, temperature);
+        fallbackCandidates.push(fbModel);
+      } catch {
+        // ignore
+      }
+    }
+  }
+
+  // Bind fallback router if candidates are available
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (fallbackCandidates.length > 0 && typeof (primaryModel as any).withFallbacks === "function") {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (primaryModel as any).withFallbacks({
+      fallbacks: fallbackCandidates,
+    }) as unknown as BaseChatModel;
+  }
+
+  return primaryModel;
 }
 export interface AgentConfigOptions {
   model?: string;
