@@ -35,6 +35,7 @@ export const MessageInput = ({
     setApproveAllTools,
     temperature,
     systemPrompt,
+    agentMode,
   } = useUISettings();
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -162,6 +163,7 @@ export const MessageInput = ({
       attachments: attachments.length > 0 ? attachments : undefined,
       temperature,
       systemPrompt,
+      agentMode,
     });
     setMessage("");
     setAttachments([]);

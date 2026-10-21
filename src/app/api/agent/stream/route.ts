@@ -26,6 +26,7 @@ export async function GET(req: NextRequest) {
   const temperatureParam = searchParams.get("temperature");
   const temperature = temperatureParam ? parseFloat(temperatureParam) : undefined;
   const systemPrompt = searchParams.get("systemPrompt") || undefined;
+  const agentMode = (searchParams.get("agentMode") as "single" | "multi") || "single";
 
   const tools = toolsParam
     ? toolsParam
@@ -71,6 +72,7 @@ export async function GET(req: NextRequest) {
               attachments,
               temperature,
               systemPrompt,
+              agentMode,
               userId: user?.id,
             },
           });

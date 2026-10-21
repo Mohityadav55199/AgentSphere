@@ -50,6 +50,7 @@ export function createMessageStream(
     params.set("approveAllTools", opts.approveAllTools ? "true" : "false");
   if (opts?.temperature !== undefined) params.set("temperature", opts.temperature.toString());
   if (opts?.systemPrompt) params.set("systemPrompt", opts.systemPrompt);
+  if (opts?.agentMode) params.set("agentMode", opts.agentMode);
   if (opts?.attachments && opts.attachments.length > 0) {
     // Serialize attachments as JSON string for query parameter
     params.set("attachments", JSON.stringify(opts.attachments));

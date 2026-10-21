@@ -1,19 +1,22 @@
 import React, { useState } from "react";
-import { PanelLeftClose, Sparkles, Plus, Download, Loader2, Sun, Moon, LogIn, LogOut, User as UserIcon } from "lucide-react";
+import { PanelLeftClose, Sparkles, Plus, Download, Loader2, Sun, Moon, LogIn, LogOut, User as UserIcon, Server, Users, Bot } from "lucide-react";
 import Link from "next/link";
 import { useUISettings } from "@/contexts/UISettingsContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useThreads } from "@/hooks/useThreads";
 import { useRouter, usePathname } from "next/navigation";
 import { ProfileModal } from "@/components/ProfileModal";
+import { useMCPTools } from "@/hooks/useMCPTools";
 
 interface HeaderProps {
   toggleSidebar: () => void;
+  onOpenMCPConfig?: () => void;
 }
 
-export const Header = ({ toggleSidebar }: HeaderProps) => {
-  const { provider, model, activePersona, theme, toggleTheme } = useUISettings();
+export const Header = ({ toggleSidebar, onOpenMCPConfig }: HeaderProps) => {
+  const { provider, model, activePersona, theme, toggleTheme, agentMode, setAgentMode } = useUISettings();
   const { user, logout, openAuthModal, checkAuth } = useAuth();
+  const { data: mcpToolsData } = useMCPTools();
   const { createThread } = useThreads();
   const router = useRouter();
   const pathname = usePathname();
@@ -96,6 +99,52 @@ export const Header = ({ toggleSidebar }: HeaderProps) => {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Multi-Agent vs Single Agent Mode Toggle */}
+          <button
+            suppressHydrationWarning
+            onClick={() => setAgentMode(agentMode === "multi" ? "single" : "multi")}
+            className={`flex cursor-pointer items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all ${
+              agentMode === "multi"
+                ? "border-purple-300 bg-purple-50 text-purple-700 shadow-xs dark:border-purple-800 dark:bg-purple-950/50 dark:text-purple-300"
+                : "border-gray-200 bg-white text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-750"
+            }`}
+            title={
+              agentMode === "multi"
+                ? "Multi-Agent Mode: Supervisor, Specialist, and Critic collaborate on every task"
+                : "Single-Agent Mode: Direct conversation with selected persona"
+            }
+          >
+            {agentMode === "multi" ? (
+              <>
+                <Users size={14} className="text-purple-600 dark:text-purple-400" />
+                <span className="font-semibold">Multi-Agent</span>
+              </>
+            ) : (
+              <>
+                <Bot size={14} className="text-gray-500 dark:text-gray-400" />
+                <span className="hidden sm:inline">Single Agent</span>
+              </>
+            )}
+          </button>
+
+          {/* MCP Servers Button */}
+          {onOpenMCPConfig && (
+            <button
+              suppressHydrationWarning
+              onClick={onOpenMCPConfig}
+              className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 shadow-xs transition-colors hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-750"
+              title="Add and configure Model Context Protocol (MCP) servers"
+            >
+              <Server size={14} className="text-emerald-600 dark:text-emerald-400" />
+              <span className="hidden md:inline">MCP Servers</span>
+              {(mcpToolsData?.totalCount ?? 0) > 0 && (
+                <span className="rounded-full bg-emerald-100 px-1.5 py-0.2 text-[10px] font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                  {mcpToolsData?.totalCount}
+                </span>
+              )}
+            </button>
+          )}
+
           {/* Dark / Light Theme Toggle */}
           <button suppressHydrationWarning
             onClick={toggleTheme}

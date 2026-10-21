@@ -28,7 +28,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       <div className="bg-gray-150 flex min-w-0 flex-1 flex-col">
         <FreeTierBanner />
         <div className="z-10">
-          <Header toggleSidebar={toggleSidebar} />
+          <Header toggleSidebar={toggleSidebar} onOpenMCPConfig={openMCPConfig} />
         </div>
 
         {/* Main content */}

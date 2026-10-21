@@ -162,23 +162,26 @@ export function MCPServerList({ isOpen, onClose }: MCPServerListProps) {
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-        <div className="max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-lg bg-white shadow-xl">
-          <div className="flex items-center justify-between border-b border-gray-200 p-4">
-            <h2 className="text-lg font-semibold text-gray-900">MCP Servers</h2>
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">
+        <div className="flex max-h-[90vh] w-full max-w-4xl flex-col rounded-xl border border-gray-200 bg-white shadow-2xl dark:border-gray-800 dark:bg-gray-900">
+          <div className="flex items-center justify-between border-b border-gray-100 p-4 dark:border-gray-800">
+            <div>
+              <h2 className="text-base font-bold text-gray-900 dark:text-white">MCP Servers</h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Manage connected Model Context Protocol servers & tools</p>
+            </div>
             <div className="flex items-center gap-2">
               <button suppressHydrationWarning
                 onClick={() => setShowForm(true)}
-                className="bg-primary text-primary-foreground hover:bg-primary/90 flex cursor-pointer items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors"
+                className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-all hover:bg-blue-700 active:scale-95"
               >
-                <Plus size={16} />
-                Add Server
+                <Plus size={15} />
+                Add MCP Server
               </button>
               <button suppressHydrationWarning
                 onClick={fetchServers}
                 disabled={loading}
-                className="flex cursor-pointer items-center gap-1 px-2 py-1.5 text-sm text-gray-600 transition-colors hover:text-gray-800"
-                title="Refresh"
+                className="flex cursor-pointer items-center gap-1 rounded-md p-1.5 text-xs text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+                title="Refresh servers"
               >
                 {loading ? (
                   <Loader2 size={16} className="animate-spin" />
@@ -188,54 +191,61 @@ export function MCPServerList({ isOpen, onClose }: MCPServerListProps) {
               </button>
               <button suppressHydrationWarning
                 onClick={onClose}
-                className="cursor-pointer text-gray-400 transition-colors hover:text-gray-600"
+                className="cursor-pointer rounded-md p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+                aria-label="Close"
               >
-                <X size={20} />
+                <X size={18} />
               </button>
             </div>
           </div>
 
-          <div className="max-h-[calc(90vh-120px)] overflow-y-auto p-4">
+          <div className="flex-1 overflow-y-auto p-4">
             {loading && servers.length === 0 ? (
-              <div className="flex items-center justify-center py-8">
-                <Loader2 size={24} className="animate-spin text-gray-400" />
+              <div className="flex items-center justify-center py-12">
+                <Loader2 size={24} className="animate-spin text-blue-500" />
               </div>
             ) : servers.length === 0 ? (
-              <div className="py-8 text-center text-gray-500">
-                <Server size={48} className="mx-auto mb-4 text-gray-300" />
-                <p className="text-lg font-medium">No MCP servers configured</p>
-                <p className="text-sm">Add your first MCP server to get started</p>
+              <div className="py-12 text-center text-gray-500 dark:text-gray-400">
+                <Server size={44} className="mx-auto mb-3 text-gray-300 dark:text-gray-700" />
+                <p className="text-base font-semibold text-gray-800 dark:text-gray-200">No MCP servers configured yet</p>
+                <p className="mt-1 text-xs">Add your first MCP server (Fetch, SQLite, Brave, Memory) to empower your agents with tools.</p>
+                <button
+                  onClick={() => setShowForm(true)}
+                  className="mt-4 inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-blue-700"
+                >
+                  <Plus size={14} /> Add First Server
+                </button>
               </div>
             ) : (
               <div className="space-y-3">
                 {servers.map((server) => (
                   <div
                     key={server.id}
-                    className="flex items-center justify-between rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50"
+                    className="flex items-center justify-between rounded-xl border border-gray-200 bg-white p-4 shadow-xs transition-colors hover:border-gray-300 dark:border-gray-800 dark:bg-gray-850 dark:hover:border-gray-700"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-2">
-                        {server.type === "stdio" ? (
-                          <Server size={20} className="text-primary" />
-                        ) : (
-                          <Globe size={20} className="text-green-500" />
-                        )}
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800">
+                          {server.type === "stdio" ? (
+                            <Server size={18} className="text-blue-600 dark:text-blue-400" />
+                          ) : (
+                            <Globe size={18} className="text-emerald-600 dark:text-emerald-400" />
+                          )}
+                        </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <h3 className="font-medium text-gray-900">{server.name}</h3>
+                            <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{server.name}</h3>
                             {server.type === "http" && (
                               <OAuthStatusBadge status={server.oauthStatus} />
                             )}
                           </div>
-                          <div className="text-sm text-gray-500">
-                            <span className="mr-2 inline-block rounded bg-gray-100 px-2 py-0.5 text-xs">
+                          <div className="mt-1 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                            <span className="rounded bg-gray-100 px-2 py-0.5 text-[10px] font-mono uppercase dark:bg-gray-800 dark:text-gray-300">
                               {server.type}
                             </span>
-                            {server.type === "stdio" ? (
-                              <span>{server.command}</span>
-                            ) : (
-                              <span>{server.url}</span>
-                            )}
+                            <span className="font-mono text-[11px] truncate max-w-md">
+                              {server.type === "stdio" ? server.command : server.url}
+                            </span>
                           </div>
                         </div>
                       </div>

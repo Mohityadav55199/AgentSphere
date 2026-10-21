@@ -46,10 +46,24 @@
 ### 📥 1-Click Chat Export (Markdown `.md`)
 - Export complete conversation history as cleanly formatted Markdown files.
 
-### 🛠️ Model Context Protocol (MCP) & Tool Approval
-- Connect custom MCP servers via Web UI (stdio and HTTP transports).
-- Human-in-the-loop tool execution approval with interactive allow/deny controls.
+### 👥 True Multi-Agent Team Collaboration
+- Toggle between **Single Agent Mode** and **Multi-Agent Team Mode** with 1 click.
+- **Supervisor Node**: Automatically deconstructs complex goals into structured milestones.
+- **Specialist Node**: Implements solutions, writes code, and interacts with external MCP servers.
+- **Critic & Quality Verifier Node**: Reviews the specialist's work for edge cases, bugs, and security before final synthesis.
 
+### 🛠️ Model Context Protocol (MCP) Server Studio
+- Access MCP server configuration anywhere directly from the top navigation bar.
+- **Visual Creation Form**: Effortlessly configure local STDIO CLI commands or remote HTTP/SSE servers without touching raw JSON.
+- **1-Click MCP Presets**: Instantly connect popular MCP servers:
+  - 🌐 **Fetch MCP**: Read and scrape live web pages into markdown.
+  - 🗄️ **SQLite MCP**: Execute SQL queries and inspect databases.
+  - 🧠 **Memory MCP**: Knowledge graph entity memory.
+  - 📁 **Filesystem MCP**: Safe file inspection and reading.
+  - 🔍 **Brave Search MCP**: Live web search API.
+  - ☁️ **Remote HTTP / SSE MCP**: Custom remote endpoints.
+- **Claude Desktop & Cursor Compatible**: Import or export raw JSON configs with auto-formatting and instant validation.
+- **Human-in-the-Loop Governance**: Real-time allow/deny approval controls before tools execute.
 ---
 
 ## 🛠️ Tech Stack

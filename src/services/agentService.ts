@@ -40,6 +40,7 @@ export async function streamResponse(params: {
       approveAllTools: opts?.approveAllTools,
       temperature: opts?.temperature,
       systemPrompt: opts?.systemPrompt,
+      agentMode: opts?.agentMode,
     });
 
     // Type assertion needed for Command union with state update in v1
@@ -76,6 +77,9 @@ export async function streamResponse(params: {
     provider: opts?.provider,
     tools: opts?.tools,
     approveAllTools: opts?.approveAllTools,
+    temperature: opts?.temperature,
+    systemPrompt: opts?.systemPrompt,
+    agentMode: opts?.agentMode,
   });
 
   // Type assertion needed for Command union with state update in v1

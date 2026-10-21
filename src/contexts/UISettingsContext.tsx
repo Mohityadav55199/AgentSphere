@@ -96,6 +96,8 @@ interface UISettingsContextType {
   activePersona: Persona;
   theme: "light" | "dark";
   toggleTheme: () => void;
+  agentMode: "single" | "multi";
+  setAgentMode: (mode: "single" | "multi") => void;
 }
 
 const UISettingsContext = createContext<UISettingsContextType | undefined>(undefined);
@@ -115,6 +117,7 @@ export const UISettingsProvider = ({ children }: UISettingsProviderProps) => {
   const [temperature, setTemperatureState] = useState<number>(0.7);
   const [systemPrompt, setSystemPromptState] = useState<string>(PERSONAS.default.prompt);
   const [theme, setThemeState] = useState<"light" | "dark">("light");
+  const [agentMode, setAgentModeState] = useState<"single" | "multi">("single");
 
   // Fetch available models from backend based on API keys
   useEffect(() => {
@@ -192,6 +195,9 @@ export const UISettingsProvider = ({ children }: UISettingsProviderProps) => {
         document.documentElement.classList.remove("dark");
       }
     }
+    if (saved.agentMode === "single" || saved.agentMode === "multi") {
+      setAgentModeState(saved.agentMode);
+    }
   }, []);
 
   const toggleToolMessages = () => setHideToolMessages((prev) => !prev);
@@ -236,6 +242,11 @@ export const UISettingsProvider = ({ children }: UISettingsProviderProps) => {
     }
   };
 
+  const setAgentMode = (mode: "single" | "multi") => {
+    setAgentModeState(mode);
+    saveSetting("agentMode", mode);
+  };
+
   const activePersona = PERSONAS[persona] || PERSONAS.default;
 
   return (
@@ -260,6 +271,8 @@ export const UISettingsProvider = ({ children }: UISettingsProviderProps) => {
         activePersona,
         theme,
         toggleTheme,
+        agentMode,
+        setAgentMode,
       }}
     >
       {children}

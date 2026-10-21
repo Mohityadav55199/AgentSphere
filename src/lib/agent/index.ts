@@ -9,6 +9,7 @@ import {
 } from "./util";
 import { getMCPTools } from "./mcp";
 import { AgentBuilder } from "./builder";
+import { MultiAgentBuilder } from "./multiAgent";
 
 let setupPromise: Promise<void> | null = null;
 
@@ -54,6 +55,18 @@ async function createAgent(cfg?: AgentConfigOptions) {
   const configTools = (cfg?.tools || []) as StructuredToolInterface[];
   const allTools = [...configTools, ...mcpTools] as DynamicTool[];
 
+  const isMultiAgent = cfg?.agentMode === "multi";
+
+  if (isMultiAgent) {
+    return new MultiAgentBuilder({
+      llm,
+      tools: allTools,
+      prompt: cfg?.systemPrompt || SYSTEM_PROMPT,
+      checkpointer: postgresCheckpointer,
+      approveAllTools: cfg?.approveAllTools || false,
+    }).build();
+  }
+
   const agent = new AgentBuilder({
     llm,
     tools: allTools,
@@ -78,6 +91,7 @@ export async function ensureAgent(cfg?: AgentConfigOptions) {
     approveAllTools: cfg?.approveAllTools,
     temperature: cfg?.temperature,
     systemPrompt: cfg?.systemPrompt,
+    agentMode: cfg?.agentMode || "single",
   });
 
   if (!agentCache || agentCache.key !== key) {

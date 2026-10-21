@@ -67,6 +67,7 @@ export interface AgentConfigOptions {
   tools?: unknown[]; // tools from registry or direct tool objects
   approveAllTools?: boolean; // if true, skip tool approval prompts
   temperature?: number;
+  agentMode?: "single" | "multi";
 }
 
 /**
