@@ -120,6 +120,8 @@ export function useChatThread({ threadId }: UseChatThreadOptions): UseChatThread
           currentMessageRef.current = null;
           stream.close();
           streamRef.current = null;
+          // Invalidate threads query so newly assigned titles update immediately in the sidebar
+          void queryClient.invalidateQueries({ queryKey: ["threads"] });
         });
 
         stream.addEventListener("error", async (ev: Event) => {
@@ -183,6 +185,7 @@ export function useChatThread({ threadId }: UseChatThreadOptions): UseChatThread
 
       // Handle the streaming response
       await handleStreamResponse({ threadId, text, opts });
+      void queryClient.invalidateQueries({ queryKey: ["threads"] });
     },
     [threadId, queryClient, handleStreamResponse],
   );

@@ -1,19 +1,25 @@
 import prisma from "@/lib/database/prisma";
 
 function generateSmartTitle(seed: string): string {
-  const clean = seed
+  let clean = seed
     .replace(/[#*`_~]/g, "") // remove markdown
     .replace(/\s+/g, " ")
     .trim();
   if (clean.length === 0) return "New thread";
 
-  // Take first 5 words or 40 characters
-  const words = clean.split(" ");
+  // Strip conversational/greeting prefixes to produce punchy, descriptive titles
+  const stripped = clean.replace(
+    /^(can you (please )?|could you (please )?|please |help me (with )?|i want to |i need to |how to |how do i |tell me about |what is |what are |explain (to me )?|write a |write an |create a |create an |generate a |give me (a |an )?)/i,
+    ""
+  ).trim();
+
+  const titleSource = stripped.length > 3 ? stripped : clean;
+
+  // Take first 6 words or up to 38 characters
+  const words = titleSource.split(" ");
   const shortTitle = words.slice(0, 6).join(" ");
-  if (shortTitle.length > 35) {
-    return shortTitle.substring(0, 32) + "...";
-  }
-  return shortTitle.charAt(0).toUpperCase() + shortTitle.slice(1);
+  const finalTitle = shortTitle.length > 38 ? shortTitle.substring(0, 35) + "..." : shortTitle;
+  return finalTitle.charAt(0).toUpperCase() + finalTitle.slice(1);
 }
 
 /**
@@ -34,7 +40,16 @@ export async function ensureThread(threadId: string, titleSeed?: string, userId?
       if (dbUser) updateData.userId = dbUser.id;
     }
 
-    if (existing.title === "New thread" && titleSeed) {
+    // Rename if current title is any variation of the default or untitled chat
+    const isDefaultTitle =
+      !existing.title ||
+      existing.title === "New thread" ||
+      existing.title === "Untitled thread" ||
+      existing.title === "New chat" ||
+      existing.title === "Untitled" ||
+      existing.title.toLowerCase().startsWith("thread ");
+
+    if (isDefaultTitle && titleSeed) {
       updateData.title = smartTitle;
     }
     if (Object.keys(updateData).length > 0) {

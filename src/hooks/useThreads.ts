@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import type { Thread } from "@/types/message";
-import { fetchThreads, createNewThread, deleteThread, updateThread } from "@/services/chatService";
+import { fetchThreads, createNewThread, deleteThread, updateThread, deleteEmptyThreads } from "@/services/chatService";
 import { useThreadContext } from "@/contexts/ThreadContext";
 
 export interface UseThreadsReturn {
@@ -11,6 +11,7 @@ export interface UseThreadsReturn {
   threadError: Error | null;
   createThread: () => Promise<Thread>;
   deleteThread: (threadId: string) => Promise<void>;
+  clearEmptyThreads: () => Promise<number>;
   renameThread: (threadId: string, title: string) => Promise<void>;
   togglePinThread: (threadId: string, isPinned: boolean) => Promise<void>;
   switchThread: (threadId: string) => void;
@@ -56,6 +57,12 @@ export function useThreads(): UseThreadsReturn {
     [queryClient, setActiveThreadId, activeThreadId],
   );
 
+  const clearEmptyThreadsCallback = useCallback(async () => {
+    const count = await deleteEmptyThreads();
+    await refetchThreadsQuery();
+    return count;
+  }, [refetchThreadsQuery]);
+
   const renameThread = useCallback(
     async (threadId: string, title: string) => {
       const updated = await updateThread({ id: threadId, title });
@@ -91,6 +98,7 @@ export function useThreads(): UseThreadsReturn {
     threadError: threadError as Error | null,
     createThread,
     deleteThread: deleteThreadCallback,
+    clearEmptyThreads: clearEmptyThreadsCallback,
     renameThread,
     togglePinThread,
     switchThread,

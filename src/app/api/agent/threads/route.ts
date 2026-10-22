@@ -99,7 +99,38 @@ export async function PATCH(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const parsed = DeleteThreadBody.safeParse(await req.json());
+    const url = new URL(req.url);
+    const deleteEmpty = url.searchParams.get("empty") === "true";
+
+    if (deleteEmpty) {
+      const user = await getCurrentUser();
+      const userCondition = user
+        ? { OR: [{ userId: user.id }, { userId: null }] }
+        : { userId: null };
+
+      const deleted = await prisma.thread.deleteMany({
+        where: {
+          AND: [
+            userCondition,
+            { isPinned: false },
+            {
+              OR: [
+                { title: "New thread" },
+                { title: "Untitled thread" },
+                { title: "New chat" },
+                { title: "Untitled" },
+                { title: "" },
+              ],
+            },
+          ],
+        },
+      });
+
+      return NextResponse.json({ success: true, count: deleted.count }, { status: 200 });
+    }
+
+    const body = await req.json().catch(() => ({}));
+    const parsed = DeleteThreadBody.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json({ error: "Thread id required" }, { status: 400 });
     }
@@ -113,10 +144,6 @@ export async function DELETE(req: NextRequest) {
 
     // Delete the thread from Prisma (metadata)
     await prisma.thread.delete({ where: { id } });
-
-    // Note: LangGraph checkpoint data will become orphaned but won't affect functionality
-    // The checkpointer will simply not find any thread metadata for this thread_id
-    // Future versions could implement direct checkpoint deletion via SQL if needed
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (e: unknown) {

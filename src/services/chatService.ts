@@ -94,6 +94,18 @@ export async function deleteThread(threadId: string): Promise<void> {
   }
 }
 
+export async function deleteEmptyThreads(): Promise<number> {
+  const response = await fetch(`${getUrl("threads")}?empty=true`, {
+    method: "DELETE",
+    headers: config.headers,
+  });
+  if (!response.ok) {
+    throw new Error("Failed to clear empty threads");
+  }
+  const data = await response.json();
+  return data.count ?? 0;
+}
+
 export async function updateThread(params: {
   id: string;
   title?: string;

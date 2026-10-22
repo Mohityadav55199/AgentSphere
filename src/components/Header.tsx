@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { PanelLeftClose, Sparkles, Plus, Download, Loader2, Sun, Moon, LogIn, LogOut, User as UserIcon, Server, Users, Bot, Sliders } from "lucide-react";
+import { PanelLeft, PanelLeftClose, Sparkles, Plus, Download, Loader2, Sun, Moon, LogIn, LogOut, User as UserIcon, Server, Users, Bot, Sliders } from "lucide-react";
 import Link from "next/link";
 import { useUISettings } from "@/contexts/UISettingsContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,10 +12,11 @@ import { AgentStudioModal } from "@/components/AgentStudioModal";
 
 interface HeaderProps {
   toggleSidebar: () => void;
+  isSidebarOpen?: boolean;
   onOpenMCPConfig?: () => void;
 }
 
-export const Header = ({ toggleSidebar, onOpenMCPConfig }: HeaderProps) => {
+export const Header = ({ toggleSidebar, isSidebarOpen = true, onOpenMCPConfig }: HeaderProps) => {
   const { provider, model, activePersona, theme, toggleTheme, agentMode, setAgentMode } = useUISettings();
   const { user, logout, openAuthModal, checkAuth } = useAuth();
   const { data: mcpToolsData } = useMCPTools();
@@ -69,28 +70,29 @@ export const Header = ({ toggleSidebar, onOpenMCPConfig }: HeaderProps) => {
   };
 
   return (
-    <header className="sticky top-0 z-10 flex items-center border-b border-gray-200/60 bg-white/75 px-4 py-2.5 backdrop-blur-md dark:border-gray-800/60 dark:bg-gray-900/75">
-      <div className="flex w-full items-center justify-between">
-        <div className="flex items-center gap-3">
+    <header className="sticky top-0 z-10 flex h-14 items-center border-b border-gray-200/70 bg-white/80 px-3 md:px-4 backdrop-blur-md dark:border-gray-800/70 dark:bg-gray-900/80">
+      <div className="flex w-full items-center justify-between gap-2">
+        <div className="flex items-center gap-2 sm:gap-3">
           <button suppressHydrationWarning
             onClick={toggleSidebar}
-            className="cursor-pointer rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
-            aria-label="Toggle navigation"
+            className="cursor-pointer rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+            aria-label={isSidebarOpen ? "Hide sidebar" : "Show sidebar"}
+            title={isSidebarOpen ? "Hide sidebar" : "Show sidebar"}
           >
-            <PanelLeftClose size={20} />
+            {isSidebarOpen ? <PanelLeftClose size={19} /> : <PanelLeft size={19} />}
           </button>
 
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-white shadow-md shadow-blue-500/20 transition-transform group-hover:scale-105">
-              <Sparkles size={18} />
+          <Link href="/" className="flex items-center gap-2 group">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 text-white shadow-xs shadow-blue-500/20 transition-transform group-hover:scale-105">
+              <Sparkles size={16} />
             </div>
-            <span className="hidden text-lg font-bold tracking-tight text-gray-900 sm:block dark:text-white">
+            <span className="hidden text-base font-bold tracking-tight text-gray-900 sm:block dark:text-white">
               AgentSphere
             </span>
           </Link>
 
           {/* Active Model Pill Badge */}
-          <div suppressHydrationWarning className="hidden items-center gap-2 rounded-full border border-blue-200/80 bg-blue-50/80 px-3 py-1 text-xs font-medium text-blue-700 md:flex dark:border-blue-900/40 dark:bg-blue-950/40 dark:text-blue-300">
+          <div suppressHydrationWarning className="hidden items-center gap-1.5 rounded-full border border-blue-200/80 bg-blue-50/80 px-2.5 py-0.5 text-xs font-medium text-blue-700 lg:flex dark:border-blue-900/40 dark:bg-blue-950/40 dark:text-blue-300">
             <span className="relative flex h-2 w-2">
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75"></span>
               <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-500"></span>
@@ -102,7 +104,7 @@ export const Header = ({ toggleSidebar, onOpenMCPConfig }: HeaderProps) => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           {/* Multi-Agent vs Single Agent Mode Toggle */}
           <div className="flex items-center gap-1">
             <button
@@ -122,7 +124,8 @@ export const Header = ({ toggleSidebar, onOpenMCPConfig }: HeaderProps) => {
               {agentMode === "multi" ? (
                 <>
                   <Users size={14} className="text-purple-600 dark:text-purple-400" />
-                  <span className="font-semibold">5-Agent Council</span>
+                  <span className="hidden md:inline font-semibold">5-Agent Council</span>
+                  <span className="md:hidden font-semibold">Council</span>
                 </>
               ) : (
                 <>
@@ -150,7 +153,7 @@ export const Header = ({ toggleSidebar, onOpenMCPConfig }: HeaderProps) => {
             <button
               suppressHydrationWarning
               onClick={onOpenMCPConfig}
-              className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-700 shadow-xs transition-colors hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-750"
+              className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-xs font-medium text-gray-700 shadow-xs transition-colors hover:bg-gray-100 sm:px-2.5 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-750"
               title="Add and configure Model Context Protocol (MCP) servers"
             >
               <Server size={14} className="text-emerald-600 dark:text-emerald-400" />
