@@ -42,7 +42,11 @@ const getContentStats = (content: string): string => {
 
 const formatContent = (content: string, contentType: ContentType, isPreview: boolean = false) => {
   if (isPreview) {
-    return <div className="text-sm text-gray-600 italic">{getContentPreview(content, 150)}</div>;
+    return (
+      <div className="text-xs text-gray-500 italic dark:text-gray-400">
+        {getContentPreview(content, 150)}
+      </div>
+    );
   }
 
   // For very short content, don't use ScrollArea
@@ -54,33 +58,37 @@ const formatContent = (content: string, contentType: ContentType, isPreview: boo
         try {
           const json = JSON.parse(content);
           return (
-            <pre className="rounded bg-gray-100 p-3 font-mono text-sm whitespace-pre-wrap">
+            <pre className="rounded bg-gray-100 p-2.5 font-mono text-xs whitespace-pre-wrap dark:bg-gray-800/80 dark:text-gray-200">
               {JSON.stringify(json, null, 2)}
             </pre>
           );
         } catch {
           return (
-            <pre className="rounded bg-gray-100 p-3 font-mono text-sm whitespace-pre-wrap">
+            <pre className="rounded bg-gray-100 p-2.5 font-mono text-xs whitespace-pre-wrap dark:bg-gray-800/80 dark:text-gray-200">
               {content}
             </pre>
           );
         }
       case "markdown":
         return (
-          <div className="rounded bg-gray-100 p-3 text-sm">
+          <div className="rounded bg-gray-100 p-2.5 text-xs dark:bg-gray-800/80 dark:text-gray-200">
             <pre className="font-sans whitespace-pre-wrap">{content}</pre>
           </div>
         );
       case "text":
       default:
-        return <div className="rounded bg-gray-100 p-3 text-sm whitespace-pre-wrap">{content}</div>;
+        return (
+          <div className="rounded bg-gray-100 p-2.5 text-xs whitespace-pre-wrap dark:bg-gray-800/80 dark:text-gray-200">
+            {content}
+          </div>
+        );
     }
   })();
 
   if (needsScroll) {
     return (
       <div
-        className="max-h-96 overflow-y-auto rounded border border-gray-200"
+        className="max-h-96 overflow-y-auto rounded border border-gray-200 dark:border-gray-700"
         style={{
           scrollbarWidth: "thin",
           scrollbarColor: "#d1d5db #f3f4f6",

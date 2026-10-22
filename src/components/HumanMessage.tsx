@@ -84,7 +84,7 @@ export const HumanMessage = ({ message }: HumanMessageProps) => {
           )}
 
           {/* Message Text */}
-          <div className="prose dark:prose-invert max-w-none">
+          <div className="text-sm leading-relaxed whitespace-pre-wrap text-gray-900 dark:text-gray-100">
             <p className="my-0">{getMessageContent(message)}</p>
           </div>
         </div>

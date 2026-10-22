@@ -225,8 +225,8 @@ export const AIMessage = ({
                   backgroundColor: "transparent",
                   color: "inherit",
                   padding: 0,
-                  fontSize: "0.95rem",
-                  lineHeight: "1.6",
+                  fontSize: "0.875rem",
+                  lineHeight: "1.55",
                 }}
                 rehypePlugins={[rehypeKatex]}
                 components={{

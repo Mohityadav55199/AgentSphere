@@ -66,8 +66,8 @@ export const AgentThoughtAccordion: React.FC<AgentThoughtAccordionProps> = ({
                 backgroundColor: "transparent",
                 color: "inherit",
                 padding: 0,
-                fontSize: "0.88rem",
-                lineHeight: "1.55",
+                fontSize: "0.8125rem",
+                lineHeight: "1.5",
               }}
               rehypePlugins={[rehypeKatex]}
             />

@@ -182,3 +182,97 @@
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(156, 163, 175, 0.5);
 }
+
+/* Compact Chatbot & Markdown Typography */
+.wm-md-markdown {
+  font-size: 0.875rem !important;
+  line-height: 1.55 !important;
+  font-family: inherit !important;
+  background-color: transparent !important;
+}
+
+.wm-md-markdown h1 {
+  font-size: 1.15rem !important;
+  font-weight: 700 !important;
+  line-height: 1.35 !important;
+  margin-top: 0.75rem !important;
+  margin-bottom: 0.35rem !important;
+  border-bottom: 1px solid rgba(156, 163, 175, 0.2) !important;
+  padding-bottom: 0.25rem !important;
+}
+
+.wm-md-markdown h2 {
+  font-size: 1.05rem !important;
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
+  margin-top: 0.65rem !important;
+  margin-bottom: 0.3rem !important;
+  border-bottom: 1px solid rgba(156, 163, 175, 0.15) !important;
+  padding-bottom: 0.2rem !important;
+}
+
+.wm-md-markdown h3 {
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  margin-top: 0.55rem !important;
+  margin-bottom: 0.25rem !important;
+}
+
+.wm-md-markdown h4,
+.wm-md-markdown h5,
+.wm-md-markdown h6 {
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  margin-top: 0.45rem !important;
+  margin-bottom: 0.2rem !important;
+}
+
+.wm-md-markdown p {
+  margin-top: 0 !important;
+  margin-bottom: 0.5rem !important;
+  line-height: 1.55 !important;
+}
+
+.wm-md-markdown p:last-child {
+  margin-bottom: 0 !important;
+}
+
+.wm-md-markdown ul,
+.wm-md-markdown ol {
+  margin-top: 0.25rem !important;
+  margin-bottom: 0.5rem !important;
+  padding-left: 1.25rem !important;
+}
+
+.wm-md-markdown li {
+  margin-top: 0.15rem !important;
+  margin-bottom: 0.15rem !important;
+  line-height: 1.5 !important;
+}
+
+.wm-md-markdown blockquote {
+  margin: 0.5rem 0 !important;
+  padding: 0.25rem 0.75rem !important;
+  border-left: 3px solid rgba(99, 102, 241, 0.5) !important;
+  color: inherit !important;
+  opacity: 0.9;
+}
+
+.wm-md-markdown table {
+  font-size: 0.8125rem !important;
+  margin-top: 0.5rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.wm-md-markdown th,
+.wm-md-markdown td {
+  padding: 0.35rem 0.6rem !important;
+}
+
+.wm-md-markdown code:not(pre code) {
+  font-size: 0.8125rem !important;
+  padding: 0.125rem 0.35rem !important;
+  border-radius: 0.25rem !important;
+}
