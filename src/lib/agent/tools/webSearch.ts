@@ -153,6 +153,15 @@ export function createWebSearchTool(): DynamicTool {
         }
       }
 
+function extractDomain(link: string): string {
+  try {
+    const u = new URL(link);
+    return u.hostname.replace(/^www\./, "");
+  } catch {
+    return "";
+  }
+}
+
       // Default DuckDuckGo search (zero configuration required)
       const results = await searchDuckDuckGo(cleanQuery);
       if (results.length === 0) {
@@ -160,10 +169,10 @@ export function createWebSearchTool(): DynamicTool {
       }
 
       return results
-        .map(
-          (r, idx) =>
-            `[${idx + 1}] ${r.title}\nURL: ${r.link}\nSnippet: ${r.snippet}\n`,
-        )
+        .map((r, idx) => {
+          const domain = extractDomain(r.link);
+          return `[${idx + 1}] ${r.title}${domain ? ` (${domain})` : ""}\nURL: ${r.link}\nSnippet: ${r.snippet}\n`;
+        })
         .join("\n---\n");
     },
   });

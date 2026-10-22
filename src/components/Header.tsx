@@ -1,7 +1,7 @@
-import React, { useState } from "react";
-import { PanelLeft, PanelLeftClose, Sparkles, Plus, Download, Loader2, Sun, Moon, LogIn, LogOut, User as UserIcon, Server, Users, Bot, Sliders } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { PanelLeft, PanelLeftClose, Sparkles, Plus, Download, Loader2, Sun, Moon, LogIn, LogOut, User as UserIcon, Server, Users, Bot, Sliders, ChevronDown, Check, Zap } from "lucide-react";
 import Link from "next/link";
-import { useUISettings } from "@/contexts/UISettingsContext";
+import { useUISettings, PERSONAS } from "@/contexts/UISettingsContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useThreads } from "@/hooks/useThreads";
 import { useRouter, usePathname } from "next/navigation";
@@ -17,7 +17,20 @@ interface HeaderProps {
 }
 
 export const Header = ({ toggleSidebar, isSidebarOpen = true, onOpenMCPConfig }: HeaderProps) => {
-  const { provider, model, activePersona, theme, toggleTheme, agentMode, setAgentMode } = useUISettings();
+  const {
+    provider,
+    setProvider,
+    model,
+    setModel,
+    activePersona,
+    persona,
+    setPersona,
+    availableProviders,
+    theme,
+    toggleTheme,
+    agentMode,
+    setAgentMode,
+  } = useUISettings();
   const { user, logout, openAuthModal, checkAuth } = useAuth();
   const { data: mcpToolsData } = useMCPTools();
   const { createThread } = useThreads();
@@ -27,6 +40,24 @@ export const Header = ({ toggleSidebar, isSidebarOpen = true, onOpenMCPConfig }:
   const [profileOpen, setProfileOpen] = useState(false);
   const [exportStudioOpen, setExportStudioOpen] = useState(false);
   const [agentStudioOpen, setAgentStudioOpen] = useState(false);
+  const [modelPickerOpen, setModelPickerOpen] = useState(false);
+  const [pickerTab, setPickerTab] = useState<"model" | "persona">("model");
+  const modelPickerRef = useRef<HTMLDivElement>(null);
+
+  // Close model picker on outside click
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (modelPickerRef.current && !modelPickerRef.current.contains(event.target as Node)) {
+        setModelPickerOpen(false);
+      }
+    }
+    if (modelPickerOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [modelPickerOpen]);
 
   const currentThreadId = pathname?.startsWith("/thread/") ? pathname.replace("/thread/", "") : null;
 
@@ -91,16 +122,163 @@ export const Header = ({ toggleSidebar, isSidebarOpen = true, onOpenMCPConfig }:
             </span>
           </Link>
 
-          {/* Active Model Pill Badge */}
-          <div suppressHydrationWarning className="hidden items-center gap-1.5 rounded-full border border-blue-200/80 bg-blue-50/80 px-2.5 py-0.5 text-xs font-medium text-blue-700 lg:flex dark:border-blue-900/40 dark:bg-blue-950/40 dark:text-blue-300">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75"></span>
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-500"></span>
-            </span>
-            <span>{activePersona.icon}</span>
-            <span className="capitalize">{provider}</span>
-            <span className="text-blue-300 dark:text-blue-700">•</span>
-            <span className="font-mono text-[11px] opacity-90">{model}</span>
+          {/* Active Model Pill Badge with Quick-Picker Dropdown */}
+          <div className="relative" ref={modelPickerRef}>
+            <button
+              suppressHydrationWarning
+              type="button"
+              onClick={() => setModelPickerOpen((prev) => !prev)}
+              className="flex cursor-pointer items-center gap-1.5 rounded-full border border-blue-200/80 bg-blue-50/80 px-2.5 py-1 text-xs font-medium text-blue-700 transition-all hover:bg-blue-100/80 hover:border-blue-300 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/60"
+              title="Click to quickly switch Model, Provider or Persona"
+            >
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75"></span>
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-500"></span>
+              </span>
+              <span>{activePersona.icon}</span>
+              <span className="hidden sm:inline capitalize font-semibold">{provider}</span>
+              <span className="hidden sm:inline text-blue-300 dark:text-blue-700">•</span>
+              <span className="max-w-[120px] sm:max-w-[160px] truncate font-mono text-[11px] opacity-90">{model}</span>
+              <ChevronDown className={`h-3 w-3 text-blue-500 transition-transform duration-200 ${modelPickerOpen ? "rotate-180" : ""}`} />
+            </button>
+
+            {/* Quick Picker Popover Dropdown */}
+            {modelPickerOpen && (
+              <div className="absolute left-0 top-full mt-2 w-80 sm:w-96 rounded-xl border border-gray-200/90 bg-white/95 p-3 shadow-2xl backdrop-blur-md z-50 dark:border-gray-800 dark:bg-gray-900/95 animate-in fade-in-0 zoom-in-95 duration-150">
+                {/* Header & Tabs */}
+                <div className="flex items-center justify-between border-b border-gray-100 pb-2 mb-2.5 dark:border-gray-800">
+                  <div className="flex items-center gap-1 rounded-lg bg-gray-100 p-0.5 dark:bg-gray-800">
+                    <button
+                      type="button"
+                      onClick={() => setPickerTab("model")}
+                      className={`flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium transition-all ${
+                        pickerTab === "model"
+                          ? "bg-white text-blue-600 shadow-xs font-semibold dark:bg-gray-700 dark:text-blue-300"
+                          : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+                      }`}
+                    >
+                      <Zap size={12} />
+                      <span>Model & Provider</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPickerTab("persona")}
+                      className={`flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium transition-all ${
+                        pickerTab === "persona"
+                          ? "bg-white text-blue-600 shadow-xs font-semibold dark:bg-gray-700 dark:text-blue-300"
+                          : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+                      }`}
+                    >
+                      <span>🎭</span>
+                      <span>Persona ({activePersona.name})</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Tab 1: Model & Provider Selector */}
+                {pickerTab === "model" && (
+                  <div className="space-y-3">
+                    {/* Providers */}
+                    <div>
+                      <div className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5 dark:text-gray-400">
+                        Provider
+                      </div>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {Object.keys(availableProviders).map((pKey) => {
+                          const isSelected = provider === pKey;
+                          const pInfo = availableProviders[pKey];
+                          return (
+                            <button
+                              key={pKey}
+                              type="button"
+                              onClick={() => {
+                                setProvider(pKey);
+                                if (pInfo?.defaultModel) {
+                                  setModel(pInfo.defaultModel);
+                                }
+                              }}
+                              className={`flex cursor-pointer items-center justify-between rounded-lg border px-2.5 py-1.5 text-xs font-medium capitalize transition-all ${
+                                isSelected
+                                  ? "border-blue-500 bg-blue-50/80 text-blue-700 shadow-xs dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-300"
+                                  : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-750"
+                              }`}
+                            >
+                              <span>{pKey}</span>
+                              {isSelected && <Check size={12} className="text-blue-600 dark:text-blue-400" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Models for active provider */}
+                    <div>
+                      <div className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5 dark:text-gray-400">
+                        Available Models ({provider})
+                      </div>
+                      <div className="max-h-48 space-y-1 overflow-y-auto pr-1">
+                        {(availableProviders[provider]?.models || [model]).map((m) => {
+                          const isCurrent = model === m;
+                          return (
+                            <button
+                              key={m}
+                              type="button"
+                              onClick={() => {
+                                setModel(m);
+                                setModelPickerOpen(false);
+                              }}
+                              className={`flex w-full cursor-pointer items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-xs font-mono transition-all ${
+                                isCurrent
+                                  ? "bg-blue-600 text-white font-semibold shadow-xs"
+                                  : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+                              }`}
+                            >
+                              <span className="truncate">{m}</span>
+                              {isCurrent && <Check size={13} className="text-white shrink-0 ml-1.5" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Tab 2: Persona Selector */}
+                {pickerTab === "persona" && (
+                  <div className="space-y-1.5 max-h-60 overflow-y-auto pr-1">
+                    {Object.values(PERSONAS).map((p) => {
+                      const isCurrent = persona === p.id;
+                      return (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => {
+                            setPersona(p.id);
+                            setModelPickerOpen(false);
+                          }}
+                          className={`flex w-full cursor-pointer items-start gap-2.5 rounded-lg border p-2 text-left transition-all ${
+                            isCurrent
+                              ? "border-blue-500 bg-blue-50/70 text-blue-900 dark:border-blue-600 dark:bg-blue-950/40 dark:text-blue-200"
+                              : "border-gray-100 bg-white hover:border-gray-200 hover:bg-gray-50 text-gray-800 dark:border-gray-800 dark:bg-gray-850 dark:hover:bg-gray-800 dark:text-gray-200"
+                          }`}
+                        >
+                          <span className="text-lg">{p.icon}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <div className="font-semibold text-xs">{p.name}</div>
+                              {isCurrent && <Check size={13} className="text-blue-600 dark:text-blue-400" />}
+                            </div>
+                            <div className="text-[11px] text-gray-500 dark:text-gray-400 line-clamp-1">
+                              {p.description}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
