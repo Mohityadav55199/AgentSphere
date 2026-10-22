@@ -1,7 +1,13 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
 import type { Thread } from "@/types/message";
-import { fetchThreads, createNewThread, deleteThread, updateThread, deleteEmptyThreads } from "@/services/chatService";
+import {
+  fetchThreads,
+  createNewThread,
+  deleteThread,
+  updateThread,
+  deleteEmptyThreads,
+} from "@/services/chatService";
 import { useThreadContext } from "@/contexts/ThreadContext";
 
 export interface UseThreadsReturn {

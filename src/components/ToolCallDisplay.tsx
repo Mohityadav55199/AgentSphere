@@ -150,7 +150,8 @@ const ToolCallItem: React.FC<{
           <ShieldAlert className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600 dark:text-amber-400" />
           <div>
             <span className="font-semibold">Human-In-The-Loop Safety Guard: </span>
-            This tool can modify files or environment state. Review arguments before permitting execution.
+            This tool can modify files or environment state. Review arguments before permitting
+            execution.
           </div>
         </div>
       )}

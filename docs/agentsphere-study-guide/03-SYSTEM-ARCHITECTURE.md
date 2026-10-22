@@ -3,6 +3,7 @@
 ---
 
 ## 📌 Document Metadata & Architectural Grounding
+
 - **Target Repository**: `AgentSphere`
 - **Scope**: Complete architectural anatomy of AgentSphere, mapping frontend components, backend endpoints, orchestration graphs, and database layers.
 - **Rule Applied**: Every box, arrow, file reference, and data schema is grounded directly in verified source code.
@@ -120,6 +121,7 @@ sequenceDiagram
 ```
 
 #### Detailed Explanation of the Lifecycle:
+
 1. **Trigger**: The user types text into [MessageInput.tsx](file:///c:/Projects/AgentSphere/src/components/MessageInput.tsx).
 2. **Optimistic Rendering**: Before sending the HTTP request, [useChatThread.ts](file:///c:/Projects/AgentSphere/src/hooks/useChatThread.ts#L170-L183) writes a synthetic human message (`id: temp-${Date.now()}`) directly into the TanStack Query cache.
 3. **Transport Protocol**: The browser initializes an `EventSource` pointing to `/api/agent/stream`. The browser uses `GET` rather than `POST` because native browser `EventSource` only supports GET.
@@ -137,14 +139,14 @@ The AI engine inside AgentSphere is not a simple linear chain; it is a **cyclic 
 stateDiagram-v2
     [*] --> START
     START --> agent: Initialize state with system prompt & history
-    
+
     state agent {
         [*] --> CallLLM
         CallLLM --> CheckResponse: Model returns AIMessage
     }
 
     agent --> shouldApproveTool: Evaluate last message
-    
+
     state shouldApproveTool <<choice>>
     shouldApproveTool --> tool_approval: If message has tool_calls
     shouldApproveTool --> END: If message is plain text (no tools)
@@ -159,7 +161,7 @@ stateDiagram-v2
 
     tool_approval --> tools: reviewAction == "continue" or "update"
     tool_approval --> agent: reviewAction == "feedback" (User rejected)
-    
+
     state tools {
         [*] --> ExecuteMCP: Dispatch to ToolNode
         ExecuteMCP --> FormToolMessage: Generate ToolMessage(content)
@@ -172,18 +174,21 @@ stateDiagram-v2
 ### Deep Dive into Each Graph Node & Edge
 
 #### Node 1: `agent` (`src/lib/agent/builder.ts:L123-L135`)
+
 - **Responsibility**: Invokes the configured LLM (`ChatGoogleGenerativeAI`, `ChatOpenAI`, or `ChatAnthropic`).
 - **Input**: The accumulated message history from `state.messages`, prepended with the active `SystemMessage`.
 - **Output**: An `AIMessage` containing either markdown text, or a list of `tool_calls`.
 - **Failure Mode**: If the LLM provider experiences an outage, throws a 429 Rate Limit, or an invalid API key is provided, execution throws here and routes to the stream error handler.
 
 #### Conditional Edge: `shouldApproveTool` (`src/lib/agent/builder.ts:L48-L59`)
+
 - **Responsibility**: Inspects `state.messages[messages.length - 1]`.
 - **Logic**:
   - If `lastMessage.tool_calls` is a non-empty array $\rightarrow$ route to `tool_approval`.
   - Else $\rightarrow$ route to `END`.
 
 #### Node 2: `tool_approval` (`src/lib/agent/builder.ts:L61-L121`)
+
 - **Responsibility**: Implements the **Human-in-the-Loop** approval gate.
 - **Behavior**:
   - If `this.approveAllTools` is `true`: immediately returns `new Command({ goto: "tools" })`.
@@ -195,6 +200,7 @@ stateDiagram-v2
   - `action === "feedback"`: Injects a `ToolMessage` containing rejection feedback and routes back to `agent` to allow the model to adjust its plan.
 
 #### Node 3: `tools` (`src/lib/agent/builder.ts:L41`)
+
 - **Responsibility**: The prebuilt LangGraph `ToolNode` executes the requested tool.
 - **Execution**: Dispatches the tool call to the connected MCP client (`MultiServerMCPClient`) or local dynamic tool.
 - **Output**: Returns a `ToolMessage` with the tool's output string.
@@ -230,6 +236,7 @@ sequenceDiagram
 ```
 
 ### Purpose of Boundaries & Security Guarantees:
+
 - **`httpOnly: true`**: JavaScript in the browser cannot read the cookie document (`document.cookie`), completely preventing token theft via Cross-Site Scripting (XSS).
 - **`sameSite: "lax"`**: Protects against Cross-Site Request Forgery (CSRF).
 - **`crypto.timingSafeEqual`**: Prevents timing attacks where an attacker measures nanosecond differences in string comparisons to deduce hash characters.
@@ -260,6 +267,7 @@ graph TD
 ```
 
 ### Why Two Separate Storage Mechanisms?
+
 1. **Prisma ORM (`User`, `Thread`, `MCPServer`)**:
    - Manages relational domain metadata.
    - Used for sidebar thread lists, user authentication, and MCP server configuration forms.
@@ -272,12 +280,12 @@ graph TD
 
 ## 6. What Happens When Components Fail? (Failure Mode Analysis)
 
-| Component That Fails | Immediate System Behavior | User Experience | Recovery Path |
-|---|---|---|---|
-| **PostgreSQL Database** | Prisma and PostgresSaver throw connection errors (`ECONNREFUSED`). | The UI shows an error banner: *"Loading conversation history failed"* or stream fails. | Check Docker container: `docker compose up -d db`. Verify port `5434`. |
-| **LLM Provider API (e.g. Groq 429)** | LangGraph node `agent` throws rate-limit exception during `.invoke()`. | SSE stream emits `event: error` with `⚠️ Rate limit exceeded`. | Switch provider in UI settings (e.g. from Groq to Google Gemini or OpenAI). |
-| **MinIO / S3 Storage** | File upload endpoint `/api/agent/upload` throws upload failure error. | Red error alert appears in `MessageInput`: *"Failed to upload file"*. | Verify MinIO container: `docker compose up -d minio createbuckets`. |
-| **MCP Tool Server** | Tool execution in `ToolNode` times out or exits with non-zero exit code. | Tool error string is returned as `ToolMessage`. Agent reads error and explains failure to user. | Reconfigure server arguments or URL in the MCP configuration modal. |
-| **Client Disconnect Mid-Stream** | Browser tab closes during SSE stream. | `stream.cancel()` is triggered on Next.js server. Node.js garbage collects the stream. | The last completed turn remains safely persisted in PostgreSQL. |
+| Component That Fails                 | Immediate System Behavior                                                | User Experience                                                                                 | Recovery Path                                                               |
+| ------------------------------------ | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| **PostgreSQL Database**              | Prisma and PostgresSaver throw connection errors (`ECONNREFUSED`).       | The UI shows an error banner: _"Loading conversation history failed"_ or stream fails.          | Check Docker container: `docker compose up -d db`. Verify port `5434`.      |
+| **LLM Provider API (e.g. Groq 429)** | LangGraph node `agent` throws rate-limit exception during `.invoke()`.   | SSE stream emits `event: error` with `⚠️ Rate limit exceeded`.                                  | Switch provider in UI settings (e.g. from Groq to Google Gemini or OpenAI). |
+| **MinIO / S3 Storage**               | File upload endpoint `/api/agent/upload` throws upload failure error.    | Red error alert appears in `MessageInput`: _"Failed to upload file"_.                           | Verify MinIO container: `docker compose up -d minio createbuckets`.         |
+| **MCP Tool Server**                  | Tool execution in `ToolNode` times out or exits with non-zero exit code. | Tool error string is returned as `ToolMessage`. Agent reads error and explains failure to user. | Reconfigure server arguments or URL in the MCP configuration modal.         |
+| **Client Disconnect Mid-Stream**     | Browser tab closes during SSE stream.                                    | `stream.cancel()` is triggered on Next.js server. Node.js garbage collects the stream.          | The last completed turn remains safely persisted in PostgreSQL.             |
 
 Proceed to [04-FRONTEND-COMPLETE-WALKTHROUGH.md](file:///c:/Projects/AgentSphere/docs/agentsphere-study-guide/04-FRONTEND-COMPLETE-WALKTHROUGH.md) for a complete breakdown of the frontend architecture and user interface components.

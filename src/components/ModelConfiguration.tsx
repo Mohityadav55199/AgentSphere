@@ -67,14 +67,15 @@ export const ModelConfiguration = ({
         </label>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {Object.values(PERSONAS).map((p) => (
-            <button suppressHydrationWarning
+            <button
+              suppressHydrationWarning
               key={p.id}
               type="button"
               onClick={() => setPersona(p.id)}
               className={`flex cursor-pointer items-center gap-2 rounded-lg border p-2 text-left transition-all ${
                 persona === p.id
-                  ? "border-blue-500 bg-blue-50/80 text-blue-950 font-medium dark:border-blue-500 dark:bg-blue-950/60 dark:text-blue-200"
-                  : "border-gray-200 bg-white hover:bg-gray-50 text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-750"
+                  ? "border-blue-500 bg-blue-50/80 font-medium text-blue-950 dark:border-blue-500 dark:bg-blue-950/60 dark:text-blue-200"
+                  : "dark:hover:bg-gray-750 border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
               }`}
             >
               <span className="text-base">{p.icon}</span>
@@ -140,7 +141,9 @@ export const ModelConfiguration = ({
 
       {/* Model Selection */}
       <div className="space-y-2">
-        <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">Model</label>
+        <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
+          Model
+        </label>
         {modelOptions.length > 0 ? (
           <div className="space-y-1.5">
             <select
@@ -164,7 +167,7 @@ export const ModelConfiguration = ({
                 value={model}
                 onChange={(e) => setModel(e.target.value)}
                 placeholder="Enter custom model identifier"
-                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-mono focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-1.5 font-mono text-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
               />
             )}
           </div>
@@ -182,10 +185,15 @@ export const ModelConfiguration = ({
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <label className="block text-xs font-semibold text-gray-700 dark:text-gray-300">
-            Temperature: <span className="font-mono text-blue-600 dark:text-blue-400">{temperature}</span>
+            Temperature:{" "}
+            <span className="font-mono text-blue-600 dark:text-blue-400">{temperature}</span>
           </label>
           <span className="text-[11px] text-gray-400">
-            {temperature < 0.3 ? "Precise & Deterministic" : temperature > 0.7 ? "Creative & Diverse" : "Balanced"}
+            {temperature < 0.3
+              ? "Precise & Deterministic"
+              : temperature > 0.7
+                ? "Creative & Diverse"
+                : "Balanced"}
           </span>
         </div>
         <input
@@ -209,7 +217,7 @@ export const ModelConfiguration = ({
           onChange={(e) => setSystemPrompt(e.target.value)}
           rows={2}
           placeholder="Custom system instructions..."
-          className="w-full resize-none rounded-lg border border-gray-300 bg-white p-2.5 text-xs font-mono text-gray-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
+          className="w-full resize-none rounded-lg border border-gray-300 bg-white p-2.5 font-mono text-xs text-gray-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
         />
       </div>
 
@@ -227,7 +235,8 @@ export const ModelConfiguration = ({
               </div>
             ) : (
               <div className="relative" ref={mcpTooltipRef}>
-                <button suppressHydrationWarning
+                <button
+                  suppressHydrationWarning
                   type="button"
                   onClick={() => setShowMCPTooltip(!showMCPTooltip)}
                   className="flex items-center gap-2 rounded border border-gray-300 px-3 py-1.5 text-sm transition-colors hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700"

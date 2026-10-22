@@ -3,6 +3,7 @@
 ---
 
 ## 📌 Document Metadata & Diagnostic Scope
+
 This guide provides systematic debugging strategies for common failure modes across AgentSphere's frontend, backend route handlers, LangGraph state machine, database, and external tool integrations.
 
 ---
@@ -26,6 +27,7 @@ graph TD
 ## 2. Realistic Debugging Scenarios Grounded in Code
 
 ### Scenario 1: The SSE Stream Hangs Indefinitely Without Output
+
 - **Symptom**: User hits Send; loading spinner animates endlessly; no response text appears.
 - **Root Cause Analysis**:
   1. **Missing or Expired LLM Key**: In [src/lib/agent/util.ts](file:///c:/Projects/AgentSphere/src/lib/agent/util.ts#L34-L58), if an API key is missing, the code passes `"missing-api-key"`. The LLM provider immediately throws an unauthorized error.
@@ -38,6 +40,7 @@ graph TD
 ---
 
 ### Scenario 2: Google Gemini Throws `400 Bad Request` on Tool Execution
+
 - **Symptom**: Prompt works fine with OpenAI/Groq, but immediately crashes when switching provider to Google Gemini with MCP tools enabled.
 - **Root Cause Analysis**:
   - Gemini's function calling API rejects standard JSON Schema draft-07 keywords.
@@ -50,6 +53,7 @@ graph TD
 ---
 
 ### Scenario 3: Database Connection Refused (`ECONNREFUSED 127.0.0.1:5434`)
+
 - **Symptom**: Next.js terminal logs show: `PrismaClientInitializationError: Can't reach database server at localhost:5434`.
 - **Root Cause Analysis**:
   - Docker container is stopped, or the user assumed PostgreSQL runs on the default port `5432` rather than `5434`.
@@ -65,7 +69,8 @@ graph TD
 ---
 
 ### Scenario 4: File Upload Returns `400 Bad Request` or Fails Silently
-- **Symptom**: Dragging a file into the chat window fails with *"File appears to be binary, not text"* or *"Upload failed"*.
+
+- **Symptom**: Dragging a file into the chat window fails with _"File appears to be binary, not text"_ or _"Upload failed"_.
 - **Root Cause Analysis**:
   - In [src/lib/storage/validation.ts](file:///c:/Projects/AgentSphere/src/lib/storage/validation.ts), strict file size and MIME checks are enforced:
     - Images: Max 5MB
@@ -77,6 +82,7 @@ graph TD
 ---
 
 ### Scenario 5: Clicking "Allow" on a Tool Call Does Nothing
+
 - **Symptom**: Tool approval card displays [Allow] and [Deny], but clicking [Allow] does not resume the AI response.
 - **Root Cause Analysis**:
   - The client sent `allowTool=allow`, but the server's checkpointer could not find the suspended thread state in the `checkpoints` table (e.g. if the `threadId` changed or the database was restarted without persistent volumes).
@@ -89,6 +95,7 @@ graph TD
 ## 3. Testing Audit & Missing Test Suite `[AUDIT FINDING]`
 
 ### Verified Repository Status
+
 - **Unit Tests**: `NOT FOUND` (0 test files in repository).
 - **Integration Tests**: `NOT FOUND`.
 - **E2E Tests**: `NOT FOUND`.
@@ -96,7 +103,7 @@ graph TD
 
 ### Proposed Production Testing Strategy
 
-If asked in an interview: *"How would you test this application?"*, present this 3-tier testing roadmap:
+If asked in an interview: _"How would you test this application?"_, present this 3-tier testing roadmap:
 
 ```mermaid
 graph TD

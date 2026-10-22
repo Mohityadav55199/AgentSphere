@@ -31,9 +31,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle, children }) => {
           isOpen ? "flex flex-col" : "hidden md:flex md:flex-col"
         }`}
       >
-        <div className="flex h-full w-[260px] flex-col overflow-hidden">
-          {children}
-        </div>
+        <div className="flex h-full w-[260px] flex-col overflow-hidden">{children}</div>
       </motion.aside>
 
       {/* Overlay Background - Only show on mobile */}

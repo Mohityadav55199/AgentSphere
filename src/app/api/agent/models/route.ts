@@ -31,12 +31,7 @@ const PROVIDER_CONFIGS: Record<
   },
   google: {
     defaultModel: "gemini-2.5-flash",
-    fallbackModels: [
-      "gemini-2.5-flash",
-      "gemini-2.0-flash",
-      "gemini-1.5-pro",
-      "gemini-1.5-flash",
-    ],
+    fallbackModels: ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-pro", "gemini-1.5-flash"],
     envKey: "GOOGLE_API_KEY",
   },
   openai: {
@@ -46,11 +41,7 @@ const PROVIDER_CONFIGS: Record<
   },
   anthropic: {
     defaultModel: "claude-3-5-sonnet-latest",
-    fallbackModels: [
-      "claude-3-5-sonnet-latest",
-      "claude-3-5-haiku-latest",
-      "claude-3-opus-latest",
-    ],
+    fallbackModels: ["claude-3-5-sonnet-latest", "claude-3-5-haiku-latest", "claude-3-opus-latest"],
     envKey: "ANTHROPIC_API_KEY",
   },
 };
@@ -71,7 +62,9 @@ async function fetchGroqModels(apiKey: string): Promise<string[]> {
         .filter((id: string) => {
           // Filter out audio, whisper, and guard models
           const lower = id.toLowerCase();
-          return !lower.includes("whisper") && !lower.includes("guard") && !lower.includes("orpheus");
+          return (
+            !lower.includes("whisper") && !lower.includes("guard") && !lower.includes("orpheus")
+          );
         });
       if (models.length > 0) {
         return models;

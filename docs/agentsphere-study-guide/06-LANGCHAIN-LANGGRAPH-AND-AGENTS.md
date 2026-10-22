@@ -3,6 +3,7 @@
 ---
 
 ## 📌 Document Metadata & Core Source Files
+
 - **Primary Source File**: [src/lib/agent/builder.ts](file:///c:/Projects/AgentSphere/src/lib/agent/builder.ts)
 - **Agent Factory & Cache**: [src/lib/agent/index.ts](file:///c:/Projects/AgentSphere/src/lib/agent/index.ts)
 - **Model Initializer & Sanitizer**: [src/lib/agent/util.ts](file:///c:/Projects/AgentSphere/src/lib/agent/util.ts)
@@ -14,6 +15,7 @@
 ## 1. Foundational Concepts from Zero
 
 ### 1.1 What is an LLM?
+
 A **Large Language Model (LLM)** is a statistical neural network trained on massive corpora of text. At its core, an LLM performs one mathematical operation:
 Given a sequence of preceding tokens (words or sub-words), it calculates a probability distribution over the entire vocabulary to predict the **next most likely token**.
 
@@ -27,6 +29,7 @@ Given a sequence of preceding tokens (words or sub-words), it calculates a proba
 ---
 
 ### 1.2 Message Roles in Modern LLMs
+
 In classical text completion, you sent raw strings. In modern chat models, prompts are structured as conversations with 4 distinct roles:
 
 1. **`SystemMessage`**: High-level instructions defining the AI's identity, rules, boundaries, and formatting constraints. In AgentSphere, this is constructed in [src/lib/agent/prompt.ts](file:///c:/Projects/AgentSphere/src/lib/agent/prompt.ts) or derived from the active persona in [src/contexts/UISettingsContext.tsx](file:///c:/Projects/AgentSphere/src/contexts/UISettingsContext.tsx).
@@ -38,12 +41,12 @@ In classical text completion, you sent raw strings. In modern chat models, promp
 
 ### 1.3 What is an "AI Agent" vs. a "Simple LLM Call"?
 
-| Dimension | Simple LLM Call (Chain) | AI Agent (LangGraph State Machine) |
-|---|---|---|
-| **Control Flow** | Rigid, linear, predefined pipeline (Input $\rightarrow$ Prompt $\rightarrow$ LLM $\rightarrow$ Output). | Dynamic, cyclic state machine (The LLM decides what to do next based on tool outputs). |
-| **Tool Usage** | None, or fixed single function call. | Multi-step tool use: can call Tool A, read result, call Tool B, and synthesize answers. |
-| **Error Recovery** | If output is invalid, the script fails. | If a tool returns an error, the agent reads the error message and attempts an alternative approach. |
-| **Human-in-the-Loop** | Cannot pause mid-execution without losing process memory. | Suspends execution via interrupts, persists graph state, and resumes upon approval. |
+| Dimension             | Simple LLM Call (Chain)                                                                                 | AI Agent (LangGraph State Machine)                                                                  |
+| --------------------- | ------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| **Control Flow**      | Rigid, linear, predefined pipeline (Input $\rightarrow$ Prompt $\rightarrow$ LLM $\rightarrow$ Output). | Dynamic, cyclic state machine (The LLM decides what to do next based on tool outputs).              |
+| **Tool Usage**        | None, or fixed single function call.                                                                    | Multi-step tool use: can call Tool A, read result, call Tool B, and synthesize answers.             |
+| **Error Recovery**    | If output is invalid, the script fails.                                                                 | If a tool returns an error, the agent reads the error message and attempts an alternative approach. |
+| **Human-in-the-Loop** | Cannot pause mid-execution without losing process memory.                                               | Suspends execution via interrupts, persists graph state, and resumes upon approval.                 |
 
 ---
 
@@ -60,7 +63,7 @@ A common interview trap is confusing **LangChain** with **LangGraph**.
   - An **orchestration framework** for building stateful, cyclic graphs.
   - Treats an agent as a finite state machine composed of **Nodes** (computational steps) and **Edges** (conditional transitions).
   - Manages mutable **State**, handles **Checkpointers** for permanent persistence, and provides **`interrupt()`** for human review.
-- **Summary**: LangChain provides the *components* (models, tools, messages); LangGraph builds the *workflow engine* that directs them.
+- **Summary**: LangChain provides the _components_ (models, tools, messages); LangGraph builds the _workflow engine_ that directs them.
 
 ---
 
@@ -90,13 +93,13 @@ build() {
 graph TD
     START([START]) --> Node_Agent[Node: agent]
     Node_Agent --> Edge_Cond{shouldApproveTool?}
-    
+
     Edge_Cond -->|No tool calls| END([END])
     Edge_Cond -->|Tool calls present| Node_Approval[Node: tool_approval]
-    
+
     Node_Approval -->|Approved: continue / update| Node_Tools[Node: tools]
     Node_Approval -->|Rejected: feedback| Node_Agent
-    
+
     Node_Tools --> Node_Agent
 ```
 
@@ -105,6 +108,7 @@ graph TD
 ## 3. Detailed Specification of Every Graph Node
 
 ### Node 1: `agent`
+
 - **Location**: [src/lib/agent/builder.ts:L123-L135](file:///c:/Projects/AgentSphere/src/lib/agent/builder.ts#L123-L135)
 - **Function**: `callModel(state: typeof MessagesAnnotation.State)`
 - **Responsibility**: Binds tools to the chat model and invokes the model with full message history and the system prompt.
@@ -122,6 +126,7 @@ graph TD
 ---
 
 ### Conditional Edge: `shouldApproveTool`
+
 - **Location**: [src/lib/agent/builder.ts:L48-L59](file:///c:/Projects/AgentSphere/src/lib/agent/builder.ts#L48-L59)
 - **Function**: `shouldApproveTool(state)`
 - **Logic**:
@@ -143,10 +148,12 @@ graph TD
 ---
 
 ### Node 2: `tool_approval` (Human-in-the-Loop)
+
 - **Location**: [src/lib/agent/builder.ts:L61-L121](file:///c:/Projects/AgentSphere/src/lib/agent/builder.ts#L61-L121)
 - **Function**: `approveToolCall(state: typeof MessagesAnnotation.State)`
 - **Responsibility**: Evaluates whether tool execution requires user permission, interrupts execution if necessary, and routes resumption.
 - **Code Breakdown**:
+
   ```typescript
   if (this.approveAllTools) {
     return new Command({ goto: "tools" });
@@ -155,11 +162,15 @@ graph TD
   const toolCall = lastMessage.tool_calls![lastMessage.tool_calls!.length - 1];
 
   // Suspend graph execution and yield interrupt to client
-  const humanReview = interrupt<{ question: string; toolCall: ToolCall }, { action: string; data: any }>({
+  const humanReview = interrupt<
+    { question: string; toolCall: ToolCall },
+    { action: string; data: any }
+  >({
     question: "Is this correct?",
     toolCall: toolCall,
   });
   ```
+
 - **How Resumption Works**:
   When resumed with `opts.allowTool`:
   1. `reviewAction === "continue"` (User clicked Allow):
@@ -174,6 +185,7 @@ graph TD
 ---
 
 ### Node 3: `tools`
+
 - **Location**: [src/lib/agent/builder.ts:L41](file:///c:/Projects/AgentSphere/src/lib/agent/builder.ts#L41)
 - **Implementation**: `new ToolNode(tools || [])` (from `@langchain/langgraph/prebuilt`).
 - **Responsibility**: Executes the actual tool requested in `lastMessage.tool_calls`.
@@ -186,7 +198,9 @@ graph TD
 ## 4. State Persistence & Checkpointing
 
 ### How State is Maintained Across Interrupts
+
 When `interrupt()` is called:
+
 1. LangGraph serializes the entire `state` (all messages, channels, and execution pointers).
 2. It writes the state to PostgreSQL via `postgresCheckpointer` (`PostgresSaver`) using the provided `thread_id`:
    - `checkpoints` table: Contains the serialized graph state snapshot.
@@ -199,21 +213,21 @@ When `interrupt()` is called:
 
 ## 5. End-to-End Task Execution Trace
 
-Let's trace: *"Search for local weather in San Francisco"*:
+Let's trace: _"Search for local weather in San Francisco"_:
 
-| Step | Component | Action | State Change |
-|---|---|---|---|
-| **1** | Client | User types query; sends SSE request to `/api/agent/stream`. | UI optimistically shows user message. |
-| **2** | `agentService.ts` | Calls `streamResponse()`; builds `HumanMessage`. | Passes `{ messages: [HumanMessage] }` to LangGraph. |
-| **3** | `START` $\rightarrow$ `agent` | `callModel()` binds MCP tools; calls Groq/Gemini with system prompt. | Model returns `AIMessage` with `tool_calls: [{ name: "weather__get_temp", args: { city: "SF" } }]`. |
-| **4** | `shouldApproveTool` | Inspects `tool_calls`; detects 1 call. | Routes to `tool_approval`. |
-| **5** | `tool_approval` | Calls `interrupt({ question: "Is this correct?", toolCall })`. | Graph suspends. State saved to Postgres. Tool call emitted to SSE. |
-| **6** | Client | Renders `<ToolCallDisplay>` with "Allow" and "Deny". | User clicks "Allow". |
-| **7** | Client $\rightarrow$ Server | Client calls `/api/agent/stream?allowTool=allow`. | Server creates `new Command({ resume: { action: "continue" } })`. |
-| **8** | `tool_approval` | Resumes; returns `new Command({ goto: "tools" })`. | Routes to `tools`. |
-| **9** | `tools` (`ToolNode`) | Executes `weather__get_temp({ city: "SF" })`. | Appends `ToolMessage({ content: "68°F, Sunny" })`. |
-| **10** | `tools` $\rightarrow$ `agent` | Loops back to `agent` node! Model reads tool output. | Model generates `AIMessage("The weather in San Francisco is currently 68°F and sunny.")`. |
-| **11** | `shouldApproveTool` | Inspects last message. No tool calls! | Routes to `END`. |
-| **12** | Server $\rightarrow$ Client | Server emits `event: done`. | Client displays completed response bubble. |
+| Step   | Component                     | Action                                                               | State Change                                                                                        |
+| ------ | ----------------------------- | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| **1**  | Client                        | User types query; sends SSE request to `/api/agent/stream`.          | UI optimistically shows user message.                                                               |
+| **2**  | `agentService.ts`             | Calls `streamResponse()`; builds `HumanMessage`.                     | Passes `{ messages: [HumanMessage] }` to LangGraph.                                                 |
+| **3**  | `START` $\rightarrow$ `agent` | `callModel()` binds MCP tools; calls Groq/Gemini with system prompt. | Model returns `AIMessage` with `tool_calls: [{ name: "weather__get_temp", args: { city: "SF" } }]`. |
+| **4**  | `shouldApproveTool`           | Inspects `tool_calls`; detects 1 call.                               | Routes to `tool_approval`.                                                                          |
+| **5**  | `tool_approval`               | Calls `interrupt({ question: "Is this correct?", toolCall })`.       | Graph suspends. State saved to Postgres. Tool call emitted to SSE.                                  |
+| **6**  | Client                        | Renders `<ToolCallDisplay>` with "Allow" and "Deny".                 | User clicks "Allow".                                                                                |
+| **7**  | Client $\rightarrow$ Server   | Client calls `/api/agent/stream?allowTool=allow`.                    | Server creates `new Command({ resume: { action: "continue" } })`.                                   |
+| **8**  | `tool_approval`               | Resumes; returns `new Command({ goto: "tools" })`.                   | Routes to `tools`.                                                                                  |
+| **9**  | `tools` (`ToolNode`)          | Executes `weather__get_temp({ city: "SF" })`.                        | Appends `ToolMessage({ content: "68°F, Sunny" })`.                                                  |
+| **10** | `tools` $\rightarrow$ `agent` | Loops back to `agent` node! Model reads tool output.                 | Model generates `AIMessage("The weather in San Francisco is currently 68°F and sunny.")`.           |
+| **11** | `shouldApproveTool`           | Inspects last message. No tool calls!                                | Routes to `END`.                                                                                    |
+| **12** | Server $\rightarrow$ Client   | Server emits `event: done`.                                          | Client displays completed response bubble.                                                          |
 
 Proceed to [07-LLM-PROVIDERS-AND-TOOL-CALLING.md](file:///c:/Projects/AgentSphere/docs/agentsphere-study-guide/07-LLM-PROVIDERS-AND-TOOL-CALLING.md) to explore multi-provider LLM integrations, model configurations, and tool schema sanitization.

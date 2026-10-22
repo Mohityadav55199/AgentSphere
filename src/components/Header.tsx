@@ -1,5 +1,24 @@
 import React, { useState, useEffect, useRef } from "react";
-import { PanelLeft, PanelLeftClose, Sparkles, Plus, Download, Loader2, Sun, Moon, LogIn, LogOut, User as UserIcon, Server, Users, Bot, Sliders, ChevronDown, Check, Zap } from "lucide-react";
+import {
+  PanelLeft,
+  PanelLeftClose,
+  Sparkles,
+  Plus,
+  Download,
+  Loader2,
+  Sun,
+  Moon,
+  LogIn,
+  LogOut,
+  User as UserIcon,
+  Server,
+  Users,
+  Bot,
+  Sliders,
+  ChevronDown,
+  Check,
+  Zap,
+} from "lucide-react";
 import Link from "next/link";
 import { useUISettings, PERSONAS } from "@/contexts/UISettingsContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -59,7 +78,9 @@ export const Header = ({ toggleSidebar, isSidebarOpen = true, onOpenMCPConfig }:
     };
   }, [modelPickerOpen]);
 
-  const currentThreadId = pathname?.startsWith("/thread/") ? pathname.replace("/thread/", "") : null;
+  const currentThreadId = pathname?.startsWith("/thread/")
+    ? pathname.replace("/thread/", "")
+    : null;
 
   const handleNewChat = async () => {
     const thread = await createThread();
@@ -101,10 +122,11 @@ export const Header = ({ toggleSidebar, isSidebarOpen = true, onOpenMCPConfig }:
   };
 
   return (
-    <header className="sticky top-0 z-10 flex h-14 items-center border-b border-gray-200/70 bg-white/80 px-3 md:px-4 backdrop-blur-md dark:border-gray-800/70 dark:bg-gray-900/80">
+    <header className="sticky top-0 z-10 flex h-14 items-center border-b border-gray-200/70 bg-white/80 px-3 backdrop-blur-md md:px-4 dark:border-gray-800/70 dark:bg-gray-900/80">
       <div className="flex w-full items-center justify-between gap-2">
         <div className="flex items-center gap-2 sm:gap-3">
-          <button suppressHydrationWarning
+          <button
+            suppressHydrationWarning
             onClick={toggleSidebar}
             className="cursor-pointer rounded-lg p-1.5 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
             aria-label={isSidebarOpen ? "Hide sidebar" : "Show sidebar"}
@@ -113,7 +135,7 @@ export const Header = ({ toggleSidebar, isSidebarOpen = true, onOpenMCPConfig }:
             {isSidebarOpen ? <PanelLeftClose size={19} /> : <PanelLeft size={19} />}
           </button>
 
-          <Link href="/" className="flex items-center gap-2 group">
+          <Link href="/" className="group flex items-center gap-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-500 text-white shadow-xs shadow-blue-500/20 transition-transform group-hover:scale-105">
               <Sparkles size={16} />
             </div>
@@ -128,7 +150,7 @@ export const Header = ({ toggleSidebar, isSidebarOpen = true, onOpenMCPConfig }:
               suppressHydrationWarning
               type="button"
               onClick={() => setModelPickerOpen((prev) => !prev)}
-              className="flex cursor-pointer items-center gap-1.5 rounded-full border border-blue-200/80 bg-blue-50/80 px-2.5 py-1 text-xs font-medium text-blue-700 transition-all hover:bg-blue-100/80 hover:border-blue-300 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/60"
+              className="flex cursor-pointer items-center gap-1.5 rounded-full border border-blue-200/80 bg-blue-50/80 px-2.5 py-1 text-xs font-medium text-blue-700 transition-all hover:border-blue-300 hover:bg-blue-100/80 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-900/60"
               title="Click to quickly switch Model, Provider or Persona"
             >
               <span className="relative flex h-2 w-2">
@@ -136,24 +158,28 @@ export const Header = ({ toggleSidebar, isSidebarOpen = true, onOpenMCPConfig }:
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-blue-500"></span>
               </span>
               <span>{activePersona.icon}</span>
-              <span className="hidden sm:inline capitalize font-semibold">{provider}</span>
-              <span className="hidden sm:inline text-blue-300 dark:text-blue-700">•</span>
-              <span className="max-w-[120px] sm:max-w-[160px] truncate font-mono text-[11px] opacity-90">{model}</span>
-              <ChevronDown className={`h-3 w-3 text-blue-500 transition-transform duration-200 ${modelPickerOpen ? "rotate-180" : ""}`} />
+              <span className="hidden font-semibold capitalize sm:inline">{provider}</span>
+              <span className="hidden text-blue-300 sm:inline dark:text-blue-700">•</span>
+              <span className="max-w-[120px] truncate font-mono text-[11px] opacity-90 sm:max-w-[160px]">
+                {model}
+              </span>
+              <ChevronDown
+                className={`h-3 w-3 text-blue-500 transition-transform duration-200 ${modelPickerOpen ? "rotate-180" : ""}`}
+              />
             </button>
 
             {/* Quick Picker Popover Dropdown */}
             {modelPickerOpen && (
-              <div className="absolute left-0 top-full mt-2 w-80 sm:w-96 rounded-xl border border-gray-200/90 bg-white/95 p-3 shadow-2xl backdrop-blur-md z-50 dark:border-gray-800 dark:bg-gray-900/95 animate-in fade-in-0 zoom-in-95 duration-150">
+              <div className="animate-in fade-in-0 zoom-in-95 absolute top-full left-0 z-50 mt-2 w-80 rounded-xl border border-gray-200/90 bg-white/95 p-3 shadow-2xl backdrop-blur-md duration-150 sm:w-96 dark:border-gray-800 dark:bg-gray-900/95">
                 {/* Header & Tabs */}
-                <div className="flex items-center justify-between border-b border-gray-100 pb-2 mb-2.5 dark:border-gray-800">
+                <div className="mb-2.5 flex items-center justify-between border-b border-gray-100 pb-2 dark:border-gray-800">
                   <div className="flex items-center gap-1 rounded-lg bg-gray-100 p-0.5 dark:bg-gray-800">
                     <button
                       type="button"
                       onClick={() => setPickerTab("model")}
                       className={`flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium transition-all ${
                         pickerTab === "model"
-                          ? "bg-white text-blue-600 shadow-xs font-semibold dark:bg-gray-700 dark:text-blue-300"
+                          ? "bg-white font-semibold text-blue-600 shadow-xs dark:bg-gray-700 dark:text-blue-300"
                           : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
                       }`}
                     >
@@ -165,7 +191,7 @@ export const Header = ({ toggleSidebar, isSidebarOpen = true, onOpenMCPConfig }:
                       onClick={() => setPickerTab("persona")}
                       className={`flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium transition-all ${
                         pickerTab === "persona"
-                          ? "bg-white text-blue-600 shadow-xs font-semibold dark:bg-gray-700 dark:text-blue-300"
+                          ? "bg-white font-semibold text-blue-600 shadow-xs dark:bg-gray-700 dark:text-blue-300"
                           : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
                       }`}
                     >
@@ -180,7 +206,7 @@ export const Header = ({ toggleSidebar, isSidebarOpen = true, onOpenMCPConfig }:
                   <div className="space-y-3">
                     {/* Providers */}
                     <div>
-                      <div className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5 dark:text-gray-400">
+                      <div className="mb-1.5 text-[11px] font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                         Provider
                       </div>
                       <div className="grid grid-cols-2 gap-1.5">
@@ -200,11 +226,13 @@ export const Header = ({ toggleSidebar, isSidebarOpen = true, onOpenMCPConfig }:
                               className={`flex cursor-pointer items-center justify-between rounded-lg border px-2.5 py-1.5 text-xs font-medium capitalize transition-all ${
                                 isSelected
                                   ? "border-blue-500 bg-blue-50/80 text-blue-700 shadow-xs dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-300"
-                                  : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-750"
+                                  : "dark:hover:bg-gray-750 border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
                               }`}
                             >
                               <span>{pKey}</span>
-                              {isSelected && <Check size={12} className="text-blue-600 dark:text-blue-400" />}
+                              {isSelected && (
+                                <Check size={12} className="text-blue-600 dark:text-blue-400" />
+                              )}
                             </button>
                           );
                         })}
@@ -213,7 +241,7 @@ export const Header = ({ toggleSidebar, isSidebarOpen = true, onOpenMCPConfig }:
 
                     {/* Models for active provider */}
                     <div>
-                      <div className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5 dark:text-gray-400">
+                      <div className="mb-1.5 text-[11px] font-semibold tracking-wider text-gray-500 uppercase dark:text-gray-400">
                         Available Models ({provider})
                       </div>
                       <div className="max-h-48 space-y-1 overflow-y-auto pr-1">
@@ -227,14 +255,16 @@ export const Header = ({ toggleSidebar, isSidebarOpen = true, onOpenMCPConfig }:
                                 setModel(m);
                                 setModelPickerOpen(false);
                               }}
-                              className={`flex w-full cursor-pointer items-center justify-between rounded-lg px-2.5 py-1.5 text-left text-xs font-mono transition-all ${
+                              className={`flex w-full cursor-pointer items-center justify-between rounded-lg px-2.5 py-1.5 text-left font-mono text-xs transition-all ${
                                 isCurrent
-                                  ? "bg-blue-600 text-white font-semibold shadow-xs"
+                                  ? "bg-blue-600 font-semibold text-white shadow-xs"
                                   : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
                               }`}
                             >
                               <span className="truncate">{m}</span>
-                              {isCurrent && <Check size={13} className="text-white shrink-0 ml-1.5" />}
+                              {isCurrent && (
+                                <Check size={13} className="ml-1.5 shrink-0 text-white" />
+                              )}
                             </button>
                           );
                         })}
@@ -245,7 +275,7 @@ export const Header = ({ toggleSidebar, isSidebarOpen = true, onOpenMCPConfig }:
 
                 {/* Tab 2: Persona Selector */}
                 {pickerTab === "persona" && (
-                  <div className="space-y-1.5 max-h-60 overflow-y-auto pr-1">
+                  <div className="max-h-60 space-y-1.5 overflow-y-auto pr-1">
                     {Object.values(PERSONAS).map((p) => {
                       const isCurrent = persona === p.id;
                       return (
@@ -259,16 +289,18 @@ export const Header = ({ toggleSidebar, isSidebarOpen = true, onOpenMCPConfig }:
                           className={`flex w-full cursor-pointer items-start gap-2.5 rounded-lg border p-2 text-left transition-all ${
                             isCurrent
                               ? "border-blue-500 bg-blue-50/70 text-blue-900 dark:border-blue-600 dark:bg-blue-950/40 dark:text-blue-200"
-                              : "border-gray-100 bg-white hover:border-gray-200 hover:bg-gray-50 text-gray-800 dark:border-gray-800 dark:bg-gray-850 dark:hover:bg-gray-800 dark:text-gray-200"
+                              : "dark:bg-gray-850 border-gray-100 bg-white text-gray-800 hover:border-gray-200 hover:bg-gray-50 dark:border-gray-800 dark:text-gray-200 dark:hover:bg-gray-800"
                           }`}
                         >
                           <span className="text-lg">{p.icon}</span>
-                          <div className="flex-1 min-w-0">
+                          <div className="min-w-0 flex-1">
                             <div className="flex items-center justify-between">
-                              <div className="font-semibold text-xs">{p.name}</div>
-                              {isCurrent && <Check size={13} className="text-blue-600 dark:text-blue-400" />}
+                              <div className="text-xs font-semibold">{p.name}</div>
+                              {isCurrent && (
+                                <Check size={13} className="text-blue-600 dark:text-blue-400" />
+                              )}
                             </div>
-                            <div className="text-[11px] text-gray-500 dark:text-gray-400 line-clamp-1">
+                            <div className="line-clamp-1 text-[11px] text-gray-500 dark:text-gray-400">
                               {p.description}
                             </div>
                           </div>
@@ -291,7 +323,7 @@ export const Header = ({ toggleSidebar, isSidebarOpen = true, onOpenMCPConfig }:
               className={`flex cursor-pointer items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all ${
                 agentMode === "multi"
                   ? "border-purple-300 bg-purple-50 text-purple-700 shadow-xs dark:border-purple-800 dark:bg-purple-950/50 dark:text-purple-300"
-                  : "border-gray-200 bg-white text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-750"
+                  : "dark:hover:bg-gray-750 border-gray-200 bg-white text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
               }`}
               title={
                 agentMode === "multi"
@@ -302,8 +334,8 @@ export const Header = ({ toggleSidebar, isSidebarOpen = true, onOpenMCPConfig }:
               {agentMode === "multi" ? (
                 <>
                   <Users size={14} className="text-purple-600 dark:text-purple-400" />
-                  <span className="hidden md:inline font-semibold">5-Agent Council</span>
-                  <span className="md:hidden font-semibold">Council</span>
+                  <span className="hidden font-semibold md:inline">5-Agent Council</span>
+                  <span className="font-semibold md:hidden">Council</span>
                 </>
               ) : (
                 <>
@@ -331,13 +363,13 @@ export const Header = ({ toggleSidebar, isSidebarOpen = true, onOpenMCPConfig }:
             <button
               suppressHydrationWarning
               onClick={onOpenMCPConfig}
-              className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-xs font-medium text-gray-700 shadow-xs transition-colors hover:bg-gray-100 sm:px-2.5 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-750"
+              className="dark:hover:bg-gray-750 flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-xs font-medium text-gray-700 shadow-xs transition-colors hover:bg-gray-100 sm:px-2.5 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
               title="Add and configure Model Context Protocol (MCP) servers"
             >
               <Server size={14} className="text-emerald-600 dark:text-emerald-400" />
               <span className="hidden md:inline">MCP Servers</span>
               {(mcpToolsData?.totalCount ?? 0) > 0 && (
-                <span className="rounded-full bg-emerald-100 px-1.5 py-0.2 text-[10px] font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                <span className="py-0.2 rounded-full bg-emerald-100 px-1.5 text-[10px] font-bold text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
                   {mcpToolsData?.totalCount}
                 </span>
               )}
@@ -345,7 +377,8 @@ export const Header = ({ toggleSidebar, isSidebarOpen = true, onOpenMCPConfig }:
           )}
 
           {/* Dark / Light Theme Toggle */}
-          <button suppressHydrationWarning
+          <button
+            suppressHydrationWarning
             onClick={toggleTheme}
             className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-600 shadow-xs transition-colors hover:bg-gray-100 hover:text-gray-900 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white"
             title={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
@@ -355,7 +388,8 @@ export const Header = ({ toggleSidebar, isSidebarOpen = true, onOpenMCPConfig }:
           </button>
 
           {currentThreadId && (
-            <button suppressHydrationWarning
+            <button
+              suppressHydrationWarning
               onClick={() => setExportStudioOpen(true)}
               className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-xs transition-colors hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
               title="Open Export & Presentation Studio (Markdown, PDF, JSON)"
@@ -365,7 +399,8 @@ export const Header = ({ toggleSidebar, isSidebarOpen = true, onOpenMCPConfig }:
             </button>
           )}
 
-          <button suppressHydrationWarning
+          <button
+            suppressHydrationWarning
             onClick={handleNewChat}
             className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-all hover:brightness-110 active:scale-95"
           >
@@ -376,9 +411,10 @@ export const Header = ({ toggleSidebar, isSidebarOpen = true, onOpenMCPConfig }:
           {/* User Auth Profile / Buttons */}
           {user ? (
             <div className="flex items-center gap-2 border-l border-gray-200 pl-2 dark:border-gray-800">
-              <button suppressHydrationWarning
+              <button
+                suppressHydrationWarning
                 onClick={() => setProfileOpen(true)}
-                className="flex cursor-pointer items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-750"
+                className="dark:hover:bg-gray-750 flex cursor-pointer items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
                 title="Account Profile & Password Settings"
               >
                 <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white uppercase">
@@ -386,7 +422,8 @@ export const Header = ({ toggleSidebar, isSidebarOpen = true, onOpenMCPConfig }:
                 </span>
                 <span className="max-w-[100px] truncate">{user.name}</span>
               </button>
-              <button suppressHydrationWarning
+              <button
+                suppressHydrationWarning
                 onClick={() => logout()}
                 className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-100 hover:text-red-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-red-400"
                 title="Sign out"
@@ -396,16 +433,18 @@ export const Header = ({ toggleSidebar, isSidebarOpen = true, onOpenMCPConfig }:
             </div>
           ) : (
             <div className="flex items-center gap-1.5 border-l border-gray-200 pl-2 dark:border-gray-800">
-              <button suppressHydrationWarning
+              <button
+                suppressHydrationWarning
                 onClick={() => openAuthModal("login")}
                 className="flex cursor-pointer items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 dark:text-gray-200 dark:hover:bg-gray-800"
               >
                 <LogIn size={14} />
                 <span>Sign In</span>
               </button>
-              <button suppressHydrationWarning
+              <button
+                suppressHydrationWarning
                 onClick={() => openAuthModal("register")}
-                className="flex cursor-pointer items-center gap-1 rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-800 shadow-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-750"
+                className="dark:hover:bg-gray-750 flex cursor-pointer items-center gap-1 rounded-lg border border-gray-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-gray-800 shadow-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
               >
                 <UserIcon size={14} />
                 <span>Sign Up</span>
@@ -430,10 +469,7 @@ export const Header = ({ toggleSidebar, isSidebarOpen = true, onOpenMCPConfig }:
         threadId={currentThreadId}
       />
 
-      <AgentStudioModal
-        isOpen={agentStudioOpen}
-        onClose={() => setAgentStudioOpen(false)}
-      />
+      <AgentStudioModal isOpen={agentStudioOpen} onClose={() => setAgentStudioOpen(false)} />
     </header>
   );
 };

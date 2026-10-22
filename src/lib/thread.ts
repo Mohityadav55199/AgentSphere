@@ -8,10 +8,12 @@ function generateSmartTitle(seed: string): string {
   if (clean.length === 0) return "New thread";
 
   // Strip conversational/greeting prefixes to produce punchy, descriptive titles
-  const stripped = clean.replace(
-    /^(can you (please )?|could you (please )?|please |help me (with )?|i want to |i need to |how to |how do i |tell me about |what is |what are |explain (to me )?|write a |write an |create a |create an |generate a |give me (a |an )?)/i,
-    ""
-  ).trim();
+  const stripped = clean
+    .replace(
+      /^(can you (please )?|could you (please )?|please |help me (with )?|i want to |i need to |how to |how do i |tell me about |what is |what are |explain (to me )?|write a |write an |create a |create an |generate a |give me (a |an )?)/i,
+      "",
+    )
+    .trim();
 
   const titleSource = stripped.length > 3 ? stripped : clean;
 

@@ -3,7 +3,7 @@ name: Database Backup Cronjob
 on:
   schedule:
     # Runs automatically every day at 02:00 UTC
-    - cron: '0 2 * * *'
+    - cron: "0 2 * * *"
   workflow_dispatch:
     # Allows manual trigger at any time from GitHub Actions UI
 
@@ -28,8 +28,9 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
           if [ -z "$DATABASE_URL" ]; then
-            echo "::error::DATABASE_URL secret is missing! Please configure DATABASE_URL in repository Secrets."
-            exit 1
+            echo "::warning::DATABASE_URL secret is not configured in repository secrets. Skipping automated database backup."
+            echo "skipped=true" >> $GITHUB_OUTPUT
+            exit 0
           fi
 
           mkdir -p backups
@@ -41,6 +42,7 @@ jobs:
           pg_dump "$DATABASE_URL" --no-owner --no-acl | gzip -9 > "$BACKUP_FILE"
 
           FILE_SIZE=$(ls -lh "$BACKUP_FILE" | awk '{print $5}')
+          echo "skipped=false" >> $GITHUB_OUTPUT
           echo "backup_file=$BACKUP_FILE" >> $GITHUB_OUTPUT
           echo "file_name=agentsphere-backup-${TIMESTAMP}.sql.gz" >> $GITHUB_OUTPUT
           echo "file_size=$FILE_SIZE" >> $GITHUB_OUTPUT
@@ -48,6 +50,7 @@ jobs:
           echo "✅ Backup successfully created: $BACKUP_FILE ($FILE_SIZE)"
 
       - name: Store Backup in GitHub Actions Artifacts
+        if: steps.dump.outputs.skipped == 'false'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.dump.outputs.file_name }}
@@ -56,6 +59,7 @@ jobs:
           if-no-files-found: error
 
       - name: Optional S3/R2 Cloud Storage Upload
+        if: steps.dump.outputs.skipped == 'false'
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
@@ -79,12 +83,17 @@ jobs:
       - name: Generate Run Summary
         run: |
           echo "### 🗄️ Database Backup Summary" >> $GITHUB_STEP_SUMMARY
-          echo "- **File Name**: \`${{ steps.dump.outputs.file_name }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Archive Size**: \`${{ steps.dump.outputs.file_size }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Timestamp**: \`${{ steps.dump.outputs.timestamp }} UTC\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Artifact Retention**: 30 Days (Downloadable from GitHub Actions run page)" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "#### How to restore:" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
-          echo "gunzip -c ${{ steps.dump.outputs.file_name }} | psql \"\$DATABASE_URL\"" >> $GITHUB_STEP_SUMMARY
-          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.dump.outputs.skipped }}" == "true" ]; then
+            echo "⚠️ **Database backup was skipped.** The \`DATABASE_URL\` secret is not configured in repository Secrets." >> $GITHUB_STEP_SUMMARY
+            echo "To enable automated daily backups, add \`DATABASE_URL\` to **Settings > Secrets and variables > Actions**." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **File Name**: \`${{ steps.dump.outputs.file_name }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "- **Archive Size**: \`${{ steps.dump.outputs.file_size }}\`" >> $GITHUB_STEP_SUMMARY
+            echo "- **Timestamp**: \`${{ steps.dump.outputs.timestamp }} UTC\`" >> $GITHUB_STEP_SUMMARY
+            echo "- **Artifact Retention**: 30 Days (Downloadable from GitHub Actions run page)" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "#### How to restore:" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+            echo "gunzip -c ${{ steps.dump.outputs.file_name }} | psql \"\$DATABASE_URL\"" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          fi

@@ -153,14 +153,14 @@ export function createWebSearchTool(): DynamicTool {
         }
       }
 
-function extractDomain(link: string): string {
-  try {
-    const u = new URL(link);
-    return u.hostname.replace(/^www\./, "");
-  } catch {
-    return "";
-  }
-}
+      function extractDomain(link: string): string {
+        try {
+          const u = new URL(link);
+          return u.hostname.replace(/^www\./, "");
+        } catch {
+          return "";
+        }
+      }
 
       // Default DuckDuckGo search (zero configuration required)
       const results = await searchDuckDuckGo(cleanQuery);

@@ -1,6 +1,18 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { Button } from "./ui/button";
-import { ArrowUp, Loader2, Eye, EyeOff, Paperclip, X, Mic, MicOff, FileText, Image as ImageIcon, Sparkles } from "lucide-react";
+import {
+  ArrowUp,
+  Loader2,
+  Eye,
+  EyeOff,
+  Paperclip,
+  X,
+  Mic,
+  MicOff,
+  FileText,
+  Image as ImageIcon,
+  Sparkles,
+} from "lucide-react";
 import { MessageOptions, FileAttachment } from "@/types/message";
 import { SettingsPanel } from "./SettingsPanel";
 import { useUISettings } from "@/contexts/UISettingsContext";
@@ -100,7 +112,9 @@ export const MessageInput = ({
     try {
       const selectedFiles = files.slice(0, remainingSlots);
       if (selectedFiles.length < files.length) {
-        alert(`Only the first ${remainingSlots} file(s) were selected (max ${MAX_ATTACHMENTS} attachments).`);
+        alert(
+          `Only the first ${remainingSlots} file(s) were selected (max ${MAX_ATTACHMENTS} attachments).`,
+        );
       }
 
       const uploadPromises = selectedFiles.map(async (file) => {
@@ -199,18 +213,20 @@ export const MessageInput = ({
         onDrop={handleDrop}
         className={`relative mx-auto flex w-full flex-col rounded-2xl border bg-white/90 shadow-md backdrop-blur-md transition-all duration-200 dark:bg-gray-900/90 ${
           isDragging
-            ? "border-blue-500 ring-4 ring-blue-500/20 bg-blue-50/40 dark:bg-blue-950/30"
+            ? "border-blue-500 bg-blue-50/40 ring-4 ring-blue-500/20 dark:bg-blue-950/30"
             : isFocused
-            ? "border-blue-500/80 shadow-lg shadow-blue-500/10 ring-2 ring-blue-500/20 dark:border-blue-500/80"
-            : "border-gray-200/80 dark:border-gray-800"
+              ? "border-blue-500/80 shadow-lg ring-2 shadow-blue-500/10 ring-blue-500/20 dark:border-blue-500/80"
+              : "border-gray-200/80 dark:border-gray-800"
         }`}
       >
         {/* Drag and drop overlay */}
         {isDragging && (
-          <div className="pointer-events-none absolute inset-0 z-30 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-blue-500 bg-blue-50/90 text-blue-600 backdrop-blur-xs dark:bg-blue-950/90 dark:text-blue-300 animate-in fade-in-0 duration-150">
-            <Paperclip className="h-8 w-8 mb-1 animate-bounce" />
+          <div className="animate-in fade-in-0 pointer-events-none absolute inset-0 z-30 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-blue-500 bg-blue-50/90 text-blue-600 backdrop-blur-xs duration-150 dark:bg-blue-950/90 dark:text-blue-300">
+            <Paperclip className="mb-1 h-8 w-8 animate-bounce" />
             <p className="text-sm font-semibold">Drop files here to attach to chat</p>
-            <p className="text-xs text-blue-500/80 dark:text-blue-400/80">Images, PDFs, Markdown, Code</p>
+            <p className="text-xs text-blue-500/80 dark:text-blue-400/80">
+              Images, PDFs, Markdown, Code
+            </p>
           </div>
         )}
 
@@ -240,7 +256,7 @@ export const MessageInput = ({
                       <img
                         src={attachment.url}
                         alt={attachment.name}
-                        className="h-8 w-8 rounded object-cover border border-gray-200 dark:border-gray-700"
+                        className="h-8 w-8 rounded border border-gray-200 object-cover dark:border-gray-700"
                       />
                     ) : (
                       <div className="flex h-8 w-8 items-center justify-center rounded bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400">
@@ -248,11 +264,13 @@ export const MessageInput = ({
                       </div>
                     )}
                     <div className="flex flex-col">
-                      <span className="max-w-[160px] truncate font-medium text-[11px] leading-tight">
+                      <span className="max-w-[160px] truncate text-[11px] leading-tight font-medium">
                         {attachment.name}
                       </span>
                       <span className="text-[10px] text-gray-400">
-                        {attachment.size < 1024 ? "<1KB" : `${(attachment.size / 1024).toFixed(0)}KB`}
+                        {attachment.size < 1024
+                          ? "<1KB"
+                          : `${(attachment.size / 1024).toFixed(0)}KB`}
                       </span>
                     </div>
                     <button
@@ -278,7 +296,7 @@ export const MessageInput = ({
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             placeholder={"Type your message..."}
-            className="max-h-[200px] min-h-[60px] w-full flex-1 resize-none overflow-auto pr-12 focus:outline-none text-sm text-gray-900 placeholder:text-gray-400 dark:text-gray-100 dark:placeholder:text-gray-500"
+            className="max-h-[200px] min-h-[60px] w-full flex-1 resize-none overflow-auto pr-12 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none dark:text-gray-100 dark:placeholder:text-gray-500"
             rows={1}
             aria-label="Message input"
             disabled={isLoading}
@@ -304,7 +322,9 @@ export const MessageInput = ({
           <div className="flex items-center justify-between pt-1">
             <div className="flex items-center gap-3">
               {/* Character counter */}
-              <div className={`text-[11px] font-mono ${isNearLimit ? "text-amber-500 font-semibold" : "text-gray-400"}`}>
+              <div
+                className={`font-mono text-[11px] ${isNearLimit ? "font-semibold text-amber-500" : "text-gray-400"}`}
+              >
                 {remainingChars}/{maxLength}
               </div>
 
@@ -316,11 +336,14 @@ export const MessageInput = ({
                   onChange={(e) => setApproveAllTools(e.target.checked)}
                   className="h-3.5 w-3.5 cursor-pointer rounded border-gray-300 text-blue-600 focus:ring-1 focus:ring-blue-500"
                 />
-                <span className="text-xs text-gray-600 dark:text-gray-300 font-medium">Auto-approve</span>
+                <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
+                  Auto-approve
+                </span>
               </label>
 
               {/* Tool messages toggle */}
-              <button suppressHydrationWarning
+              <button
+                suppressHydrationWarning
                 type="button"
                 onClick={toggleToolMessages}
                 className="inline-flex cursor-pointer items-center gap-1 rounded-md px-1.5 py-0.5 text-xs transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
@@ -331,7 +354,7 @@ export const MessageInput = ({
                 ) : (
                   <Eye className="h-3.5 w-3.5 text-gray-500" />
                 )}
-                <span className="text-gray-600 dark:text-gray-300 text-xs">
+                <span className="text-xs text-gray-600 dark:text-gray-300">
                   {hideToolMessages ? "Show tools" : "Hide tools"}
                 </span>
               </button>
@@ -340,12 +363,14 @@ export const MessageInput = ({
             <div className="flex items-center gap-1.5">
               {/* Audio Waveform feedback when recording */}
               {isListening && (
-                <div className="flex items-center gap-0.5 px-2 py-1 rounded-full bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-900/40">
+                <div className="flex items-center gap-0.5 rounded-full border border-red-200 bg-red-50 px-2 py-1 dark:border-red-900/40 dark:bg-red-950/60">
                   <span className="h-2 w-0.5 animate-pulse rounded-full bg-red-500" />
-                  <span className="h-4 w-0.5 animate-pulse delay-75 rounded-full bg-red-500" />
-                  <span className="h-3 w-0.5 animate-pulse delay-150 rounded-full bg-red-500" />
-                  <span className="h-4.5 w-0.5 animate-pulse delay-100 rounded-full bg-red-500" />
-                  <span className="text-[10px] font-semibold text-red-600 dark:text-red-400 ml-1">Listening</span>
+                  <span className="h-4 w-0.5 animate-pulse rounded-full bg-red-500 delay-75" />
+                  <span className="h-3 w-0.5 animate-pulse rounded-full bg-red-500 delay-150" />
+                  <span className="h-4.5 w-0.5 animate-pulse rounded-full bg-red-500 delay-100" />
+                  <span className="ml-1 text-[10px] font-semibold text-red-600 dark:text-red-400">
+                    Listening
+                  </span>
                 </div>
               )}
 
@@ -358,8 +383,8 @@ export const MessageInput = ({
                 disabled={isLoading}
                 className={`h-8 w-8 rounded-full p-0 transition-all ${
                   isListening
-                    ? "bg-red-100 text-red-600 animate-pulse dark:bg-red-950 dark:text-red-400"
-                    : "text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
+                    ? "animate-pulse bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400"
+                    : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
                 }`}
                 title={isListening ? "Listening... Click to stop" : "Voice input"}
                 aria-label="Voice input"
@@ -374,7 +399,7 @@ export const MessageInput = ({
                 variant="ghost"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isLoading || isUploading || attachments.length >= MAX_ATTACHMENTS}
-                className="h-8 w-8 rounded-full p-0 text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-800"
+                className="h-8 w-8 rounded-full p-0 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
                 title={`Attach file (${attachments.length}/${MAX_ATTACHMENTS})`}
                 aria-label="Attach file"
               >

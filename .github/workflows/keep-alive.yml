@@ -3,11 +3,11 @@ name: Keep Server Warm (Render Free Tier)
 on:
   schedule:
     # Runs every 14 minutes (Render free tier spins down after 15 minutes of inactivity)
-    - cron: '*/14 * * * *'
+    - cron: "*/14 * * * *"
   workflow_dispatch:
     inputs:
       target_url:
-        description: 'Optional custom URL to ping (defaults to RENDER_APP_URL secret)'
+        description: "Optional custom URL to ping (defaults to RENDER_APP_URL secret)"
         required: false
         type: string
 
@@ -23,7 +23,7 @@ jobs:
         run: |
           # Priority: Manual input -> RENDER_APP_URL secret/var -> NEXT_PUBLIC_APP_URL secret/var -> APP_URL secret/var -> Default fallback
           TARGET="${{ inputs.target_url || secrets.RENDER_APP_URL || vars.RENDER_APP_URL || secrets.NEXT_PUBLIC_APP_URL || vars.NEXT_PUBLIC_APP_URL || secrets.APP_URL || vars.APP_URL || 'https://agentsphere.onrender.com' }}"
-          
+
           if [ -z "$TARGET" ]; then
             echo "::error::Target URL is not configured! Please configure RENDER_APP_URL in your repository Secrets or Variables (Settings -> Secrets and variables -> Actions)."
             exit 1
@@ -45,7 +45,7 @@ jobs:
         run: |
           URL="${{ steps.resolve-url.outputs.target_url }}"
           echo "Sending keep-alive request to $URL at $(date -u)..."
-          
+
           START_TIME=$(date +%s%3N)
           HTTP_RESPONSE=$(curl -s -S -L -o response.json -w "%{http_code}" --max-time 60 "$URL" || echo "FAILED")
           END_TIME=$(date +%s%3N)

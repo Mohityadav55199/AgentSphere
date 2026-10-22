@@ -19,9 +19,7 @@ export async function GET() {
   const user = await getCurrentUser();
 
   // If user logged in, fetch their threads or unassigned guest threads
-  const whereCondition = user
-    ? { OR: [{ userId: user.id }, { userId: null }] }
-    : { userId: null };
+  const whereCondition = user ? { OR: [{ userId: user.id }, { userId: null }] } : { userId: null };
 
   const dbThreads = await prisma.thread.findMany({
     where: whereCondition,

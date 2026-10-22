@@ -3,6 +3,7 @@
 ---
 
 ## 📌 Document Metadata & Component Grounding
+
 - **Target Repository**: `AgentSphere`
 - **Framework**: Next.js 16.2.9 (App Router) + React 19.2.7 + Tailwind CSS v4.3.1
 - **Component Directory**: [src/components/](file:///c:/Projects/AgentSphere/src/components)
@@ -20,14 +21,14 @@ graph TD
     RootLayout["RootLayout (src/app/layout.tsx)<br/>Provides QueryClient, AuthProvider, UISettingsProvider, ThreadProvider"]
     RootLayout --> Page["Page: / or /thread/[threadId]"]
     Page --> MainLayout["MainLayout (src/components/MainLayout.tsx)"]
-    
+
     MainLayout --> Sidebar["Sidebar Component (src/components/Sidebar.tsx)"]
     Sidebar --> ThreadList["ThreadList (src/components/ThreadList.tsx)"]
-    
+
     MainLayout --> Header["Header (src/components/Header.tsx)"]
     Header --> ProfileModal["ProfileModal (src/components/ProfileModal.tsx)"]
     Header --> AuthModal["AuthModal (src/components/AuthModal.tsx)"]
-    
+
     MainLayout --> ThreadComp["Thread Component (src/components/Thread.tsx)"]
     ThreadComp --> MsgList["MessageList (src/components/MessageList.tsx)"]
     MsgList --> HumanMsg["HumanMessage (src/components/HumanMessage.tsx)"]
@@ -35,11 +36,11 @@ graph TD
     AIMsg --> ToolCallUI["ToolCallDisplay (src/components/ToolCallDisplay.tsx)"]
     MsgList --> ToolMsg["ToolMessage (src/components/ToolMessage.tsx)"]
     MsgList --> ErrorMsg["ErrorMessage (src/components/ErrorMessage.tsx)"]
-    
+
     ThreadComp --> MsgInput["MessageInput (src/components/MessageInput.tsx)"]
     MsgInput --> SettingsPanel["SettingsPanel (src/components/SettingsPanel.tsx)"]
     SettingsPanel --> ModelConfig["ModelConfiguration (src/components/ModelConfiguration.tsx)"]
-    
+
     MainLayout --> MCPList["MCPServerList Modal (src/components/MCPServerList.tsx)"]
     MCPList --> MCPForm["MCPServerForm (src/components/MCPServerForm.tsx)"]
 ```
@@ -51,6 +52,7 @@ graph TD
 AgentSphere leverages the **Next.js App Router** with two primary routes:
 
 ### 2.1 The Root Route (`/`)
+
 - **File**: [src/app/page.tsx](file:///c:/Projects/AgentSphere/src/app/page.tsx)
 - **Rendering Behavior**: Client-Side Component (`"use client"`).
 - **Initialization Logic**:
@@ -67,6 +69,7 @@ AgentSphere leverages the **Next.js App Router** with two primary routes:
   5. The URL transitions seamlessly from `/` to `/thread/3b9e...` once a conversation begins.
 
 ### 2.2 The Thread Route (`/thread/[threadId]`)
+
 - **File**: [src/app/thread/[threadId]/page.tsx](file:///c:/Projects/AgentSphere/src/app/thread/[threadId]/page.tsx)
 - **Role**: Dynamic segment extracting `params.threadId` via `useParams()`.
 - **Behavior**: Renders `<MainLayout>` containing `<Thread threadId={threadId} />`.
@@ -78,6 +81,7 @@ AgentSphere leverages the **Next.js App Router** with two primary routes:
 AgentSphere wraps the application in 3 React context providers in [src/app/layout.tsx](file:///c:/Projects/AgentSphere/src/app/layout.tsx#L26-L37):
 
 ### 3.1 `AuthContext` (`src/contexts/AuthContext.tsx`)
+
 - **State Managed**:
   - `user: UserSession | null` (current user ID, email, name).
   - `isLoading: boolean` (initial session verification status).
@@ -89,6 +93,7 @@ AgentSphere wraps the application in 3 React context providers in [src/app/layou
   - `openAuthModal(mode)` / `closeAuthModal()`.
 
 ### 3.2 `UISettingsContext` (`src/contexts/UISettingsContext.tsx`)
+
 - **State Managed**:
   - `provider: string` (default: `"groq"`, fallback: `"google"`, `"openai"`, `"anthropic"`).
   - `model: string` (e.g. `"openai/gpt-oss-120b"`, `"gemini-2.5-flash"`).
@@ -100,6 +105,7 @@ AgentSphere wraps the application in 3 React context providers in [src/app/layou
 - **Persistence Mechanism**: Automatically mirrors settings to browser `localStorage` under the key `agent_model_settings`.
 
 ### 3.3 `ThreadContext` (`src/contexts/ThreadContext.tsx`)
+
 - **State Managed**: `activeThreadId: string | null` and `setActiveThreadId(id)`.
 
 ---
@@ -107,6 +113,7 @@ AgentSphere wraps the application in 3 React context providers in [src/app/layou
 ## 4. Custom Hooks: The Frontend Logic Engine
 
 ### 4.1 `useChatThread` (`src/hooks/useChatThread.ts`)
+
 The most important hook in the frontend. Manages message history, optimistic updates, and SSE stream consumption.
 
 ```typescript
@@ -123,6 +130,7 @@ export interface UseChatThreadReturn {
 ```
 
 #### How Message Accumulation Works:
+
 ```mermaid
 sequenceDiagram
     participant Srv as Server (SSE)
@@ -133,11 +141,11 @@ sequenceDiagram
     Srv->>Hook: First chunk: { id: "msg-1", content: "Hello" }
     Hook->>Ref: Ref is empty -> currentMessageRef = chunk
     Hook->>Cache: Appends currentMessageRef to message list
-    
+
     Srv->>Hook: Second chunk: { id: "msg-1", content: " world!" }
     Hook->>Ref: IDs match! Concatenates: "Hello" + " world!" = "Hello world!"
     Hook->>Cache: Replaces item at index with updated content
-    
+
     Srv->>Hook: Event: "done"
     Hook->>Hook: Closes EventSource & resets isSending
 ```
@@ -149,12 +157,14 @@ sequenceDiagram
 ---
 
 ### 4.2 `useThreads` (`src/hooks/useThreads.ts`)
+
 - **Role**: Handles fetching, creating, updating (pinning/renaming), and deleting conversation threads.
 - **Cache Management**: Uses `queryKey: ["threads"]`. Mutations trigger `queryClient.invalidateQueries({ queryKey: ["threads"] })` to keep the sidebar updated.
 
 ---
 
 ### 4.3 `useMCPTools` (`src/hooks/useMCPTools.ts`)
+
 - **Role**: Queries `GET /api/mcp-tools` with a 60-second stale time. Returns tool counts and tool descriptions grouped by server name.
 
 ---
@@ -162,12 +172,14 @@ sequenceDiagram
 ## 5. Major Components Deep Dive
 
 ### 5.1 `Thread.tsx` (`src/components/Thread.tsx`)
+
 - **Role**: Main conversation viewport.
 - **States & Handlers**:
   - `isDragging`: Controls the full-screen visual glassmorphic dropzone overlay when a user drags files over the browser window.
   - `PROMPT_SUGGESTIONS`: When a thread has no messages, displays 4 interactive starter prompt cards ("Write Code", "Fast Analysis", "Draft Content", "Brainstorm Ideas").
 
 ### 5.2 `MessageInput.tsx` (`src/components/MessageInput.tsx`)
+
 - **Role**: Comprehensive user prompt interface.
 - **Key Features**:
   1. **Auto-Resizing Textarea**: `textareaRef.current.style.height = scrollHeight + "px"`.
@@ -178,6 +190,7 @@ sequenceDiagram
   4. **Settings Panel Trigger**: Toggles model and persona configurations.
 
 ### 5.3 `AIMessage.tsx` (`src/components/AIMessage.tsx`)
+
 - **Role**: Renders agent responses with rich formatting.
 - **Key Features**:
   1. **Markdown & Math**: Uses `@uiw/react-md-editor` with `rehype-katex` for formula rendering.
@@ -189,6 +202,7 @@ sequenceDiagram
   5. **Tool Call Embedding**: If the message contains tool calls, renders `<ToolCallDisplay>`.
 
 ### 5.4 `ToolCallDisplay.tsx` (`src/components/ToolCallDisplay.tsx`)
+
 - **Role**: Renders human-in-the-loop tool approval controls.
 - **Behavior**:
   - Renders expandable argument cards.
@@ -196,6 +210,7 @@ sequenceDiagram
   - When clicked, invokes `approvalCallbacks.onApprove(toolCallId)` or `onDeny(toolCallId)` and disables the buttons to prevent duplicate submissions.
 
 ### 5.5 `Header.tsx` (`src/components/Header.tsx`)
+
 - **Role**: Top navigation bar.
 - **Key Features**:
   - **Live Model Pill**: Displays pulsating dot, active persona icon, model provider, and model name.
@@ -208,13 +223,15 @@ sequenceDiagram
 ## 6. End-to-End Frontend Interaction Traces
 
 ### Trace A: Voice-to-Text Prompt Submission
+
 1. User clicks the microphone icon in `MessageInput.tsx`.
 2. Browser requests microphone permissions; `SpeechRecognition.start()` initializes.
-3. User speaks: *"Explain binary search."*
+3. User speaks: _"Explain binary search."_
 4. `recognition.onresult` captures transcript: `setMessage("Explain binary search.")`.
 5. User hits Enter $\rightarrow$ `sendMessage()` triggers.
 
 ### Trace B: File Upload & Attachment
+
 1. User drags a PDF or clicks the paperclip icon in `MessageInput.tsx`.
 2. `handleFileSelect` checks file count against `MAX_ATTACHMENTS = 5`.
 3. Constructs `FormData` and `POST`s to `/api/agent/upload`.
@@ -223,6 +240,7 @@ sequenceDiagram
 6. When sending, metadata is serialized into `opts.attachments`.
 
 ### Trace C: Interactive Tool Approval
+
 1. AI model requests tool execution: `db__query_users`.
 2. `AIMessage.tsx` receives `tool_calls` array and renders `<ToolCallDisplay>`.
 3. User reviews tool arguments and clicks **Allow**.

@@ -3,6 +3,7 @@
 ---
 
 ## 📌 Document Metadata & Schema Verification
+
 - **Target Schema File**: [prisma/schema.prisma](file:///c:/Projects/AgentSphere/prisma/schema.prisma)
 - **Checkpointer File**: [src/lib/agent/memory.ts](file:///c:/Projects/AgentSphere/src/lib/agent/memory.ts)
 - **Database Engine**: PostgreSQL 17 (Dockerized on port `5434` / Cloud NeonDB)
@@ -28,7 +29,7 @@ To understand AgentSphere's database layer, review these core relational princip
 ```mermaid
 erDiagram
     User ||--o{ Thread : "owns (0 to many)"
-    
+
     User {
         String id PK "UUID"
         String name "User full name"
@@ -72,6 +73,7 @@ erDiagram
 ## 3. Field-by-Field Model Breakdown
 
 ### 3.1 The `User` Model
+
 - **`id` (`String @id @default(uuid())`)**: Unique primary key.
 - **`name` (`String`)**: User display name.
 - **`email` (`String @unique`)**: Unique user login identifier. Enforced at the database level with a unique index.
@@ -79,6 +81,7 @@ erDiagram
 - **`threads` (`Thread[]`)**: One-to-many virtual relation pointing to threads created by this user.
 
 ### 3.2 The `Thread` Model
+
 - **`id` (`String @id @default(uuid())`)**: Unique conversation ID. Crucially, this same `id` is passed to LangGraph as the `thread_id` for checkpointing!
 - **`title` (`String`)**: Conversation title. Defaults to `"New thread"`, auto-summarized to a 35-character snippet upon first user prompt.
 - **`isPinned` (`Boolean @default(false)`)**: Pinned threads are sorted to the top of the sidebar.
@@ -86,6 +89,7 @@ erDiagram
 - **`user` (`User? @relation(fields: [userId], references: [id], onDelete: Cascade)`)**: If a user deletes their account, all their threads are deleted automatically.
 
 ### 3.3 The `MCPServer` Model
+
 - **`type` (`enum MCPServerType { stdio, http }`)**:
   - `stdio`: Spawns a local binary process using `command`, `args`, and `env`.
   - `http`: Connects to a remote HTTP/SSE endpoint using `url`, `headers`, and optional OAuth.
@@ -113,7 +117,9 @@ graph TD
 ```
 
 ### Why Doesn't Prisma Store Messages?
+
 Notice that there is no `Message` model in `schema.prisma`.
+
 - In standard chatbots, developers create a `Message` table with columns like `role` and `content`.
 - In an **agentic system**, message states are far more complex: messages can be content blocks, image buffers, pending tool interrupts, function calls, or graph channel updates.
 - Instead of flattening this into a relational table, AgentSphere delegates conversation history to **LangGraph's official `PostgresSaver` checkpointer** ([src/lib/agent/memory.ts](file:///c:/Projects/AgentSphere/src/lib/agent/memory.ts)).
@@ -124,13 +130,13 @@ Notice that there is no `Message` model in `schema.prisma`.
 ## 5. CRUD Query Traces from Code
 
 ### 5.1 Fetching User Threads with Guest Fallback
+
 In [src/app/api/agent/threads/route.ts:L18-L40](file:///c:/Projects/AgentSphere/src/app/api/agent/threads/route.ts#L18-L40):
+
 ```typescript
 const user = await getCurrentUser();
 
-const whereCondition = user
-  ? { OR: [{ userId: user.id }, { userId: null }] }
-  : { userId: null };
+const whereCondition = user ? { OR: [{ userId: user.id }, { userId: null }] } : { userId: null };
 
 const dbThreads = await prisma.thread.findMany({
   where: whereCondition,
@@ -138,10 +144,13 @@ const dbThreads = await prisma.thread.findMany({
   take: 50,
 });
 ```
+
 - **Explanation**: If logged in, users see both their registered threads and any unclaimed guest threads created before logging in. Pinned threads are prioritized first.
 
 ### 5.2 Auto-Summarizing Titles
+
 In [src/lib/thread.ts:L37-L45](file:///c:/Projects/AgentSphere/src/lib/thread.ts#L37-L45):
+
 ```typescript
 if (existing.title === "New thread" && titleSeed) {
   updateData.title = generateSmartTitle(titleSeed);
@@ -157,6 +166,7 @@ if (existing.title === "New thread" && titleSeed) {
 ## 6. Database Safety & Migration Procedures
 
 ### Migration Commands Comparison
+
 1. **`pnpm prisma:migrate` (`prisma migrate dev`)**:
    - Safe for development and production. Compares schema to database, generates SQL migration scripts, applies them, and tracks history in `_prisma_migrations`.
 2. **`pnpm prisma:push` (`prisma db push --accept-data-loss`)**:

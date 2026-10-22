@@ -45,28 +45,32 @@ export const PERSONAS: Record<string, Persona> = {
     name: "Senior Developer",
     icon: "💻",
     description: "Expert fullstack engineer for clean code & architecture",
-    prompt: "You are a Senior Principal Software Engineer. Provide concise, production-ready code with TypeScript types, error handling, and high efficiency.",
+    prompt:
+      "You are a Senior Principal Software Engineer. Provide concise, production-ready code with TypeScript types, error handling, and high efficiency.",
   },
   analyst: {
     id: "analyst",
     name: "Data Scientist",
     icon: "📊",
     description: "Specialized in data analysis, statistics & quantitative models",
-    prompt: "You are a Lead Data Scientist. Analyze questions using mathematical rigour, clear step-by-step logic, and data insights.",
+    prompt:
+      "You are a Lead Data Scientist. Analyze questions using mathematical rigour, clear step-by-step logic, and data insights.",
   },
   writer: {
     id: "writer",
     name: "Content Strategist",
     icon: "✍️",
     description: "Compelling storytelling, marketing & polished writing",
-    prompt: "You are an elite Copywriter and Content Strategist. Craft engaging, persuasive, and beautifully structured writing.",
+    prompt:
+      "You are an elite Copywriter and Content Strategist. Craft engaging, persuasive, and beautifully structured writing.",
   },
   auditor: {
     id: "auditor",
     name: "Security Auditor",
     icon: "🛡️",
     description: "Security review, vulnerability audit & code optimization",
-    prompt: "You are a Cybersecurity Auditor. Review code for security flaws, edge-case bugs, performance bottlenecks, and OWASP vulnerabilities.",
+    prompt:
+      "You are a Cybersecurity Auditor. Review code for security flaws, edge-case bugs, performance bottlenecks, and OWASP vulnerabilities.",
   },
 };
 
@@ -131,11 +135,16 @@ export const UISettingsProvider = ({ children }: UISettingsProviderProps) => {
             setAvailableProviders(data.providers);
 
             const saved = loadSettings();
-            let activeProv = typeof saved.provider === "string" ? saved.provider : data.defaultProvider;
+            let activeProv =
+              typeof saved.provider === "string" ? saved.provider : data.defaultProvider;
             let activeMod = typeof saved.model === "string" ? saved.model : "";
 
             // Sanitize invalid or deprecated cached model names
-            if (!activeMod || activeMod === "llama-3.3-70b-versatile" || activeMod === "gemini-3-flash-preview") {
+            if (
+              !activeMod ||
+              activeMod === "llama-3.3-70b-versatile" ||
+              activeMod === "gemini-3-flash-preview"
+            ) {
               activeMod = data.providers[activeProv]?.defaultModel || data.defaultModel;
               saveSetting("model", activeMod);
             }

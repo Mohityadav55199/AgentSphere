@@ -130,7 +130,9 @@ export class AgentBuilder {
       ...state.messages,
     ];
     const modelInvoker =
-      this.tools.length > 0 && "bindTools" in this.model && typeof this.model.bindTools === "function"
+      this.tools.length > 0 &&
+      "bindTools" in this.model &&
+      typeof this.model.bindTools === "function"
         ? this.model.bindTools(this.tools)
         : this.model;
     const response = await modelInvoker.invoke(messages);

@@ -26,7 +26,7 @@ async function handleBackup(req: NextRequest) {
   if (cronSecret && providedKey !== cronSecret) {
     return NextResponse.json(
       { error: "Unauthorized: Invalid or missing CRON_SECRET key" },
-      { status: 401 }
+      { status: 401 },
     );
   }
 
@@ -88,7 +88,7 @@ async function handleBackup(req: NextRequest) {
               timestamp: new Date().toISOString(),
               appName: "AgentSphere",
             },
-          })
+          }),
         );
         s3Uploaded = true;
         s3Message = `Uploaded successfully to s3://${BUCKET_NAME}/${s3Key}`;
@@ -124,7 +124,7 @@ async function handleBackup(req: NextRequest) {
         success: false,
         error: error instanceof Error ? error.message : "Internal backup error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

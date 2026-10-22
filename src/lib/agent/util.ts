@@ -19,10 +19,15 @@ function isValidKey(key?: string): boolean {
 /**
  * Instantiates a single chat model provider
  */
-function createSingleModel(provider: string, modelName: string, temperature: number): BaseChatModel {
+function createSingleModel(
+  provider: string,
+  modelName: string,
+  temperature: number,
+): BaseChatModel {
   switch (provider) {
     case "groq": {
-      const groqModel = !modelName || modelName === "llama-3.3-70b-versatile" ? "openai/gpt-oss-120b" : modelName;
+      const groqModel =
+        !modelName || modelName === "llama-3.3-70b-versatile" ? "openai/gpt-oss-120b" : modelName;
       return new ChatOpenAI({
         model: groqModel,
         temperature,
@@ -46,7 +51,8 @@ function createSingleModel(provider: string, modelName: string, temperature: num
       });
     case "google":
     default: {
-      const googleModel = !modelName || modelName === "gemini-3-flash-preview" ? "gemini-2.5-flash" : modelName;
+      const googleModel =
+        !modelName || modelName === "gemini-3-flash-preview" ? "gemini-2.5-flash" : modelName;
       return new ChatGoogleGenerativeAI({
         model: googleModel,
         temperature,

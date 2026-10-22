@@ -45,13 +45,16 @@ function parseCouncilSections(text: string): {
       name: "Supervisor",
       title: "Task Decomposition & Execution Plan",
       content: supMatch[1].trim(),
-      badgeBg: "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800",
+      badgeBg:
+        "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800",
     });
     remainingText = remainingText.replace(supMatch[0], "");
   }
 
   // 2. 🔍 Research & Context Findings
-  const resMatch = text.match(/### 🔍\s*(Research|Context)[\s\S]*?Findings([\s\S]*?)(?=(### [🎯💻📊🛡️]|$))/i);
+  const resMatch = text.match(
+    /### 🔍\s*(Research|Context)[\s\S]*?Findings([\s\S]*?)(?=(### [🎯💻📊🛡️]|$))/i,
+  );
   if (resMatch) {
     thoughts.push({
       id: "researcher",
@@ -59,13 +62,16 @@ function parseCouncilSections(text: string): {
       name: "Researcher",
       title: "Context, References & Documentation",
       content: resMatch[2].trim(),
-      badgeBg: "bg-sky-100 text-sky-700 border-sky-200 dark:bg-sky-950 dark:text-sky-300 dark:border-sky-800",
+      badgeBg:
+        "bg-sky-100 text-sky-700 border-sky-200 dark:bg-sky-950 dark:text-sky-300 dark:border-sky-800",
     });
     remainingText = remainingText.replace(resMatch[0], "");
   }
 
   // 3. 📊 Data & Architecture Analysis
-  const anaMatch = text.match(/### 📊\s*Data & Architecture Analysis([\s\S]*?)(?=(### [🎯🔍💻🛡️]|$))/i);
+  const anaMatch = text.match(
+    /### 📊\s*Data & Architecture Analysis([\s\S]*?)(?=(### [🎯🔍💻🛡️]|$))/i,
+  );
   if (anaMatch) {
     thoughts.push({
       id: "analyst",
@@ -73,13 +79,16 @@ function parseCouncilSections(text: string): {
       name: "Analyst",
       title: "Quantitative Insights & Trade-offs",
       content: anaMatch[1].trim(),
-      badgeBg: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800",
+      badgeBg:
+        "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800",
     });
     remainingText = remainingText.replace(anaMatch[0], "");
   }
 
   // 4. 🛡️ Security Audit & Verification
-  const audMatch = text.match(/### 🛡️\s*Security Audit & Verification([\s\S]*?)(?=(### [🎯🔍💻📊]|$))/i);
+  const audMatch = text.match(
+    /### 🛡️\s*Security Audit & Verification([\s\S]*?)(?=(### [🎯🔍💻📊]|$))/i,
+  );
   if (audMatch) {
     thoughts.push({
       id: "auditor",
@@ -87,7 +96,8 @@ function parseCouncilSections(text: string): {
       name: "Auditor",
       title: "Zero-Trust Security & Edge Case Audit",
       content: audMatch[1].trim(),
-      badgeBg: "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800",
+      badgeBg:
+        "bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-950 dark:text-rose-300 dark:border-rose-800",
     });
     remainingText = remainingText.replace(audMatch[0], "");
   }
@@ -171,7 +181,7 @@ export const AIMessage = ({
   }
 
   return (
-    <div className="group flex gap-3 animate-fade-in">
+    <div className="group animate-fade-in flex gap-3">
       <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/20">
         <Sparkles className="h-5 w-5" />
       </div>
@@ -231,9 +241,9 @@ export const AIMessage = ({
 
                     if (match) {
                       return (
-                        <div className="my-3 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-[#0d1117] text-gray-200 shadow-xs">
-                          <div className="flex items-center justify-between px-3.5 py-1.5 bg-[#161b22] border-b border-gray-800 text-xs font-mono text-gray-400">
-                            <span className="uppercase text-[11px] font-bold tracking-wider text-indigo-400">
+                        <div className="my-3 overflow-hidden rounded-xl border border-gray-200 bg-[#0d1117] text-gray-200 shadow-xs dark:border-gray-800">
+                          <div className="flex items-center justify-between border-b border-gray-800 bg-[#161b22] px-3.5 py-1.5 font-mono text-xs text-gray-400">
+                            <span className="text-[11px] font-bold tracking-wider text-indigo-400 uppercase">
                               {lang}
                             </span>
                             <div className="flex items-center gap-2">
@@ -244,10 +254,10 @@ export const AIMessage = ({
                                     lang === "typescript"
                                       ? "ts"
                                       : lang === "javascript"
-                                      ? "js"
-                                      : lang === "python"
-                                      ? "py"
-                                      : lang;
+                                        ? "js"
+                                        : lang === "python"
+                                          ? "py"
+                                          : lang;
                                   const blob = new Blob([codeString], { type: "text/plain" });
                                   const url = URL.createObjectURL(blob);
                                   const a = document.createElement("a");
@@ -256,7 +266,7 @@ export const AIMessage = ({
                                   a.click();
                                   URL.revokeObjectURL(url);
                                 }}
-                                className="hover:text-white flex items-center gap-1 cursor-pointer transition-colors text-[11px]"
+                                className="flex cursor-pointer items-center gap-1 text-[11px] transition-colors hover:text-white"
                                 title="Download code file"
                               >
                                 <Download size={12} />
@@ -267,7 +277,7 @@ export const AIMessage = ({
                                 onClick={async () => {
                                   await navigator.clipboard.writeText(codeString);
                                 }}
-                                className="hover:text-white flex items-center gap-1 cursor-pointer transition-colors text-[11px]"
+                                className="flex cursor-pointer items-center gap-1 text-[11px] transition-colors hover:text-white"
                                 title="Copy code"
                               >
                                 <Copy size={12} />
@@ -275,7 +285,7 @@ export const AIMessage = ({
                               </button>
                             </div>
                           </div>
-                          <pre className="p-3.5 overflow-x-auto text-xs font-mono leading-relaxed bg-[#0d1117]">
+                          <pre className="overflow-x-auto bg-[#0d1117] p-3.5 font-mono text-xs leading-relaxed">
                             <code className={className} {...props}>
                               {children}
                             </code>
@@ -298,11 +308,7 @@ export const AIMessage = ({
             </div>
 
             {/* Real-Time Token, Cost & Latency Telemetry */}
-            <TelemetryBar
-              content={messageContent}
-              modelName={model}
-              provider={provider}
-            />
+            <TelemetryBar content={messageContent} modelName={model} provider={provider} />
 
             {/* Quick Actions & Analytics Bar */}
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-gray-100 pt-2.5 text-xs text-gray-400 dark:border-gray-800">
@@ -325,12 +331,16 @@ export const AIMessage = ({
                   onClick={handleSpeech}
                   className={`flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors ${
                     isSpeaking
-                      ? "bg-blue-100 text-blue-600 animate-pulse dark:bg-blue-950 dark:text-blue-400"
+                      ? "animate-pulse bg-blue-100 text-blue-600 dark:bg-blue-950 dark:text-blue-400"
                       : "text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-200"
                   }`}
                   title={isSpeaking ? "Stop reading" : "Read aloud"}
                 >
-                  {isSpeaking ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
+                  {isSpeaking ? (
+                    <VolumeX className="h-3.5 w-3.5" />
+                  ) : (
+                    <Volume2 className="h-3.5 w-3.5" />
+                  )}
                   <span>{isSpeaking ? "Stop" : "Listen"}</span>
                 </button>
 
@@ -344,7 +354,9 @@ export const AIMessage = ({
                   {copied ? (
                     <>
                       <Check className="h-3.5 w-3.5 text-green-500" />
-                      <span className="text-green-600 font-semibold dark:text-green-400">Copied!</span>
+                      <span className="font-semibold text-green-600 dark:text-green-400">
+                        Copied!
+                      </span>
                     </>
                   ) : (
                     <>

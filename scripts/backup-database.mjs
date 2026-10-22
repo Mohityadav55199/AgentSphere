@@ -2,7 +2,7 @@
 
 /**
  * AgentSphere Database Backup Script
- * 
+ *
  * Creates a timestamped PostgreSQL backup using pg_dump (if installed)
  * or outputs table records using Prisma.
  *
@@ -71,7 +71,9 @@ if (hasPgDump()) {
   import("../src/lib/database/prisma.ts")
     .then(async ({ prisma }) => {
       try {
-        const users = await prisma.user.findMany({ select: { id: true, name: true, email: true, createdAt: true } });
+        const users = await prisma.user.findMany({
+          select: { id: true, name: true, email: true, createdAt: true },
+        });
         const threads = await prisma.thread.findMany();
         const mcpServers = await prisma.mCPServer.findMany();
 
@@ -98,7 +100,9 @@ if (hasPgDump()) {
 
         const sizeKb = (fs.statSync(jsonFilePath).size / 1024).toFixed(2);
         console.log(`✅ Table data exported and compressed: ${jsonFilePath} (${sizeKb} KB)`);
-        console.log(`📊 Exported: ${users.length} users, ${threads.length} threads, ${mcpServers.length} MCP servers.`);
+        console.log(
+          `📊 Exported: ${users.length} users, ${threads.length} threads, ${mcpServers.length} MCP servers.`,
+        );
         await prisma.$disconnect();
       } catch (e) {
         console.error("❌ Prisma export failed:", e.message);

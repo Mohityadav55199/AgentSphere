@@ -82,7 +82,8 @@ export const Thread = ({ threadId, onFirstMessageSent }: ThreadProps) => {
     {
       icon: "👥",
       title: "5-Agent Swarm",
-      prompt: "Design and implement a rate-limited API gateway in TypeScript with an architecture flowchart.",
+      prompt:
+        "Design and implement a rate-limited API gateway in TypeScript with an architecture flowchart.",
     },
     {
       icon: "🛡️",
@@ -97,7 +98,8 @@ export const Thread = ({ threadId, onFirstMessageSent }: ThreadProps) => {
     {
       icon: "🔍",
       title: "Deep Tech Research",
-      prompt: "Research and compare LangGraph, AutoGen, and CrewAI architectures for production multi-agent systems.",
+      prompt:
+        "Research and compare LangGraph, AutoGen, and CrewAI architectures for production multi-agent systems.",
     },
   ];
 
@@ -113,9 +115,13 @@ export const Thread = ({ threadId, onFirstMessageSent }: ThreadProps) => {
       {isDragging && (
         <div className="absolute inset-0 z-50 flex flex-col items-center justify-center border-4 border-dashed border-blue-500 bg-blue-600/10 backdrop-blur-md transition-all">
           <div className="flex flex-col items-center gap-3 rounded-2xl bg-white/90 p-8 shadow-2xl dark:bg-gray-900/90">
-            <UploadCloud className="h-12 w-12 text-blue-600 animate-bounce" />
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Drop files to attach</h3>
-            <p className="text-xs text-gray-500">Attach images, documents, or text files directly to AgentSphere</p>
+            <UploadCloud className="h-12 w-12 animate-bounce text-blue-600" />
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+              Drop files to attach
+            </h3>
+            <p className="text-xs text-gray-500">
+              Attach images, documents, or text files directly to AgentSphere
+            </p>
           </div>
         </div>
       )}
@@ -146,14 +152,16 @@ export const Thread = ({ threadId, onFirstMessageSent }: ThreadProps) => {
                 What would you like to build today?
               </h1>
               <p className="mx-auto max-w-lg text-xs text-gray-500 sm:text-sm dark:text-gray-400">
-                AgentSphere deploys a collaborative 5-agent council (Supervisor, Researcher, Developer, Analyst, and Auditor) with live MCP tool access.
+                AgentSphere deploys a collaborative 5-agent council (Supervisor, Researcher,
+                Developer, Analyst, and Auditor) with live MCP tool access.
               </p>
             </div>
 
             {/* Prompt Suggestion Cards */}
             <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
               {PROMPT_SUGGESTIONS.map((item, idx) => (
-                <button suppressHydrationWarning
+                <button
+                  suppressHydrationWarning
                   key={idx}
                   onClick={() => handleSendMessage(item.prompt)}
                   disabled={isSending}

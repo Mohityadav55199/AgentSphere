@@ -6,20 +6,22 @@
 
 ## 🌐 Live Demos
 
-| Platform | Status | Live Link |
-| --- | --- | --- |
+| Platform   | Status  | Live Link                                                                     |
+| ---------- | ------- | ----------------------------------------------------------------------------- |
 | **Vercel** | 🟢 Live | [https://agent-sphere-self.vercel.app](https://agent-sphere-self.vercel.app/) |
-| **Render** | 🟢 Live | [https://agentsphere.onrender.com](https://agentsphere.onrender.com/) |
+| **Render** | 🟢 Live | [https://agentsphere.onrender.com](https://agentsphere.onrender.com/)         |
 
 ---
 
 ## ✨ Features at a Glance
 
 ### ⚡ Powered by Multi-Provider LLM & Fast Inference
+
 - Integrated with **Groq**, **Google Gemini**, **OpenAI**, and **Anthropic**.
 - Real-time Server-Sent Events (SSE) streaming for zero-latency AI responses.
 
 ### 🎭 Specialized Agent Personas & System Instructions
+
 - **✨ General Assistant**: Everyday tasks and general Q&A.
 - **💻 Senior Developer**: Production-ready code, architecture, and bug fixes.
 - **📊 Data Scientist**: Quantitative logic, statistics, and data insights.
@@ -28,40 +30,49 @@
 - Customizable **System Instructions** text input to tune agent prompts on the fly.
 
 ### 🎛️ Real-Time Temperature Control
-- Fine-tune model creativity from `0.0` (*Precise & Deterministic*) to `1.0` (*Creative & Diverse*).
+
+- Fine-tune model creativity from `0.0` (_Precise & Deterministic_) to `1.0` (_Creative & Diverse_).
 
 ### 🌙 Dark & Light Mode Theme Switcher
+
 - Seamless 1-click theme toggling with Sun/Moon icons and persistent preference memory.
 
 ### 🔊 Text-to-Speech & 🎙️ Voice Input
+
 - **Voice-to-Text**: Dictate prompts using the Web Speech API with an active recording pulse indicator.
 - **Read Aloud**: Listen to AI responses hands-free using browser Web Speech Synthesis.
 
 ### 📊 Real-Time Response Analytics
+
 - Automatic **Word Count** and **Estimated Reading Time** displayed on every AI response bubble.
 
 ### 📁 Drag-and-Drop File Upload Overlay
+
 - Visual glassmorphic dropzone overlay when dragging images, PDFs, or documents onto the chat window.
 
 ### 📥 1-Click Chat Export (Markdown `.md`)
+
 - Export complete conversation history as cleanly formatted Markdown files.
 
 ### 👥 5-Agent Autonomous Council Architecture
+
 AgentSphere is powered by a genuine **5-Agent Council** orchestrating via LangGraph, replacing monolithic prompts with specialized autonomous roles:
 
-1. 🎯 **Orchestration Supervisor (*The Strategist*)**: Evaluates complexity, decomposes objectives into execution DAGs, tracks state, and routes to specialists.
-2. 🔍 **Lead Researcher (*The Knowledge Engine*)**: Hunts live web data, documentation, and external APIs using search/fetch MCP tools without polluting the developer's context.
-3. 💻 **Principal Developer (*The Builder*)**: Specializes in clean, modular code, TypeScript typing, database queries, and filesystem interactions.
-4. 📊 **Data & Architecture Analyst (*The Insight Engine*)**: Delivers quantitative reasoning, structured comparisons, and auto-generates visual **Mermaid.js diagrams**.
-5. 🛡️ **Chief Security Auditor (*The Critic & Verifier*)**: Zero-trust code review scanning for OWASP top 10 vulnerabilities, edge cases, and hallucinations before synthesizing final delivery.
+1. 🎯 **Orchestration Supervisor (_The Strategist_)**: Evaluates complexity, decomposes objectives into execution DAGs, tracks state, and routes to specialists.
+2. 🔍 **Lead Researcher (_The Knowledge Engine_)**: Hunts live web data, documentation, and external APIs using search/fetch MCP tools without polluting the developer's context.
+3. 💻 **Principal Developer (_The Builder_)**: Specializes in clean, modular code, TypeScript typing, database queries, and filesystem interactions.
+4. 📊 **Data & Architecture Analyst (_The Insight Engine_)**: Delivers quantitative reasoning, structured comparisons, and auto-generates visual **Mermaid.js diagrams**.
+5. 🛡️ **Chief Security Auditor (_The Critic & Verifier_)**: Zero-trust code review scanning for OWASP top 10 vulnerabilities, edge cases, and hallucinations before synthesizing final delivery.
 6. 🚦 **Human-in-the-Loop Safety Governor**: Intercepts high-risk MCP tool calls for user confirmation before execution.
 
 #### 💡 Why 5+ Agents are Architecturally Justified:
+
 - **Zero Context Pollution**: Web scrapes and noisy tool outputs stay in the Researcher's context; the Developer receives only distilled specifications.
 - **Elimination of Self-Validation Bias**: The Auditor operates with an adversarial prompt to catch bugs that the Developer's forward pass misses.
 - **Higher Tool Accuracy (>98%)**: Scoping specific MCP tools to specific worker agents prevents tool confusion when 20+ MCP functions are bound.
 
 ### 🛠️ Model Context Protocol (MCP) Server Studio
+
 - Access MCP server configuration anywhere directly from the top navigation bar with live tool count badges.
 - **Visual Creation Form**: Configure local STDIO CLI commands or remote HTTP/SSE servers with key-value environment and header editors.
 - **1-Click MCP Presets**: Instantly connect popular MCP servers:
@@ -73,6 +84,7 @@ AgentSphere is powered by a genuine **5-Agent Council** orchestrating via LangGr
   - ☁️ **Remote HTTP / SSE MCP**: Custom remote endpoints.
 - **Claude Desktop & Cursor Compatible**: Import or export raw JSON configs with auto-formatting and instant validation.
 - **Human-in-the-Loop Governance**: Real-time allow/deny approval controls before tools execute.
+
 ---
 
 ## 🛠️ Tech Stack
@@ -87,6 +99,7 @@ AgentSphere is powered by a genuine **5-Agent Council** orchestrating via LangGr
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - **Node.js**: v18 or higher
 - **API Keys**: Google Gemini API Key or Groq API Key
 
@@ -132,10 +145,9 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to experienc
 ## ⚡ Render Free Tier Keep-Alive & Automated Backups
 
 When deployed on Render's free tier:
+
 - **Free Tier Wake-up Banner**: Embedded across all screens to notify visitors of cold-start wake-up times with live status polling.
 - **Automated Keep-Alive Ping**: Runs every 14 minutes via [`.github/workflows/keep-alive.yml`](file:///c:/Projects/AgentSphere/.github/workflows/keep-alive.yml) to keep the instance warm.
 - **Daily Automated Database Backups**: Runs daily via [`.github/workflows/db-backup.yml`](file:///c:/Projects/AgentSphere/.github/workflows/db-backup.yml) with 30-day artifact retention and optional S3/R2 storage upload.
 
 📖 See [`docs/KEEP-ALIVE-AND-BACKUPS.md`](file:///c:/Projects/AgentSphere/docs/KEEP-ALIVE-AND-BACKUPS.md) for full configuration details.
-
-

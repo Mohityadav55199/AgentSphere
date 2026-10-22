@@ -41,7 +41,14 @@ function formatRelativeTime(dateInput: Date | string | undefined): string {
 }
 
 export function ThreadList({ onOpenMCPConfig, onToggleSidebar }: ThreadListProps) {
-  const { threads, createThread, deleteThread, clearEmptyThreads, togglePinThread, refetchThreads } = useThreads();
+  const {
+    threads,
+    createThread,
+    deleteThread,
+    clearEmptyThreads,
+    togglePinThread,
+    refetchThreads,
+  } = useThreads();
   const [isCreating, setIsCreating] = useState(false);
   const [filter, setFilter] = useState("");
   const [renamingId, setRenamingId] = useState<string | null>(null);
@@ -106,7 +113,7 @@ export function ThreadList({ onOpenMCPConfig, onToggleSidebar }: ThreadListProps
         t.title === "New thread" ||
         t.title === "Untitled thread" ||
         t.title === "New chat" ||
-        t.title.toLowerCase().startsWith("thread "))
+        t.title.toLowerCase().startsWith("thread ")),
   );
 
   const filtered = threads.filter((t) => {
@@ -196,7 +203,7 @@ export function ThreadList({ onOpenMCPConfig, onToggleSidebar }: ThreadListProps
         }}
       >
         {active && (
-          <div className="absolute left-0 top-1.5 bottom-1.5 w-1 rounded-r-full bg-blue-600 dark:bg-blue-400" />
+          <div className="absolute top-1.5 bottom-1.5 left-0 w-1 rounded-r-full bg-blue-600 dark:bg-blue-400" />
         )}
         {!isRenaming ? (
           <div className="flex items-center justify-between gap-1.5">
@@ -213,7 +220,7 @@ export function ThreadList({ onOpenMCPConfig, onToggleSidebar }: ThreadListProps
               )}
               <span className="truncate">{thread.title || `Thread ${thread.id.slice(0, 8)}`}</span>
             </div>
-            <div className="flex items-center gap-0.5 opacity-80 sm:opacity-0 transition-opacity sm:group-hover:opacity-100">
+            <div className="flex items-center gap-0.5 opacity-80 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
               <button
                 suppressHydrationWarning
                 onClick={(e) => {
@@ -225,7 +232,9 @@ export function ThreadList({ onOpenMCPConfig, onToggleSidebar }: ThreadListProps
               >
                 <Star
                   className={`h-3 w-3 ${
-                    thread.isPinned ? "fill-amber-400 text-amber-500" : "text-gray-400 hover:text-amber-500"
+                    thread.isPinned
+                      ? "fill-amber-400 text-amber-500"
+                      : "text-gray-400 hover:text-amber-500"
                   }`}
                 />
               </button>
@@ -247,7 +256,7 @@ export function ThreadList({ onOpenMCPConfig, onToggleSidebar }: ThreadListProps
                   handleDeleteThread(thread.id);
                 }}
                 disabled={deletingId === thread.id}
-                className="inline-flex h-5 w-5 items-center justify-center rounded hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-950/60 dark:hover:text-red-400 disabled:opacity-50"
+                className="inline-flex h-5 w-5 items-center justify-center rounded hover:bg-red-100 hover:text-red-600 disabled:opacity-50 dark:hover:bg-red-950/60 dark:hover:text-red-400"
                 title="Delete thread"
               >
                 {deletingId === thread.id ? (
@@ -308,7 +317,7 @@ export function ThreadList({ onOpenMCPConfig, onToggleSidebar }: ThreadListProps
           <span className="text-xs font-bold tracking-tight text-gray-800 uppercase dark:text-gray-200">
             Chats
           </span>
-          <span className="rounded-full bg-gray-100 px-1.5 py-0.2 text-[10px] font-semibold text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+          <span className="py-0.2 rounded-full bg-gray-100 px-1.5 text-[10px] font-semibold text-gray-600 dark:bg-gray-800 dark:text-gray-400">
             {threads.length}
           </span>
         </div>
@@ -348,7 +357,8 @@ export function ThreadList({ onOpenMCPConfig, onToggleSidebar }: ThreadListProps
 
       <div className="space-y-2 px-3 pt-2.5 pb-2">
         <div className="flex gap-1.5">
-          <button suppressHydrationWarning
+          <button
+            suppressHydrationWarning
             onClick={handleCreateThread}
             disabled={isCreating}
             className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-xs font-medium text-white shadow-xs transition-colors hover:bg-blue-700 disabled:opacity-50"
@@ -360,9 +370,10 @@ export function ThreadList({ onOpenMCPConfig, onToggleSidebar }: ThreadListProps
             )}
             <span>New Chat</span>
           </button>
-          <button suppressHydrationWarning
+          <button
+            suppressHydrationWarning
             onClick={handleRefresh}
-            className="flex cursor-pointer items-center justify-center rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-gray-500 hover:bg-gray-100 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-750 dark:hover:text-white"
+            className="dark:hover:bg-gray-750 flex cursor-pointer items-center justify-center rounded-lg border border-gray-200 bg-white px-2.5 py-2 text-gray-500 hover:bg-gray-100 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:text-white"
             title="Refresh threads list"
           >
             {refreshing ? (
@@ -392,7 +403,7 @@ export function ThreadList({ onOpenMCPConfig, onToggleSidebar }: ThreadListProps
               <X className="h-3 w-3" />
             </button>
           ) : (
-            <span className="pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 rounded border border-gray-200 bg-gray-100 px-1 py-0.2 text-[9px] font-mono text-gray-400 dark:border-gray-700 dark:bg-gray-800">
+            <span className="py-0.2 pointer-events-none absolute top-1/2 right-2.5 -translate-y-1/2 rounded border border-gray-200 bg-gray-100 px-1 font-mono text-[9px] text-gray-400 dark:border-gray-700 dark:bg-gray-800">
               /
             </span>
           )}
@@ -425,7 +436,7 @@ export function ThreadList({ onOpenMCPConfig, onToggleSidebar }: ThreadListProps
           if (filter.trim()) {
             return (
               <div className="space-y-1">
-                <div className="px-1 text-[10px] font-semibold tracking-wider uppercase text-gray-400">
+                <div className="px-1 text-[10px] font-semibold tracking-wider text-gray-400 uppercase">
                   Search Results ({filtered.length})
                 </div>
                 {filtered.map(renderThreadItem)}
@@ -472,7 +483,7 @@ export function ThreadList({ onOpenMCPConfig, onToggleSidebar }: ThreadListProps
 
           return sections.map((sec) => (
             <div key={sec.label} className="space-y-1">
-              <div className="flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">
+              <div className="flex items-center gap-1.5 px-2 py-0.5 text-[10px] font-semibold tracking-wider text-gray-400 uppercase dark:text-gray-500">
                 <span>{sec.icon}</span>
                 <span>{sec.label}</span>
                 <span className="text-[9px] opacity-70">({sec.items.length})</span>
@@ -485,7 +496,8 @@ export function ThreadList({ onOpenMCPConfig, onToggleSidebar }: ThreadListProps
 
       {/* MCP Configuration Button */}
       <div className="border-t border-gray-100 p-2.5 dark:border-gray-800">
-        <button suppressHydrationWarning
+        <button
+          suppressHydrationWarning
           onClick={onOpenMCPConfig}
           className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-gray-200 bg-gray-50/70 px-3 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-900 dark:border-gray-700 dark:bg-gray-800/60 dark:text-gray-300 dark:hover:bg-gray-800 dark:hover:text-white"
         >

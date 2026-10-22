@@ -51,14 +51,20 @@ export async function PATCH(req: Request) {
 
     if (newPassword) {
       if (!currentPassword) {
-        return NextResponse.json({ error: "Current password is required to change password" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Current password is required to change password" },
+          { status: 400 },
+        );
       }
       const isValid = verifyPassword(currentPassword, dbUser.password);
       if (!isValid) {
         return NextResponse.json({ error: "Incorrect current password" }, { status: 400 });
       }
       if (newPassword.length < 6) {
-        return NextResponse.json({ error: "New password must be at least 6 characters" }, { status: 400 });
+        return NextResponse.json(
+          { error: "New password must be at least 6 characters" },
+          { status: 400 },
+        );
       }
       updateData.password = hashPassword(newPassword);
     }

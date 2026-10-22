@@ -1,7 +1,18 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { X, Loader2, Wand2, Sparkles, Server, Globe, Terminal, Code2, Plus, Trash2 } from "lucide-react";
+import {
+  X,
+  Loader2,
+  Wand2,
+  Sparkles,
+  Server,
+  Globe,
+  Terminal,
+  Code2,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { MCPServerType } from "@/types/mcp";
 
 interface MCPServer {
@@ -102,7 +113,7 @@ export function MCPServerForm({ isOpen, onClose, onSaved, server }: MCPServerFor
   const [type, setType] = useState<MCPServerType>(server?.type || "stdio");
   const [command, setCommand] = useState(server?.command || "npx");
   const [argsString, setArgsString] = useState(
-    Array.isArray(server?.args) ? server.args.join(" ") : ""
+    Array.isArray(server?.args) ? server.args.join(" ") : "",
   );
   const [url, setUrl] = useState(server?.url || "");
   const [envPairs, setEnvPairs] = useState<Array<{ key: string; value: string }>>([]);
@@ -125,16 +136,14 @@ export function MCPServerForm({ isOpen, onClose, onSaved, server }: MCPServerFor
       setUrl(server.url || "");
 
       if (server.env) {
-        setEnvPairs(
-          Object.entries(server.env).map(([k, v]) => ({ key: k, value: String(v) }))
-        );
+        setEnvPairs(Object.entries(server.env).map(([k, v]) => ({ key: k, value: String(v) })));
       } else {
         setEnvPairs([]);
       }
 
       if (server.headers) {
         setHeaderPairs(
-          Object.entries(server.headers).map(([k, v]) => ({ key: k, value: String(v) }))
+          Object.entries(server.headers).map(([k, v]) => ({ key: k, value: String(v) })),
         );
       } else {
         setHeaderPairs([]);
@@ -172,8 +181,8 @@ export function MCPServerForm({ isOpen, onClose, onSaved, server }: MCPServerFor
             },
           },
           null,
-          2
-        )
+          2,
+        ),
       );
     }
   }, [server]);
@@ -215,9 +224,10 @@ export function MCPServerForm({ isOpen, onClose, onSaved, server }: MCPServerFor
     let parsedArgs: string[] | undefined = undefined;
     if (type === "stdio" && argsString.trim()) {
       // Split arguments while respecting simple quotes
-      parsedArgs = argsString
-        .match(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g)
-        ?.map((a) => a.replace(/^["']|["']$/g, "")) || [];
+      parsedArgs =
+        argsString
+          .match(/(?:[^\s"']+|"[^"]*"|'[^']*')+/g)
+          ?.map((a) => a.replace(/^["']|["']$/g, "")) || [];
     }
 
     const envMap: Record<string, string> = {};
@@ -290,7 +300,8 @@ export function MCPServerForm({ isOpen, onClose, onSaved, server }: MCPServerFor
           args: transport === "stdio" ? (serverConfig.args as unknown[]) : undefined,
           env: transport === "stdio" ? (serverConfig.env as Record<string, string>) : undefined,
           url: transport === "http" ? (serverConfig.url as string) : undefined,
-          headers: transport === "http" ? (serverConfig.headers as Record<string, string>) : undefined,
+          headers:
+            transport === "http" ? (serverConfig.headers as Record<string, string>) : undefined,
         };
 
         const method = server ? "PATCH" : "POST";
@@ -333,7 +344,8 @@ export function MCPServerForm({ isOpen, onClose, onSaved, server }: MCPServerFor
                 {server ? "Edit MCP Server" : "Create & Connect MCP Server"}
               </h2>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                Model Context Protocol tools allow AI agents to execute local commands and API queries.
+                Model Context Protocol tools allow AI agents to execute local commands and API
+                queries.
               </p>
             </div>
           </div>
@@ -456,7 +468,7 @@ export function MCPServerForm({ isOpen, onClose, onSaved, server }: MCPServerFor
                       placeholder="npx, python, node, uvx, or /path/to/binary"
                       value={command}
                       onChange={(e) => setCommand(e.target.value)}
-                      className="mt-1 w-full font-mono rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 shadow-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                      className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-mono text-xs text-gray-900 shadow-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
                     />
                   </div>
 
@@ -469,7 +481,7 @@ export function MCPServerForm({ isOpen, onClose, onSaved, server }: MCPServerFor
                       placeholder="-y @modelcontextprotocol/server-sqlite --db-path ./database.sqlite"
                       value={argsString}
                       onChange={(e) => setArgsString(e.target.value)}
-                      className="mt-1 w-full font-mono rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 shadow-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                      className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-mono text-xs text-gray-900 shadow-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
                     />
                     <p className="mt-1 text-[11px] text-gray-400">
                       Space-delimited arguments. Arguments with spaces can be enclosed in quotes.
@@ -478,7 +490,7 @@ export function MCPServerForm({ isOpen, onClose, onSaved, server }: MCPServerFor
 
                   {/* Environment Variables */}
                   <div>
-                    <div className="flex items-center justify-between mb-1">
+                    <div className="mb-1 flex items-center justify-between">
                       <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">
                         Environment Variables (Optional)
                       </label>
@@ -537,13 +549,13 @@ export function MCPServerForm({ isOpen, onClose, onSaved, server }: MCPServerFor
                       placeholder="http://localhost:8000/mcp or https://example.com/sse"
                       value={url}
                       onChange={(e) => setUrl(e.target.value)}
-                      className="mt-1 w-full font-mono rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs text-gray-900 shadow-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                      className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 font-mono text-xs text-gray-900 shadow-xs focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
                     />
                   </div>
 
                   {/* Headers */}
                   <div>
-                    <div className="flex items-center justify-between mb-1">
+                    <div className="mb-1 flex items-center justify-between">
                       <label className="text-xs font-semibold text-gray-700 dark:text-gray-300">
                         Custom Headers (Optional)
                       </label>
@@ -601,19 +613,19 @@ export function MCPServerForm({ isOpen, onClose, onSaved, server }: MCPServerFor
                 <div
                   key={preset.id}
                   onClick={() => applyPreset(preset)}
-                  className="group flex cursor-pointer flex-col justify-between rounded-xl border border-gray-200 bg-white p-4 shadow-xs transition-all hover:border-blue-500 hover:shadow-md dark:border-gray-800 dark:bg-gray-850 dark:hover:border-blue-500"
+                  className="group dark:bg-gray-850 flex cursor-pointer flex-col justify-between rounded-xl border border-gray-200 bg-white p-4 shadow-xs transition-all hover:border-blue-500 hover:shadow-md dark:border-gray-800 dark:hover:border-blue-500"
                 >
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="text-xl">{preset.icon}</span>
-                      <h3 className="font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 text-xs">
+                      <h3 className="text-xs font-semibold text-gray-900 group-hover:text-blue-600 dark:text-white dark:group-hover:text-blue-400">
                         {preset.name}
                       </h3>
-                      <span className="ml-auto rounded-full bg-gray-100 px-2 py-0.5 text-[10px] uppercase font-mono text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                      <span className="ml-auto rounded-full bg-gray-100 px-2 py-0.5 font-mono text-[10px] text-gray-600 uppercase dark:bg-gray-800 dark:text-gray-300">
                         {preset.type}
                       </span>
                     </div>
-                    <p className="mt-2 text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                    <p className="mt-2 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
                       {preset.description}
                     </p>
                   </div>
@@ -658,9 +670,7 @@ export function MCPServerForm({ isOpen, onClose, onSaved, server }: MCPServerFor
                 className="w-full rounded-lg border border-gray-300 bg-gray-950 p-3 font-mono text-xs text-emerald-400 shadow-inner focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               />
 
-              {validationError && (
-                <p className="text-xs text-red-500">{validationError}</p>
-              )}
+              {validationError && <p className="text-xs text-red-500">{validationError}</p>}
             </div>
           )}
         </div>

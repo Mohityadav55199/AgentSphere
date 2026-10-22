@@ -34,11 +34,12 @@ export function AuthModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-fade-in">
+    <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
       <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-gray-200 bg-white/95 p-6 shadow-2xl dark:border-gray-800 dark:bg-gray-900/95">
-        <button suppressHydrationWarning
+        <button
+          suppressHydrationWarning
           onClick={closeAuthModal}
-          className="absolute right-4 top-4 rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+          className="absolute top-4 right-4 rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-200"
         >
           <X size={18} />
         </button>
@@ -70,14 +71,14 @@ export function AuthModal() {
                 Full Name
               </label>
               <div className="relative">
-                <User className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                <User className="absolute top-2.5 left-3 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Mohit Yadav"
-                  className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                  className="w-full rounded-lg border border-gray-300 bg-white py-2 pr-3 pl-9 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white"
                 />
               </div>
             </div>
@@ -88,14 +89,14 @@ export function AuthModal() {
               Email Address
             </label>
             <div className="relative">
-              <Mail className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+              <Mail className="absolute top-2.5 left-3 h-4 w-4 text-gray-400" />
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                className="w-full rounded-lg border border-gray-300 bg-white py-2 pr-3 pl-9 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white"
               />
             </div>
           </div>
@@ -105,7 +106,7 @@ export function AuthModal() {
               Password
             </label>
             <div className="relative">
-              <Lock className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+              <Lock className="absolute top-2.5 left-3 h-4 w-4 text-gray-400" />
               <input
                 type="password"
                 required
@@ -113,12 +114,13 @@ export function AuthModal() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                className="w-full rounded-lg border border-gray-300 bg-white py-2 pr-3 pl-9 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-700 dark:bg-gray-800 dark:text-white"
               />
             </div>
           </div>
 
-          <button suppressHydrationWarning
+          <button
+            suppressHydrationWarning
             type="submit"
             disabled={loading}
             className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:brightness-110 active:scale-95"
@@ -132,7 +134,8 @@ export function AuthModal() {
           {mode === "login" ? (
             <p>
               Don't have an account?{" "}
-              <button suppressHydrationWarning
+              <button
+                suppressHydrationWarning
                 type="button"
                 onClick={() => setMode("register")}
                 className="font-semibold text-blue-600 hover:underline dark:text-blue-400"
@@ -143,7 +146,8 @@ export function AuthModal() {
           ) : (
             <p>
               Already have an account?{" "}
-              <button suppressHydrationWarning
+              <button
+                suppressHydrationWarning
                 type="button"
                 onClick={() => setMode("login")}
                 className="font-semibold text-blue-600 hover:underline dark:text-blue-400"

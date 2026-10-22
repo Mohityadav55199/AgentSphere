@@ -3,6 +3,7 @@
 ---
 
 ## 📌 Document Metadata & Purpose
+
 Keep this document open on the day of your interview. It contains quick-reference summaries, elevator pitches, critical diagrams, common interview pitfalls, and a 50-term technical glossary.
 
 ---
@@ -10,14 +11,16 @@ Keep this document open on the day of your interview. It contains quick-referenc
 ## 1. The Project Pitches
 
 ### The 1-Minute Elevator Pitch
-> *"AgentSphere is a production-oriented, full-stack AI platform built with Next.js 16, React 19, LangGraph.js, and PostgreSQL. Unlike traditional chatbots that merely generate text, AgentSphere is an autonomous agentic system: it connects to external tool servers using the Model Context Protocol (MCP), halts execution for human approval before running dangerous tools, and persists conversation turns using PostgreSQL checkpointers. On the frontend, it features optimistic UI updates, Server-Sent Events streaming, multimodal file uploads, and browser-native voice dictation and speech synthesis."*
+
+> _"AgentSphere is a production-oriented, full-stack AI platform built with Next.js 16, React 19, LangGraph.js, and PostgreSQL. Unlike traditional chatbots that merely generate text, AgentSphere is an autonomous agentic system: it connects to external tool servers using the Model Context Protocol (MCP), halts execution for human approval before running dangerous tools, and persists conversation turns using PostgreSQL checkpointers. On the frontend, it features optimistic UI updates, Server-Sent Events streaming, multimodal file uploads, and browser-native voice dictation and speech synthesis."_
 
 ### The 2-Minute Deep Technical Pitch
-> *"Under the hood, AgentSphere addresses the core weaknesses of LLM wrappers: hallucination, unverified tool execution, and session memory loss. We orchestrate execution using a LangGraph StateGraph that loops between an `agent` node and a `tools` node.*
+
+> _"Under the hood, AgentSphere addresses the core weaknesses of LLM wrappers: hallucination, unverified tool execution, and session memory loss. We orchestrate execution using a LangGraph StateGraph that loops between an `agent` node and a `tools` node._
 >
-> *When the model invokes a tool, a conditional edge routes execution to a `tool_approval` node that triggers LangGraph's `interrupt()` primitive. This suspends execution on the server and writes the state to PostgreSQL's `checkpoints` table. The browser receives the tool details and renders an interactive approval card. When the user allows the call, the client resumes execution via a `Command({ resume: { action: 'continue' } })`, routing to the `tools` node and looping back to the model for response synthesis.*
+> _When the model invokes a tool, a conditional edge routes execution to a `tool_approval` node that triggers LangGraph's `interrupt()` primitive. This suspends execution on the server and writes the state to PostgreSQL's `checkpoints` table. The browser receives the tool details and renders an interactive approval card. When the user allows the call, the client resumes execution via a `Command({ resume: { action: 'continue' } })`, routing to the `tools` node and looping back to the model for response synthesis._
 >
-> *We support Groq, Gemini, OpenAI, and Anthropic, with custom schema sanitization to ensure Gemini compatibility. Our database layer uses Prisma for metadata and PostgresSaver for binary graph state, while custom scrypt and HMAC JWTs handle authentication without external dependencies."*
+> _We support Groq, Gemini, OpenAI, and Anthropic, with custom schema sanitization to ensure Gemini compatibility. Our database layer uses Prisma for metadata and PostgresSaver for binary graph state, while custom scrypt and HMAC JWTs handle authentication without external dependencies."_
 
 ---
 
@@ -41,22 +44,22 @@ Keep this document open on the day of your interview. It contains quick-referenc
 
 ## 3. Top 10 Things to Avoid Saying in an Interview
 
-| ❌ What NOT to Say | ✅ What to Say Instead | Why It Matters |
-|---|---|---|
-| *"We have 5 autonomous agents debating in a swarm."* | *"We use a LangGraph StateGraph with 5 specialized persona system prompts and dynamic tool binding."* | The code implements prompt switching, not a multi-agent debate swarm. Honesty wins interviews. |
-| *"We store all chat messages in a Prisma Message table."* | *"We use Prisma for Thread metadata, while LangGraph's `PostgresSaver` handles conversation message checkpoints."* | Demonstrates real knowledge of LangGraph's persistence architecture. |
-| *"Tool calling runs code directly inside the LLM."* | *"The LLM generates structured JSON tool arguments; our server-side `ToolNode` executes the code."* | Models cannot run code; applications run code on behalf of the model. |
-| *"We use WebSockets for chat streaming."* | *"We use Server-Sent Events (SSE) over HTTP because text generation is unidirectional."* | Accurate protocol knowledge. |
-| *"Our app is 100% bug-free and fully tested."* | *"The application works end-to-end, but a key improvement I want to build is an automated Vitest and Playwright test suite."* | Shows senior engineering self-awareness. |
+| ❌ What NOT to Say                                        | ✅ What to Say Instead                                                                                                        | Why It Matters                                                                                 |
+| --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| _"We have 5 autonomous agents debating in a swarm."_      | _"We use a LangGraph StateGraph with 5 specialized persona system prompts and dynamic tool binding."_                         | The code implements prompt switching, not a multi-agent debate swarm. Honesty wins interviews. |
+| _"We store all chat messages in a Prisma Message table."_ | _"We use Prisma for Thread metadata, while LangGraph's `PostgresSaver` handles conversation message checkpoints."_            | Demonstrates real knowledge of LangGraph's persistence architecture.                           |
+| _"Tool calling runs code directly inside the LLM."_       | _"The LLM generates structured JSON tool arguments; our server-side `ToolNode` executes the code."_                           | Models cannot run code; applications run code on behalf of the model.                          |
+| _"We use WebSockets for chat streaming."_                 | _"We use Server-Sent Events (SSE) over HTTP because text generation is unidirectional."_                                      | Accurate protocol knowledge.                                                                   |
+| _"Our app is 100% bug-free and fully tested."_            | _"The application works end-to-end, but a key improvement I want to build is an automated Vitest and Playwright test suite."_ | Shows senior engineering self-awareness.                                                       |
 
 ---
 
 ## 4. The 50-Term Technical Glossary
 
-1. **LLM (Large Language Model)**: A neural network trained on vast text data to predict the next token. *(Analogy: An ultra-advanced autocomplete).*
-2. **Token**: The basic chunk of text processed by an LLM (~4 characters). *(Analogy: The syllables of AI language).*
-3. **Context Window**: Maximum tokens an LLM can process in one turn. *(Analogy: The size of a desk where reference books can sit).*
-4. **Temperature**: Hyperparameter controlling randomness in model output. *(0.0 = deterministic math, 1.0 = creative fiction).*
+1. **LLM (Large Language Model)**: A neural network trained on vast text data to predict the next token. _(Analogy: An ultra-advanced autocomplete)._
+2. **Token**: The basic chunk of text processed by an LLM (~4 characters). _(Analogy: The syllables of AI language)._
+3. **Context Window**: Maximum tokens an LLM can process in one turn. _(Analogy: The size of a desk where reference books can sit)._
+4. **Temperature**: Hyperparameter controlling randomness in model output. _(0.0 = deterministic math, 1.0 = creative fiction)._
 5. **Prompt Engineering**: Designing system instructions to guide model outputs reliably.
 6. **System Message**: Directive setting the AI's role and rules before user queries are evaluated.
 7. **Human Message**: Input provided by the user.

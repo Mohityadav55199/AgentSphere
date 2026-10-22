@@ -133,4 +133,3 @@ export async function getPresignedUrl(key: string, expiresIn = 3600): Promise<st
 
   return await getSignedUrl(client, command, { expiresIn });
 }
-

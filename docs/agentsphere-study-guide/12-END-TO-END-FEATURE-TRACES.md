@@ -3,6 +3,7 @@
 ---
 
 ## 📌 Document Metadata & Tracing Methodology
+
 This document traces the 6 core features of AgentSphere from the initial user gesture on the screen, through frontend hooks, network transport, backend route handlers, database queries, and LLM calls, back to the final UI update.
 
 ---
@@ -40,6 +41,7 @@ sequenceDiagram
 ```
 
 ### Trace Step-by-Step Breakdown:
+
 1. **User Action**: Enters prompt and clicks Send.
 2. **Frontend Handler**: `handleSubmit()` in [src/components/MessageInput.tsx](file:///c:/Projects/AgentSphere/src/components/MessageInput.tsx#L153).
 3. **Optimistic Cache Update**: `sendMessage()` in [src/hooks/useChatThread.ts](file:///c:/Projects/AgentSphere/src/hooks/useChatThread.ts#L164) adds a `human` message into the TanStack Query cache under a temporary ID (`temp-${Date.now()}`).
@@ -73,7 +75,7 @@ sequenceDiagram
     LG-->>Route: Execution halts; yields pending tool call
     Route-->>Hook: SSE sends { type: "ai", data: { tool_calls: [...] } }
     Hook-->>UI: Renders Approval Card: "db__query_users" [Allow] [Deny]
-    
+
     User->>UI: Clicks [Allow]
     UI->>Hook: approveToolExecution(id, "allow")
     Hook->>Route: GET /api/agent/stream?allowTool=allow&threadId=t1
@@ -90,6 +92,7 @@ sequenceDiagram
 ```
 
 ### Trace Step-by-Step Breakdown:
+
 1. **Model Action**: The LLM determines it needs external data and generates a `tool_calls` payload.
 2. **Graph Interruption**: In [src/lib/agent/builder.ts:L74](file:///c:/Projects/AgentSphere/src/lib/agent/builder.ts#L74), `approveToolCall()` invokes `interrupt()`. LangGraph saves the exact execution state into PostgreSQL's `checkpoints` table and yields the tool call.
 3. **Frontend Rendering**: `<AIMessage>` renders `<ToolCallDisplay>`, presenting expandable JSON arguments and **[Allow]** and **[Deny]** buttons.
@@ -120,7 +123,7 @@ sequenceDiagram
     S3-->>UpRoute: Successfully stored
     UpRoute-->>Input: Returns { url, key, name, type, size }
     Input-->>User: Displays attachment chip in input box
-    
+
     User->>Input: Types "What is the total on this receipt?" & hits Send
     Input->>StreamRoute: GET /api/agent/stream?content=...&attachments=[{...}]
     StreamRoute->>Content: processAttachmentsForAI(attachments)
@@ -131,6 +134,7 @@ sequenceDiagram
 ```
 
 ### Trace Step-by-Step Breakdown:
+
 1. **Drag-and-Drop Gesture**: Handled by `handleDrop()` in [src/components/Thread.tsx](file:///c:/Projects/AgentSphere/src/components/Thread.tsx#L54-L59), turning on the glassmorphic dropzone overlay.
 2. **Validation**: [src/lib/storage/validation.ts](file:///c:/Projects/AgentSphere/src/lib/storage/validation.ts) checks file extensions, MIME types, and maximum sizes (Images: 5MB, PDFs: 10MB).
 3. **Upload**: [src/lib/storage/upload.ts](file:///c:/Projects/AgentSphere/src/lib/storage/upload.ts) uploads the buffer to MinIO or AWS S3.
@@ -156,7 +160,7 @@ sequenceDiagram
     Route->>DB: prisma.user.create({ data: { name, email, password } })
     Route->>Route: signToken({ id, email, name })
     Route-->>UI: 201 Created + Sets httpOnly Cookie
-    
+
     Note over User,UI: User sends a message in an existing thread created as a guest
     UI->>Route: GET /api/agent/stream?threadId=guest-123
     Route->>ThreadLib: ensureThread("guest-123", "Hello", user.id)
@@ -165,6 +169,7 @@ sequenceDiagram
 ```
 
 ### Trace Step-by-Step Breakdown:
+
 1. **Registration**: Validates password length ($\ge 6$), hashes password using a 16-byte random salt and `crypto.scryptSync(password, salt, 64)`, and inserts a new `User` row.
 2. **Session Generation**: Issues an HS256 JWT containing `{ id, email, name, exp }` signed with `JWT_SECRET`.
 3. **Cookie Storage**: Injects `agentsphere_auth_token` as an `httpOnly`, `sameSite: "lax"` cookie.
@@ -178,17 +183,22 @@ sequenceDiagram
 2. **Network Call**: Hits `GET /api/agent/history/${currentThreadId}`.
 3. **Database Retrieval**: [src/lib/agent/memory.ts:L36-L46](file:///c:/Projects/AgentSphere/src/lib/agent/memory.ts#L36-L46) queries `postgresCheckpointer.get({ configurable: { thread_id } })`.
 4. **Formatting**: Iterates through messages and structures a Markdown document:
+
    ```markdown
    # AgentSphere Conversation
-   *Thread ID: 3b9e84...*
-   *Exported: 10/13/2026, 10:30 PM*
+
+   _Thread ID: 3b9e84..._
+   _Exported: 10/13/2026, 10:30 PM_
 
    ### 👤 User
+
    What is an algorithm?
 
    ### 🤖 AgentSphere AI
+
    An algorithm is a step-by-step procedure...
    ```
+
 5. **Download Trigger**: Instantiates a browser `Blob([mdContent], { type: "text/markdown" })`, generates an object URL (`URL.createObjectURL(blob)`), and triggers an automatic browser download.
 
 ---

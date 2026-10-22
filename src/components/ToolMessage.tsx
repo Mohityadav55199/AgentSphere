@@ -126,7 +126,8 @@ export const ToolMessage = ({ message }: ToolMessageProps) => {
 
   return (
     <div className="rounded border border-gray-200 bg-gray-50 transition-colors hover:bg-gray-100">
-      <button suppressHydrationWarning
+      <button
+        suppressHydrationWarning
         className="flex w-full cursor-pointer items-center justify-between p-4 text-left focus:ring-2 focus:ring-blue-500 focus:outline-none focus:ring-inset"
         onClick={() => setOpen((o) => !o)}
       >
@@ -135,7 +136,8 @@ export const ToolMessage = ({ message }: ToolMessageProps) => {
           <span className="text-xs text-gray-500">({contentStats})</span>
         </div>
         <div className="flex items-center space-x-2">
-          <button suppressHydrationWarning
+          <button
+            suppressHydrationWarning
             onClick={handleCopy}
             className="rounded p-1 text-gray-500 hover:bg-gray-200 hover:text-gray-700 focus:outline-none"
             title="Copy content"

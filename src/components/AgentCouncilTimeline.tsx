@@ -19,7 +19,8 @@ export const COUNCIL_MEMBERS: CouncilMember[] = [
     role: "Planning & Strategy",
     icon: "🎯",
     activeColor: "text-purple-600 dark:text-purple-400",
-    badgeBg: "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800",
+    badgeBg:
+      "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800",
     borderColor: "border-purple-300 dark:border-purple-800",
     headingMatch: /### 🎯\s*Supervisor Plan/i,
   },
@@ -29,7 +30,8 @@ export const COUNCIL_MEMBERS: CouncilMember[] = [
     role: "Context & Retrieval",
     icon: "🔍",
     activeColor: "text-sky-600 dark:text-sky-400",
-    badgeBg: "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800",
+    badgeBg:
+      "bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800",
     borderColor: "border-sky-300 dark:border-sky-800",
     headingMatch: /### 🔍\s*(Research|Context)/i,
   },
@@ -39,7 +41,8 @@ export const COUNCIL_MEMBERS: CouncilMember[] = [
     role: "Code & Implementation",
     icon: "💻",
     activeColor: "text-emerald-600 dark:text-emerald-400",
-    badgeBg: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800",
+    badgeBg:
+      "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800",
     borderColor: "border-emerald-300 dark:border-emerald-800",
     headingMatch: /### 💻\s*Developer Implementation/i,
   },
@@ -49,7 +52,8 @@ export const COUNCIL_MEMBERS: CouncilMember[] = [
     role: "Data & Architecture",
     icon: "📊",
     activeColor: "text-amber-600 dark:text-amber-400",
-    badgeBg: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800",
+    badgeBg:
+      "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800",
     borderColor: "border-amber-300 dark:border-amber-800",
     headingMatch: /### 📊\s*Data & Architecture/i,
   },
@@ -59,7 +63,8 @@ export const COUNCIL_MEMBERS: CouncilMember[] = [
     role: "Security & QA Critic",
     icon: "🛡️",
     activeColor: "text-rose-600 dark:text-rose-400",
-    badgeBg: "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800",
+    badgeBg:
+      "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800",
     borderColor: "border-rose-300 dark:border-rose-800",
     headingMatch: /### 🛡️\s*Security Audit/i,
   },
@@ -115,7 +120,7 @@ export const AgentCouncilTimeline: React.FC<AgentCouncilTimelineProps> = ({
       </div>
 
       {/* Stepper Pipeline */}
-      <div className="mt-2.5 flex flex-wrap items-center gap-1.5 pt-1 border-t border-gray-100 dark:border-gray-800/80">
+      <div className="mt-2.5 flex flex-wrap items-center gap-1.5 border-t border-gray-100 pt-1 dark:border-gray-800/80">
         {participatingMembers.map((member, idx) => {
           return (
             <React.Fragment key={member.id}>

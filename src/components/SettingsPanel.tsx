@@ -28,7 +28,8 @@ export const SettingsPanel = ({
   return (
     <div className="border-b border-gray-200 dark:border-gray-700">
       {/* Settings Header */}
-      <button suppressHydrationWarning
+      <button
+        suppressHydrationWarning
         type="button"
         onClick={onToggle}
         className="flex w-full items-center justify-between px-4 py-2 text-left transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
@@ -43,11 +44,13 @@ export const SettingsPanel = ({
               <span className="text-xs text-gray-500">
                 {provider} / {model}
               </span>
-              <span className={`text-[10px] font-semibold px-1.5 py-0.2 rounded-full ${agentMode === "multi" ? "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300" : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"}`}>
+              <span
+                className={`py-0.2 rounded-full px-1.5 text-[10px] font-semibold ${agentMode === "multi" ? "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300" : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"}`}
+              >
                 {agentMode === "multi" ? "Multi-Agent" : "Single"}
               </span>
               {(mcpToolsData?.totalCount ?? 0) > 0 && (
-                <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
                   • {mcpToolsData?.totalCount ?? 0} MCP tools
                 </span>
               )}
@@ -76,7 +79,7 @@ export const SettingsPanel = ({
                   onClick={() => setAgentMode("single")}
                   className={`flex cursor-pointer items-center justify-center gap-2 rounded-lg border p-2 text-xs font-medium transition-all ${
                     agentMode === "single"
-                      ? "border-blue-600 bg-blue-50/60 text-blue-700 dark:border-blue-500 dark:bg-blue-950/40 dark:text-blue-300 font-semibold shadow-xs"
+                      ? "border-blue-600 bg-blue-50/60 font-semibold text-blue-700 shadow-xs dark:border-blue-500 dark:bg-blue-950/40 dark:text-blue-300"
                       : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
                   }`}
                 >
@@ -89,7 +92,7 @@ export const SettingsPanel = ({
                   onClick={() => setAgentMode("multi")}
                   className={`flex cursor-pointer items-center justify-center gap-2 rounded-lg border p-2 text-xs font-medium transition-all ${
                     agentMode === "multi"
-                      ? "border-purple-600 bg-purple-50/60 text-purple-700 dark:border-purple-500 dark:bg-purple-950/40 dark:text-purple-300 font-semibold shadow-xs"
+                      ? "border-purple-600 bg-purple-50/60 font-semibold text-purple-700 shadow-xs dark:border-purple-500 dark:bg-purple-950/40 dark:text-purple-300"
                       : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300"
                   }`}
                 >
@@ -105,25 +108,30 @@ export const SettingsPanel = ({
 
               {agentMode === "multi" && (
                 <div className="mt-2 rounded-lg border border-purple-100 bg-purple-50/50 p-2.5 text-xs dark:border-purple-900/40 dark:bg-purple-950/20">
-                  <div className="font-semibold text-purple-900 dark:text-purple-300 flex items-center gap-1.5 mb-1.5">
+                  <div className="mb-1.5 flex items-center gap-1.5 font-semibold text-purple-900 dark:text-purple-300">
                     <Sparkles className="h-3.5 w-3.5" />
                     <span>Active 5-Agent Council Members</span>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px]">
+                  <div className="grid grid-cols-1 gap-1.5 text-[11px] sm:grid-cols-2">
                     <div className="flex items-center gap-1.5 text-purple-800 dark:text-purple-300">
-                      <span>🎯</span> <span className="font-medium">Supervisor:</span> Planning & DAG Routing
+                      <span>🎯</span> <span className="font-medium">Supervisor:</span> Planning &
+                      DAG Routing
                     </div>
                     <div className="flex items-center gap-1.5 text-sky-800 dark:text-sky-300">
-                      <span>🔍</span> <span className="font-medium">Researcher:</span> Live Docs, Web, APIs
+                      <span>🔍</span> <span className="font-medium">Researcher:</span> Live Docs,
+                      Web, APIs
                     </div>
                     <div className="flex items-center gap-1.5 text-emerald-800 dark:text-emerald-300">
-                      <span>💻</span> <span className="font-medium">Developer:</span> Code Engineering & MCP
+                      <span>💻</span> <span className="font-medium">Developer:</span> Code
+                      Engineering & MCP
                     </div>
                     <div className="flex items-center gap-1.5 text-amber-800 dark:text-amber-300">
-                      <span>📊</span> <span className="font-medium">Analyst:</span> Stats & Mermaid Diagrams
+                      <span>📊</span> <span className="font-medium">Analyst:</span> Stats & Mermaid
+                      Diagrams
                     </div>
-                    <div className="flex items-center gap-1.5 text-rose-800 dark:text-rose-300 sm:col-span-2">
-                      <span>🛡️</span> <span className="font-medium">Auditor:</span> OWASP Security & Quality Audit
+                    <div className="flex items-center gap-1.5 text-rose-800 sm:col-span-2 dark:text-rose-300">
+                      <span>🛡️</span> <span className="font-medium">Auditor:</span> OWASP Security &
+                      Quality Audit
                     </div>
                   </div>
                 </div>

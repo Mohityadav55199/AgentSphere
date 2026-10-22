@@ -9,6 +9,7 @@ This document describes how to configure the keep-alive monitor and automated da
 Render's free web services spin down after **15 minutes of inactivity**. When a new visitor accesses the app, the initial cold start can take **50–60 seconds**.
 
 ### Features of the In-App Banner:
+
 - **Location**: Rendered across the top of all screens above the main header ([`FreeTierBanner.tsx`](file:///c:/Projects/AgentSphere/src/components/FreeTierBanner.tsx)).
 - **Transparent Notice**: Clearly informs users that the instance is hosted on Render's free tier and that cold starts take up to 50 seconds.
 - **Live Status Ping**: Automatically pings [`/api/health`](file:///c:/Projects/AgentSphere/src/app/api/health/route.ts) on load:
@@ -27,6 +28,7 @@ To prevent the Render free instance from going to sleep, a scheduled GitHub Acti
 - **Endpoint**: `https://<YOUR_RENDER_URL>/api/health`
 
 ### Setup Instructions:
+
 1. Open your GitHub repository in your browser.
 2. Go to **Settings** > **Secrets and variables** > **Actions**.
 3. Under **Repository secrets**, click **New repository secret**:
@@ -49,6 +51,7 @@ Render free tier PostgreSQL instances expire after 30 days unless upgraded or ba
 - **Local / Script Execution**: `npm run db:backup` (defined in [`scripts/backup-database.mjs`](file:///c:/Projects/AgentSphere/scripts/backup-database.mjs)).
 
 ### Setup Instructions:
+
 1. In your GitHub repository, go to **Settings** > **Secrets and variables** > **Actions**.
 2. Add the following **Repository secret**:
    - **Name**: `DATABASE_URL`
@@ -56,7 +59,9 @@ Render free tier PostgreSQL instances expire after 30 days unless upgraded or ba
      `postgresql://user:password@external-host.render.com/dbname?sslmode=require`
 
 ### (Optional) Cloud Storage Upload (AWS S3 / Cloudflare R2 / MinIO):
+
 If you also want the backup uploaded to an S3 bucket in addition to GitHub Artifacts, add:
+
 - `S3_BUCKET_NAME`: e.g. `my-agentsphere-backups`
 - `S3_ACCESS_KEY_ID`: Your storage access key
 - `S3_SECRET_ACCESS_KEY`: Your storage secret key
@@ -64,12 +69,14 @@ If you also want the backup uploaded to an S3 bucket in addition to GitHub Artif
 - `S3_REGION`: (Optional) e.g. `us-east-1`
 
 ### How to Download Backups:
+
 1. Go to the **Actions** tab in your GitHub repository.
 2. Click on the latest successful **Database Backup Cronjob** run.
 3. Scroll down to the **Artifacts** section at the bottom of the page.
 4. Click on the backup archive (e.g., `agentsphere-backup-20261021_020000.sql.gz`) to download it.
 
 ### How to Restore a Backup:
+
 ```bash
 # Decompress and stream directly into PostgreSQL
 gunzip -c agentsphere-backup-YYYYMMDD_HHMMSS.sql.gz | psql "$DATABASE_URL"
@@ -82,6 +89,7 @@ gunzip -c agentsphere-backup-YYYYMMDD_HHMMSS.sql.gz | psql "$DATABASE_URL"
 If you prefer using an external cron service like **[cron-job.org](https://cron-job.org)** instead of or alongside GitHub Actions, AgentSphere provides dedicated HTTP endpoints.
 
 ### Step 1: Keep Server Awake (Render Keep-Alive)
+
 1. Sign up / Log in to **[cron-job.org](https://cron-job.org)** (100% free).
 2. Go to **Cronjobs** > **Create cronjob**.
 3. Fill in the details:
@@ -90,9 +98,10 @@ If you prefer using an external cron service like **[cron-job.org](https://cron-
    - **Execution schedule**: Every **10 minutes** or **14 minutes**.
    - **Request Method**: `GET`
 4. Click **Create**.
-5. *Result*: cron-job.org will ping your server 24/7, keeping it warm and preventing it from entering cold sleep!
+5. _Result_: cron-job.org will ping your server 24/7, keeping it warm and preventing it from entering cold sleep!
 
 ### Step 2: Automated Database Backup via cron-job.org
+
 1. In Render's dashboard for your web service, add an environment variable:
    - `CRON_SECRET` = `your_strong_random_secret_password`
 2. In **[cron-job.org](https://cron-job.org)**, click **Create cronjob**:
@@ -101,20 +110,20 @@ If you prefer using an external cron service like **[cron-job.org](https://cron-
    - **Execution schedule**: User-defined (e.g. **Every day at 02:00**).
    - **Request Method**: `GET`
 3. Click **Create**.
-4. *Result*: When triggered, the `/api/cron/backup` endpoint securely backs up the database. If S3/R2 storage is configured, it automatically uploads the compressed archive to your S3 bucket!
+4. _Result_: When triggered, the `/api/cron/backup` endpoint securely backs up the database. If S3/R2 storage is configured, it automatically uploads the compressed archive to your S3 bucket!
 
 ---
 
 ## 5. 🛠️ Verification Checklist
 
-| Component | File / Endpoint | Status |
-|---|---|---|
-| **Health API** | [`src/app/api/health/route.ts`](file:///c:/Projects/AgentSphere/src/app/api/health/route.ts) | ✅ Created |
-| **Notice Banner** | [`src/components/FreeTierBanner.tsx`](file:///c:/Projects/AgentSphere/src/components/FreeTierBanner.tsx) | ✅ Created |
-| **Layout Integration** | [`src/components/MainLayout.tsx`](file:///c:/Projects/AgentSphere/src/components/MainLayout.tsx) | ✅ Integrated |
-| **Cron Backup API** | [`src/app/api/cron/backup/route.ts`](file:///c:/Projects/AgentSphere/src/app/api/cron/backup/route.ts) | ✅ Created |
-| **cron-job.org Setup** | `docs/KEEP-ALIVE-AND-BACKUPS.md` | ✅ Documented |
-| **Keep-Alive GitHub Action** | [`.github/workflows/keep-alive.yml`](file:///c:/Projects/AgentSphere/.github/workflows/keep-alive.yml) | ✅ Created |
-| **DB Backup GitHub Action** | [`.github/workflows/db-backup.yml`](file:///c:/Projects/AgentSphere/.github/workflows/db-backup.yml) | ✅ Created |
-| **Backup Runner Script** | [`scripts/backup-database.mjs`](file:///c:/Projects/AgentSphere/scripts/backup-database.mjs) | ✅ Created (`npm run db:backup`) |
-| **Render Config** | [`render.yaml`](file:///c:/Projects/AgentSphere/render.yaml) | ✅ Updated |
+| Component                    | File / Endpoint                                                                                          | Status                           |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| **Health API**               | [`src/app/api/health/route.ts`](file:///c:/Projects/AgentSphere/src/app/api/health/route.ts)             | ✅ Created                       |
+| **Notice Banner**            | [`src/components/FreeTierBanner.tsx`](file:///c:/Projects/AgentSphere/src/components/FreeTierBanner.tsx) | ✅ Created                       |
+| **Layout Integration**       | [`src/components/MainLayout.tsx`](file:///c:/Projects/AgentSphere/src/components/MainLayout.tsx)         | ✅ Integrated                    |
+| **Cron Backup API**          | [`src/app/api/cron/backup/route.ts`](file:///c:/Projects/AgentSphere/src/app/api/cron/backup/route.ts)   | ✅ Created                       |
+| **cron-job.org Setup**       | `docs/KEEP-ALIVE-AND-BACKUPS.md`                                                                         | ✅ Documented                    |
+| **Keep-Alive GitHub Action** | [`.github/workflows/keep-alive.yml`](file:///c:/Projects/AgentSphere/.github/workflows/keep-alive.yml)   | ✅ Created                       |
+| **DB Backup GitHub Action**  | [`.github/workflows/db-backup.yml`](file:///c:/Projects/AgentSphere/.github/workflows/db-backup.yml)     | ✅ Created                       |
+| **Backup Runner Script**     | [`scripts/backup-database.mjs`](file:///c:/Projects/AgentSphere/scripts/backup-database.mjs)             | ✅ Created (`npm run db:backup`) |
+| **Render Config**            | [`render.yaml`](file:///c:/Projects/AgentSphere/render.yaml)                                             | ✅ Updated                       |

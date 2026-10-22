@@ -35,20 +35,20 @@ export const AgentThoughtAccordion: React.FC<AgentThoughtAccordionProps> = ({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex w-full cursor-pointer items-center justify-between px-3.5 py-2 text-left transition-colors hover:bg-gray-50/80 dark:hover:bg-gray-850/80"
+        className="dark:hover:bg-gray-850/80 flex w-full cursor-pointer items-center justify-between px-3.5 py-2 text-left transition-colors hover:bg-gray-50/80"
       >
         <div className="flex items-center gap-2">
           <span className="text-base">{icon}</span>
-          <span className={`rounded-md px-1.5 py-0.5 text-[11px] font-semibold border ${badgeBg}`}>
+          <span className={`rounded-md border px-1.5 py-0.5 text-[11px] font-semibold ${badgeBg}`}>
             {name}
           </span>
-          <span className="text-xs font-medium text-gray-800 dark:text-gray-200 line-clamp-1">
+          <span className="line-clamp-1 text-xs font-medium text-gray-800 dark:text-gray-200">
             {title}
           </span>
         </div>
 
         <div className="flex items-center gap-2 text-gray-400 dark:text-gray-500">
-          <span className="text-[10px] font-mono hidden sm:inline">{words} words</span>
+          <span className="hidden font-mono text-[10px] sm:inline">{words} words</span>
           {isOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
         </div>
       </button>

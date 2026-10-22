@@ -27,10 +27,6 @@ export function getS3Client(): S3Client | null {
 }
 
 // Fallback dummy export for compatibility
-export const s3Client = isS3Configured
-  ? getS3Client()!
-  : (null as unknown as S3Client);
+export const s3Client = isS3Configured ? getS3Client()! : (null as unknown as S3Client);
 
 export const BUCKET_NAME = process.env.S3_BUCKET_NAME || "uploads";
-
-

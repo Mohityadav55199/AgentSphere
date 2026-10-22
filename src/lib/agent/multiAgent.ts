@@ -9,13 +9,19 @@ import {
 } from "@langchain/langgraph";
 import { ToolNode } from "@langchain/langgraph/prebuilt";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
-import { SystemMessage, HumanMessage, AIMessage, ToolMessage, ContentBlock } from "@langchain/core/messages";
+import {
+  SystemMessage,
+  HumanMessage,
+  AIMessage,
+  ToolMessage,
+  ContentBlock,
+} from "@langchain/core/messages";
 import { ToolCall } from "@langchain/core/messages/tool";
 import { DynamicTool } from "@langchain/core/tools";
 
 /**
  * 5-Agent Council Architecture:
- * 
+ *
  * 1. 🎯 Supervisor (Strategist & Dispatcher): Decomposes objectives, plans steps, and dispatches to specialists.
  * 2. 🔍 Researcher (Knowledge & Retrieval): Gathers context, documentation, web queries, and references.
  * 3. 💻 Developer (Code & Systems Engineer): Focuses on implementation, coding, database queries, and MCP tool execution.
@@ -138,7 +144,7 @@ Format:
 **Strategy:** [Numbered 2-3 step plan]
 **Assigned Specialist:** [Specialist Name]
 
-[ROUTE: <TAG>]`
+[ROUTE: <TAG>]`,
     );
 
     const response = await this.model.invoke([supervisorPrompt, lastMessage]);
@@ -148,7 +154,9 @@ Format:
   /**
    * Evaluates Supervisor output to choose next node
    */
-  private routeFromSupervisor(state: typeof MessagesAnnotation.State): "researcher" | "analyst" | "developer" {
+  private routeFromSupervisor(
+    state: typeof MessagesAnnotation.State,
+  ): "researcher" | "analyst" | "developer" {
     const messages = state.messages;
     const lastMessage = messages[messages.length - 1];
     const content = typeof lastMessage?.content === "string" ? lastMessage.content : "";
@@ -166,7 +174,11 @@ Format:
    * Helper to safely bind tools to model if supported
    */
   private getInvoker(tools: DynamicTool[]) {
-    if (tools.length > 0 && "bindTools" in this.model && typeof this.model.bindTools === "function") {
+    if (
+      tools.length > 0 &&
+      "bindTools" in this.model &&
+      typeof this.model.bindTools === "function"
+    ) {
       return this.model.bindTools(tools);
     }
     return this.model;
@@ -189,7 +201,7 @@ Your role:
 
 Format your response starting with:
 ### 🔍 Research & Context Findings
-[Your synthesized facts, references, and prerequisites for the Developer and Analyst]`
+[Your synthesized facts, references, and prerequisites for the Developer and Analyst]`,
     );
 
     const messages = [researcherPrompt, ...state.messages];
@@ -216,7 +228,7 @@ Your role:
 
 Format your response starting with:
 ### 💻 Developer Implementation
-[Your detailed implementation, code blocks, and system explanations]`
+[Your detailed implementation, code blocks, and system explanations]`,
     );
 
     const messages = [devPrompt, ...state.messages];
@@ -241,7 +253,7 @@ Your role:
 
 Format your response starting with:
 ### 📊 Data & Architecture Analysis
-[Your quantitative insights, comparison tables, and/or Mermaid visual diagram]`
+[Your quantitative insights, comparison tables, and/or Mermaid visual diagram]`,
     );
 
     const messages = [analystPrompt, ...state.messages];
@@ -284,7 +296,7 @@ Format your response starting with:
 - **Edge Cases Checked:** [List 1-2 edge cases verified]
 - **Council Verdict:** [Approved / Enhanced]
 
-[Conclude with final advice or a polished wrap-up summary]`
+[Conclude with final advice or a polished wrap-up summary]`,
     );
 
     const response = await this.model.invoke([auditorPrompt, ...messages]);

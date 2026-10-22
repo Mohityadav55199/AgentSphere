@@ -70,7 +70,8 @@ const DEFAULT_COUNCIL_CONFIG: AgentRoleConfig[] = [
     icon: "🛡️",
     enabled: true,
     temperature: 0.2,
-    customPrompt: "Audit code against OWASP vulnerabilities, performance bottlenecks, and edge cases.",
+    customPrompt:
+      "Audit code against OWASP vulnerabilities, performance bottlenecks, and edge cases.",
   },
 ];
 
@@ -98,9 +99,7 @@ export const AgentStudioModal: React.FC<AgentStudioModalProps> = ({ isOpen, onCl
   const selectedAgent = agents.find((a) => a.id === selectedAgentId) || agents[0];
 
   const updateSelectedAgent = (updates: Partial<AgentRoleConfig>) => {
-    setAgents((prev) =>
-      prev.map((a) => (a.id === selectedAgentId ? { ...a, ...updates } : a)),
-    );
+    setAgents((prev) => prev.map((a) => (a.id === selectedAgentId ? { ...a, ...updates } : a)));
   };
 
   const handleSave = () => {
@@ -168,8 +167,8 @@ export const AgentStudioModal: React.FC<AgentStudioModalProps> = ({ isOpen, onCl
         {/* Modal Body */}
         <div className="flex flex-1 overflow-hidden">
           {/* Agent Role Selector List */}
-          <div className="w-1/3 border-r border-gray-200/70 p-3 overflow-y-auto dark:border-gray-800/70">
-            <div className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider mb-2">
+          <div className="w-1/3 overflow-y-auto border-r border-gray-200/70 p-3 dark:border-gray-800/70">
+            <div className="mb-2 text-[11px] font-semibold tracking-wider text-gray-400 uppercase">
               Council Specialists
             </div>
             <div className="space-y-1.5">
@@ -178,9 +177,9 @@ export const AgentStudioModal: React.FC<AgentStudioModalProps> = ({ isOpen, onCl
                   suppressHydrationWarning
                   key={agent.id}
                   onClick={() => setSelectedAgentId(agent.id)}
-                  className={`w-full flex items-center justify-between rounded-xl p-2.5 text-left text-xs transition-all ${
+                  className={`flex w-full items-center justify-between rounded-xl p-2.5 text-left text-xs transition-all ${
                     selectedAgentId === agent.id
-                      ? "bg-purple-50 font-semibold text-purple-900 border border-purple-200 dark:bg-purple-950/40 dark:text-purple-200 dark:border-purple-800"
+                      ? "border border-purple-200 bg-purple-50 font-semibold text-purple-900 dark:border-purple-800 dark:bg-purple-950/40 dark:text-purple-200"
                       : "text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800/60"
                   }`}
                 >
@@ -199,20 +198,18 @@ export const AgentStudioModal: React.FC<AgentStudioModalProps> = ({ isOpen, onCl
           </div>
 
           {/* Agent Detail & Controls */}
-          <div className="flex-1 p-5 overflow-y-auto space-y-4">
+          <div className="flex-1 space-y-4 overflow-y-auto p-5">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                <h3 className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-white">
                   <span>{selectedAgent.icon}</span>
                   <span>{selectedAgent.name} Specialist</span>
                 </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {selectedAgent.role}
-                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{selectedAgent.role}</p>
               </div>
 
               {/* Toggle Enabled */}
-              <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-gray-700 dark:text-gray-300">
+              <label className="flex cursor-pointer items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-300">
                 <input
                   type="checkbox"
                   checked={selectedAgent.enabled}
@@ -237,9 +234,7 @@ export const AgentStudioModal: React.FC<AgentStudioModalProps> = ({ isOpen, onCl
                 max="1.0"
                 step="0.05"
                 value={selectedAgent.temperature}
-                onChange={(e) =>
-                  updateSelectedAgent({ temperature: parseFloat(e.target.value) })
-                }
+                onChange={(e) => updateSelectedAgent({ temperature: parseFloat(e.target.value) })}
                 className="w-full accent-purple-600"
               />
               <div className="flex justify-between text-[10px] text-gray-400">
@@ -279,7 +274,7 @@ export const AgentStudioModal: React.FC<AgentStudioModalProps> = ({ isOpen, onCl
             <button
               suppressHydrationWarning
               onClick={onClose}
-              className="rounded-lg border border-gray-300 bg-white px-3.5 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-750"
+              className="dark:hover:bg-gray-750 rounded-lg border border-gray-300 bg-white px-3.5 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
             >
               Cancel
             </button>

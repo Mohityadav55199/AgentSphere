@@ -135,7 +135,7 @@ export async function getMCPTools() {
           const timeoutPromise = new Promise((_, reject) => {
             timer = setTimeout(
               () => reject(new Error(`MCP tool '${sanitized.name}' execution timed out after 30s`)),
-              MCP_TOOL_TIMEOUT_MS
+              MCP_TOOL_TIMEOUT_MS,
             );
           });
           try {

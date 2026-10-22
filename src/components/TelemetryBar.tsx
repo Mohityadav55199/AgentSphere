@@ -45,7 +45,7 @@ export const TelemetryBar: React.FC<TelemetryBarProps> = ({
   const estimatedCost = (estimatedTokens * (pricePerMillion / 1_000_000)).toFixed(5);
 
   // Latency estimation heuristic based on token length and provider
-  const estimatedLatency = (Math.max(0.4, estimatedTokens / 450)).toFixed(1);
+  const estimatedLatency = Math.max(0.4, estimatedTokens / 450).toFixed(1);
 
   return (
     <div className="mt-2.5 flex flex-wrap items-center gap-2 text-[11px] text-gray-500 select-none dark:text-gray-400">

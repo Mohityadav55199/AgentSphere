@@ -16,4 +16,3 @@ export async function GET(_req: Request, { params }: { params: Promise<{ threadI
     return NextResponse.json([], { status: 200 });
   }
 }
-

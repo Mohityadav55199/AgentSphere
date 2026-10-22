@@ -29,7 +29,6 @@ export function FreeTierBanner() {
         signal: controller.signal,
         cache: "no-store",
       });
-      clearTimeout(timeoutId);
       if (res.ok) {
         setServerStatus("online");
       } else {
@@ -39,6 +38,7 @@ export function FreeTierBanner() {
       // If request timed out or network error, backend is likely cold/spinning up
       setServerStatus("waking");
     } finally {
+      clearTimeout(timeoutId);
       setIsRetrying(false);
     }
   };
@@ -67,8 +67,12 @@ export function FreeTierBanner() {
 
           {/* Main message */}
           <span className="font-normal text-amber-900/90 dark:text-amber-100/90">
-            Hosted on Render&apos;s free tier. The instance spins down after 15 minutes of inactivity
-            and may take <strong className="font-semibold text-amber-950 dark:text-amber-100">50+ seconds to wake up</strong>. Please be patient on cold starts!
+            Hosted on Render&apos;s free tier. The instance spins down after 15 minutes of
+            inactivity and may take{" "}
+            <strong className="font-semibold text-amber-950 dark:text-amber-100">
+              50+ seconds to wake up
+            </strong>
+            . Please be patient on cold starts!
           </span>
 
           {/* Live Status indicator */}
@@ -84,7 +88,7 @@ export function FreeTierBanner() {
             ) : serverStatus === "waking" ? (
               <span
                 title="Backend is waking up or starting up"
-                className="inline-flex items-center gap-1 rounded-md bg-amber-200/80 px-2 py-0.5 text-[11px] font-medium text-amber-900 animate-pulse dark:bg-amber-900/60 dark:text-amber-200"
+                className="inline-flex animate-pulse items-center gap-1 rounded-md bg-amber-200/80 px-2 py-0.5 text-[11px] font-medium text-amber-900 dark:bg-amber-900/60 dark:text-amber-200"
               >
                 <Clock className="h-3 w-3 text-amber-600 dark:text-amber-400" />
                 Waking up...

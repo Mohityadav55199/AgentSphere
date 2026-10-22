@@ -15,15 +15,18 @@ export function createCheckpointer(): BaseCheckpointSaver {
   try {
     const dbUrl = process.env.DATABASE_URL || "";
     if (dbUrl.startsWith("postgres://") || dbUrl.startsWith("postgresql://")) {
-    let connectionString = dbUrl;
-    if (process.env.DB_SSLMODE && !connectionString.includes("sslmode=")) {
-      const separator = connectionString.includes("?") ? "&" : "?";
-      connectionString = `${connectionString}${separator}sslmode=${process.env.DB_SSLMODE}`;
-    }
-    return PostgresSaver.fromConnString(connectionString);
+      let connectionString = dbUrl;
+      if (process.env.DB_SSLMODE && !connectionString.includes("sslmode=")) {
+        const separator = connectionString.includes("?") ? "&" : "?";
+        connectionString = `${connectionString}${separator}sslmode=${process.env.DB_SSLMODE}`;
+      }
+      return PostgresSaver.fromConnString(connectionString);
     }
   } catch (err) {
-    console.warn("Failed to initialize PostgresSaver checkpointer, falling back to MemorySaver:", err);
+    console.warn(
+      "Failed to initialize PostgresSaver checkpointer, falling back to MemorySaver:",
+      err,
+    );
   }
   return new MemorySaver();
 }
@@ -46,5 +49,3 @@ export const getHistory = async (threadId: string): Promise<BaseMessage[]> => {
     return [];
   }
 };
-
-

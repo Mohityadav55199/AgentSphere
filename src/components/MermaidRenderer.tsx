@@ -25,8 +25,10 @@ export const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code }) => {
 
       try {
         // Dynamically import Mermaid from CDN to prevent heavy SSR bundle overhead
-        // @ts-expect-error dynamic CDN import
-        const mermaidModule = await import("https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs");
+        const cdnUrl = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const importDynamic = new Function("url", "return import(url)");
+        const mermaidModule = await importDynamic(cdnUrl);
         const mermaid = mermaidModule.default || mermaidModule;
 
         mermaid.initialize({
@@ -79,7 +81,7 @@ export const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code }) => {
   if (error) {
     return (
       <div className="my-3 rounded-xl border border-red-200 bg-red-50/50 p-3 text-xs text-red-700 dark:border-red-900/50 dark:bg-red-950/20 dark:text-red-300">
-        <div className="font-semibold mb-1 flex items-center justify-between">
+        <div className="mb-1 flex items-center justify-between font-semibold">
           <span>⚠️ Diagram Rendering Error</span>
           <button
             onClick={handleCopy}
@@ -90,7 +92,7 @@ export const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code }) => {
           </button>
         </div>
         <p className="font-mono text-[11px] whitespace-pre-wrap">{error}</p>
-        <pre className="mt-2 rounded bg-black/5 dark:bg-white/5 p-2 font-mono text-[11px] overflow-x-auto">
+        <pre className="mt-2 overflow-x-auto rounded bg-black/5 p-2 font-mono text-[11px] dark:bg-white/5">
           {code}
         </pre>
       </div>
@@ -101,15 +103,17 @@ export const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code }) => {
     <div
       className={`my-3 overflow-hidden rounded-xl border transition-all ${
         isExpanded
-          ? "fixed inset-4 z-50 flex flex-col bg-white shadow-2xl dark:bg-gray-900 dark:border-gray-700"
+          ? "fixed inset-4 z-50 flex flex-col bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-900"
           : "border-gray-200 bg-white shadow-xs dark:border-gray-800 dark:bg-gray-900"
       }`}
     >
       {/* Diagram Toolbar */}
-      <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/80 px-3 py-1.5 text-xs dark:border-gray-800 dark:bg-gray-850">
+      <div className="dark:bg-gray-850 flex items-center justify-between border-b border-gray-100 bg-gray-50/80 px-3 py-1.5 text-xs dark:border-gray-800">
         <div className="flex items-center gap-2">
-          <span className="font-semibold text-gray-700 dark:text-gray-300">📊 Architecture Diagram</span>
-          <span className="rounded bg-indigo-100 px-1.5 py-0.2 text-[10px] font-medium text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+          <span className="font-semibold text-gray-700 dark:text-gray-300">
+            📊 Architecture Diagram
+          </span>
+          <span className="py-0.2 rounded bg-indigo-100 px-1.5 text-[10px] font-medium text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
             Mermaid
           </span>
         </div>
@@ -117,7 +121,7 @@ export const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code }) => {
         <div className="flex items-center gap-1.5">
           <button
             onClick={handleCopy}
-            className="flex cursor-pointer items-center gap-1 rounded px-2 py-0.8 text-gray-600 hover:bg-gray-200/60 dark:text-gray-400 dark:hover:bg-gray-800"
+            className="py-0.8 flex cursor-pointer items-center gap-1 rounded px-2 text-gray-600 hover:bg-gray-200/60 dark:text-gray-400 dark:hover:bg-gray-800"
             title="Copy raw Mermaid code"
           >
             {copied ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} />}
@@ -127,7 +131,7 @@ export const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code }) => {
           <button
             onClick={handleDownloadSVG}
             disabled={!svgContent}
-            className="flex cursor-pointer items-center gap-1 rounded px-2 py-0.8 text-gray-600 hover:bg-gray-200/60 dark:text-gray-400 dark:hover:bg-gray-800 disabled:opacity-50"
+            className="py-0.8 flex cursor-pointer items-center gap-1 rounded px-2 text-gray-600 hover:bg-gray-200/60 disabled:opacity-50 dark:text-gray-400 dark:hover:bg-gray-800"
             title="Download diagram as SVG"
           >
             <Download size={13} />
@@ -136,7 +140,7 @@ export const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code }) => {
 
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="flex cursor-pointer items-center gap-1 rounded px-2 py-0.8 text-gray-600 hover:bg-gray-200/60 dark:text-gray-400 dark:hover:bg-gray-800"
+            className="py-0.8 flex cursor-pointer items-center gap-1 rounded px-2 text-gray-600 hover:bg-gray-200/60 dark:text-gray-400 dark:hover:bg-gray-800"
             title={isExpanded ? "Exit fullscreen" : "Expand diagram fullscreen"}
           >
             {isExpanded ? <Minimize2 size={13} /> : <Maximize2 size={13} />}
@@ -158,7 +162,7 @@ export const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code }) => {
           </div>
         ) : (
           <div
-            className="w-full flex justify-center [&_svg]:max-w-full [&_svg]:h-auto"
+            className="flex w-full justify-center [&_svg]:h-auto [&_svg]:max-w-full"
             dangerouslySetInnerHTML={{ __html: svgContent }}
           />
         )}
