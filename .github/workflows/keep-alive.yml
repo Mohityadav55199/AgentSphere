@@ -21,11 +21,11 @@ jobs:
       - name: Determine Target URL
         id: resolve-url
         run: |
-          # Priority: Manual input -> RENDER_APP_URL secret -> NEXT_PUBLIC_APP_URL secret -> APP_URL secret
-          TARGET="${{ inputs.target_url || secrets.RENDER_APP_URL || secrets.NEXT_PUBLIC_APP_URL || secrets.APP_URL }}"
+          # Priority: Manual input -> RENDER_APP_URL secret/var -> NEXT_PUBLIC_APP_URL secret/var -> APP_URL secret/var -> Default fallback
+          TARGET="${{ inputs.target_url || secrets.RENDER_APP_URL || vars.RENDER_APP_URL || secrets.NEXT_PUBLIC_APP_URL || vars.NEXT_PUBLIC_APP_URL || secrets.APP_URL || vars.APP_URL || 'https://agentsphere.onrender.com' }}"
           
           if [ -z "$TARGET" ]; then
-            echo "::error::Target URL is not configured! Please configure RENDER_APP_URL in your repository Secrets (Settings -> Secrets and variables -> Actions)."
+            echo "::error::Target URL is not configured! Please configure RENDER_APP_URL in your repository Secrets or Variables (Settings -> Secrets and variables -> Actions)."
             exit 1
           fi
 
@@ -47,7 +47,7 @@ jobs:
           echo "Sending keep-alive request to $URL at $(date -u)..."
           
           START_TIME=$(date +%s%3N)
-          HTTP_RESPONSE=$(curl -s -S -o response.json -w "%{http_code}" --max-time 60 "$URL" || echo "FAILED")
+          HTTP_RESPONSE=$(curl -s -S -L -o response.json -w "%{http_code}" --max-time 60 "$URL" || echo "FAILED")
           END_TIME=$(date +%s%3N)
           DURATION=$((END_TIME - START_TIME))
 
@@ -64,7 +64,7 @@ jobs:
             sleep 20
             
             RETRY_START=$(date +%s%3N)
-            RETRY_CODE=$(curl -s -S -o response_retry.json -w "%{http_code}" --max-time 60 "$URL" || echo "FAILED")
+            RETRY_CODE=$(curl -s -S -L -o response_retry.json -w "%{http_code}" --max-time 60 "$URL" || echo "FAILED")
             RETRY_END=$(date +%s%3N)
             RETRY_DURATION=$((RETRY_END - RETRY_START))
             
