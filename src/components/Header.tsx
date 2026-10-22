@@ -112,7 +112,7 @@ export const Header = ({ toggleSidebar, isSidebarOpen = true, onOpenMCPConfig }:
       a.href = url;
       a.download = `agentsphere-chat-${currentThreadId.slice(0, 8)}.md`;
       a.click();
-      URL.revokeObjectURL(url);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (e) {
       console.error("Export error", e);
       alert("Failed to export conversation history.");

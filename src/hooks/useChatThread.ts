@@ -125,6 +125,9 @@ export function useChatThread({ threadId }: UseChatThreadOptions): UseChatThread
         });
 
         stream.addEventListener("error", async (ev: Event) => {
+          // If stream was already closed or finished normally, ignore spurious disconnect event
+          if (!streamRef.current) return;
+
           try {
             // Try to extract a meaningful error message from the event payload
             const dataText = (ev as MessageEvent<string>)?.data;

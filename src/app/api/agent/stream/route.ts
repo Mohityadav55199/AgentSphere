@@ -108,7 +108,11 @@ export async function GET(req: NextRequest) {
             );
           }
         } finally {
-          controller.close();
+          try {
+            controller.close();
+          } catch {
+            // Controller was already closed or aborted
+          }
         }
       })();
     },

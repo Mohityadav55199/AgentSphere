@@ -264,7 +264,7 @@ export const AIMessage = ({
                                   a.href = url;
                                   a.download = `code-${Date.now()}.${ext}`;
                                   a.click();
-                                  URL.revokeObjectURL(url);
+                                  setTimeout(() => URL.revokeObjectURL(url), 1000);
                                 }}
                                 className="flex cursor-pointer items-center gap-1 text-[11px] transition-colors hover:text-white"
                                 title="Download code file"

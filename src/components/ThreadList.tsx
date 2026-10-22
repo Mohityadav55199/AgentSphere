@@ -303,7 +303,9 @@ export function ThreadList({ onOpenMCPConfig, onToggleSidebar }: ThreadListProps
         )}
         <div className="mt-1 flex items-center justify-between text-[10px] text-gray-400 dark:text-gray-500">
           <span className="font-mono text-[9px] opacity-75">{thread.id.slice(0, 6)}</span>
-          <span>{formatRelativeTime(thread.updatedAt || thread.createdAt)}</span>
+          <span suppressHydrationWarning>
+            {formatRelativeTime(thread.updatedAt || thread.createdAt)}
+          </span>
         </div>
       </div>
     );

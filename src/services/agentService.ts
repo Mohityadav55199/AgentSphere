@@ -3,7 +3,7 @@ import { ensureThread } from "@/lib/thread";
 import type { MessageOptions, MessageResponse, ToolCall } from "@/types/message";
 import prisma from "@/lib/database/prisma";
 import { getHistory } from "@/lib/agent/memory";
-import { BaseMessage, HumanMessage } from "@langchain/core/messages";
+import { BaseMessage, HumanMessage, AIMessage, AIMessageChunk } from "@langchain/core/messages";
 import { Command } from "@langchain/langgraph";
 import { processAttachmentsForAI } from "@/lib/storage/content";
 import { CallbackHandler } from "@langfuse/langchain";
@@ -127,6 +127,11 @@ async function* generator(
               if (!message) continue;
 
               const isAIMessage =
+                message instanceof AIMessage ||
+                message instanceof AIMessageChunk ||
+                (typeof (message as { _getType?: () => string })?._getType === "function" &&
+                  (message as { _getType: () => string })._getType() === "ai") ||
+                (message as Record<string, unknown>)?.type === "ai" ||
                 (message as Record<string, unknown>)?.constructor?.name === "AIMessageChunk" ||
                 (message as Record<string, unknown>)?.constructor?.name === "AIMessage";
 

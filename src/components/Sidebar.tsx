@@ -27,8 +27,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggle, children }) => {
           width: isOpen ? 260 : 0,
         }}
         transition={{ duration: 0.25, ease: "easeInOut" }}
-        className={`fixed top-0 left-0 z-30 h-screen overflow-hidden border-r border-gray-200/80 bg-white md:sticky dark:border-gray-800/80 dark:bg-gray-900 ${
-          isOpen ? "flex flex-col" : "hidden md:flex md:flex-col"
+        className={`fixed top-0 left-0 z-30 h-screen overflow-hidden bg-white md:sticky dark:bg-gray-900 ${
+          isOpen
+            ? "flex flex-col border-r border-gray-200/80 dark:border-gray-800/80"
+            : "hidden border-r-0 md:flex md:flex-col"
         }`}
       >
         <div className="flex h-full w-[260px] flex-col overflow-hidden">{children}</div>

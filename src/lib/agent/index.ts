@@ -28,13 +28,19 @@ async function setupOnce() {
     setupPromise = (async () => {
       const chk = postgresCheckpointer as { setup?: () => Promise<void> };
       if (chk && typeof chk.setup === "function") {
-        await chk.setup();
+        try {
+          await chk.setup();
+        } catch (setupErr) {
+          console.warn(
+            "Postgres checkpointer setup encountered a warning (continuing execution):",
+            setupErr,
+          );
+        }
       }
     })().catch((err) => {
       // Reset so a future call can retry if initial setup failed.
       setupPromise = null;
       console.error("Failed to setup checkpointer:", err);
-      throw err;
     });
   }
   await setupPromise;
