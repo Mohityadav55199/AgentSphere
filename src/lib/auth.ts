@@ -17,10 +17,17 @@ export function hashPassword(password: string): string {
 }
 
 export function verifyPassword(password: string, storedHash: string): boolean {
-  const [salt, hash] = storedHash.split(":");
-  if (!salt || !hash) return false;
-  const verifyHash = crypto.scryptSync(password, salt, 64).toString("hex");
-  return crypto.timingSafeEqual(Buffer.from(hash, "hex"), Buffer.from(verifyHash, "hex"));
+  try {
+    const [salt, hash] = storedHash.split(":");
+    if (!salt || !hash) return false;
+    const verifyHash = crypto.scryptSync(password, salt, 64).toString("hex");
+    const bufA = Buffer.from(hash, "hex");
+    const bufB = Buffer.from(verifyHash, "hex");
+    if (bufA.length !== bufB.length) return false;
+    return crypto.timingSafeEqual(bufA, bufB);
+  } catch {
+    return false;
+  }
 }
 
 export function signToken(payload: UserSession): string {

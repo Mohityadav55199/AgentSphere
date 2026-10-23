@@ -31,6 +31,7 @@ function createSingleModel(
       return new ChatOpenAI({
         model: groqModel,
         temperature,
+        streaming: true,
         apiKey: process.env.GROQ_API_KEY || "missing-api-key",
         configuration: {
           baseURL: "https://api.groq.com/openai/v1",
@@ -41,12 +42,14 @@ function createSingleModel(
       return new ChatOpenAI({
         model: modelName || "gpt-4o",
         temperature,
+        streaming: true,
         apiKey: process.env.OPENAI_API_KEY || "missing-api-key",
       });
     case "anthropic":
       return new ChatAnthropic({
         model: modelName || "claude-3-5-sonnet-latest",
         temperature,
+        streaming: true,
         apiKey: process.env.ANTHROPIC_API_KEY || "missing-api-key",
       });
     case "google":
@@ -56,6 +59,7 @@ function createSingleModel(
       return new ChatGoogleGenerativeAI({
         model: googleModel,
         temperature,
+        streaming: true,
         apiKey: process.env.GOOGLE_API_KEY || "missing-api-key",
       });
     }

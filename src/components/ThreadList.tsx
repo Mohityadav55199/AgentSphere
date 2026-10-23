@@ -46,6 +46,7 @@ export function ThreadList({ onOpenMCPConfig, onToggleSidebar }: ThreadListProps
     createThread,
     deleteThread,
     clearEmptyThreads,
+    renameThread,
     togglePinThread,
     refetchThreads,
   } = useThreads();
@@ -137,12 +138,7 @@ export function ThreadList({ onOpenMCPConfig, onToggleSidebar }: ThreadListProps
     if (!renamingId) return;
     setSavingRename(true);
     try {
-      await fetch("/api/agent/threads", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: renamingId, title: renameValue || "Untitled thread" }),
-      });
-      await refetchThreads();
+      await renameThread(renamingId, renameValue || "Untitled thread");
       setRenamingId(null);
     } catch (e) {
       console.error("Rename failed", e);

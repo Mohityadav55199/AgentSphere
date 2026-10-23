@@ -5,7 +5,6 @@ import {
   Sparkles,
   Plus,
   Download,
-  Loader2,
   Sun,
   Moon,
   LogIn,
@@ -55,7 +54,6 @@ export const Header = ({ toggleSidebar, isSidebarOpen = true, onOpenMCPConfig }:
   const { createThread } = useThreads();
   const router = useRouter();
   const pathname = usePathname();
-  const [exporting, setExporting] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [exportStudioOpen, setExportStudioOpen] = useState(false);
   const [agentStudioOpen, setAgentStudioOpen] = useState(false);
@@ -85,40 +83,6 @@ export const Header = ({ toggleSidebar, isSidebarOpen = true, onOpenMCPConfig }:
   const handleNewChat = async () => {
     const thread = await createThread();
     router.push(`/thread/${thread.id}`);
-  };
-
-  const handleExportMarkdown = async () => {
-    if (!currentThreadId) return;
-    setExporting(true);
-    try {
-      const res = await fetch(`/api/agent/history/${currentThreadId}`);
-      if (!res.ok) throw new Error("Failed to fetch history");
-      const messages = await res.json();
-
-      let mdContent = `# AgentSphere Conversation\n*Thread ID: ${currentThreadId}*\n*Persona: ${activePersona.name}*\n*Exported: ${new Date().toLocaleString()}*\n\n---\n\n`;
-      for (const msg of messages) {
-        const role =
-          msg.type === "human" ? "👤 User" : msg.type === "ai" ? "🤖 AgentSphere AI" : "🛠️ Tool";
-        const content =
-          typeof msg.data?.content === "string"
-            ? msg.data.content
-            : JSON.stringify(msg.data?.content || "");
-        mdContent += `### ${role}\n${content}\n\n`;
-      }
-
-      const blob = new Blob([mdContent], { type: "text/markdown" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `agentsphere-chat-${currentThreadId.slice(0, 8)}.md`;
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-    } catch (e) {
-      console.error("Export error", e);
-      alert("Failed to export conversation history.");
-    } finally {
-      setExporting(false);
-    }
   };
 
   return (

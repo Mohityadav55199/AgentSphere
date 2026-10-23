@@ -10,8 +10,6 @@ import {
   Mic,
   MicOff,
   FileText,
-  Image as ImageIcon,
-  Sparkles,
 } from "lucide-react";
 import { MessageOptions, FileAttachment } from "@/types/message";
 import { SettingsPanel } from "./SettingsPanel";
@@ -296,6 +294,7 @@ export const MessageInput = ({
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             placeholder={"Type your message..."}
+            maxLength={maxLength}
             className="max-h-[200px] min-h-[60px] w-full flex-1 resize-none overflow-auto pr-12 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none dark:text-gray-100 dark:placeholder:text-gray-500"
             rows={1}
             aria-label="Message input"

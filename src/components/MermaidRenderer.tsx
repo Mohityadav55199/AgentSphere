@@ -75,7 +75,7 @@ export const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code }) => {
     a.href = url;
     a.download = `diagram-${Date.now()}.svg`;
     a.click();
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
   if (error) {

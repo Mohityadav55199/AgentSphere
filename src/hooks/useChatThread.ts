@@ -71,44 +71,44 @@ export function useChatThread({ threadId }: UseChatThreadOptions): UseChatThread
             // Extract the data from the MessageResponse
             const data = messageResponse.data as AIMessageData;
 
-            // First chunk for this response id: create a new message entry
-            if (!currentMessageRef.current || currentMessageRef.current.data.id !== data.id) {
-              currentMessageRef.current = messageResponse;
-              queryClient.setQueryData(["messages", threadId], (old: MessageResponse[] = []) => [
-                ...old,
-                currentMessageRef.current!,
-              ]);
-            } else {
-              // Subsequent chunks: append content if it's a string, otherwise replace
-              const currentData = currentMessageRef.current.data as AIMessageData;
-              const newContent =
-                typeof data.content === "string" && typeof currentData.content === "string"
-                  ? currentData.content + data.content
-                  : data.content;
+            queryClient.setQueryData(["messages", threadId], (old: MessageResponse[] = []) => {
+              const existingIdx = old.findIndex((m) => m.data?.id === data.id);
 
-              currentMessageRef.current = {
-                ...currentMessageRef.current,
+              if (existingIdx === -1) {
+                // First chunk for this response id: append new entry
+                currentMessageRef.current = messageResponse;
+                return [...old, messageResponse];
+              }
+
+              // Subsequent chunks for this response id: append token chunks smoothly
+              const existingMsg = old[existingIdx];
+              const existingData = existingMsg.data as AIMessageData;
+              const newContent =
+                typeof data.content === "string" && typeof existingData.content === "string"
+                  ? existingData.content + data.content
+                  : (data.content || existingData.content);
+
+              const updatedMsg: MessageResponse = {
+                ...existingMsg,
                 data: {
-                  ...currentData,
+                  ...existingData,
                   content: newContent,
-                  // Update tool call data if present
                   ...(data.tool_calls && { tool_calls: data.tool_calls }),
-                  ...(data.additional_kwargs && { additional_kwargs: data.additional_kwargs }),
+                  ...(data.additional_kwargs && {
+                    additional_kwargs: {
+                      ...(existingData.additional_kwargs || {}),
+                      ...data.additional_kwargs,
+                    },
+                  }),
                   ...(data.response_metadata && { response_metadata: data.response_metadata }),
                 },
               };
-              queryClient.setQueryData(["messages", threadId], (old: MessageResponse[] = []) => {
-                // Find the in-flight assistant message by its stable response id
-                const idx = old.findIndex((m) => m.data?.id === currentMessageRef.current!.data.id);
-                // If it's not in the cache (race or refresh), keep existing state
-                if (idx === -1) return old;
-                // Immutable update so React Query subscribers are notified
-                const clone = [...old];
-                // Replace only the updated message entry with the latest accumulated content
-                clone[idx] = currentMessageRef.current!;
-                return clone;
-              });
-            }
+
+              currentMessageRef.current = updatedMsg;
+              const clone = [...old];
+              clone[existingIdx] = updatedMsg;
+              return clone;
+            });
           } catch {
             // Ignore malformed chunks to keep the stream alive
           }

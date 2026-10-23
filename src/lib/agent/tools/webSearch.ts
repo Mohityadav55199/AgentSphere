@@ -29,36 +29,37 @@ async function searchDuckDuckGo(query: string, maxResults = 5): Promise<SearchRe
     const html = await res.text();
     const results: SearchResult[] = [];
 
-    // Extract search snippets using regex from DuckDuckGo HTML
-    const resultBlockRegex = /<div class="result__body">([\s\S]*?)<\/div>/g;
-    let match;
-    while ((match = resultBlockRegex.exec(html)) !== null && results.length < maxResults) {
-      const block = match[1];
+    const cleanText = (str: string) =>
+      str
+        .replace(/<[^>]+>/g, "")
+        .replace(/&amp;/g, "&")
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/\s+/g, " ")
+        .trim();
 
-      // Title & Link
-      const titleMatch = /<a class="result__url" href="([^"]+)">/i.exec(block);
-      const snippetMatch = /<a class="result__snippet[^>]*>([\s\S]*?)<\/a>/i.exec(block);
-      const titleTextMatch = /<a class="result__title"[^>]*>([\s\S]*?)<\/a>/i.exec(block);
+    // Split HTML into individual result blocks
+    const blocks = html.split(/class="[^"]*web-result[^"]*"/).slice(1);
 
-      let link = titleMatch?.[1] || "";
+    for (const block of blocks) {
+      if (results.length >= maxResults) break;
+
+      // Extract title and link from result__a
+      const linkMatch =
+        /<a[^>]*class="[^"]*result__a[^"]*"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/i.exec(block);
+      const snippetMatch =
+        /<a[^>]*class="[^"]*result__snippet[^"]*"[^>]*>([\s\S]*?)<\/a>/i.exec(block);
+
+      let link = linkMatch?.[1] || "";
       if (link.startsWith("//")) link = `https:${link}`;
       if (link.includes("uddg=")) {
         const decoded = decodeURIComponent(link.split("uddg=")[1]?.split("&")[0] || "");
         if (decoded) link = decoded;
       }
 
-      const cleanText = (str: string) =>
-        str
-          .replace(/<[^>]+>/g, "")
-          .replace(/&amp;/g, "&")
-          .replace(/&quot;/g, '"')
-          .replace(/&#39;/g, "'")
-          .replace(/&lt;/g, "<")
-          .replace(/&gt;/g, ">")
-          .replace(/\s+/g, " ")
-          .trim();
-
-      const title = cleanText(titleTextMatch?.[1] || "Search Result");
+      const title = cleanText(linkMatch?.[2] || "");
       const snippet = cleanText(snippetMatch?.[1] || "");
 
       if (title && (snippet || link)) {

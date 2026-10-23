@@ -3,7 +3,13 @@ import { ensureThread } from "@/lib/thread";
 import type { MessageOptions, MessageResponse, ToolCall } from "@/types/message";
 import prisma from "@/lib/database/prisma";
 import { getHistory } from "@/lib/agent/memory";
-import { BaseMessage, HumanMessage, AIMessage, AIMessageChunk } from "@langchain/core/messages";
+import {
+  BaseMessage,
+  HumanMessage,
+  AIMessage,
+  AIMessageChunk,
+  ToolMessage,
+} from "@langchain/core/messages";
 import { Command } from "@langchain/langgraph";
 import { processAttachmentsForAI } from "@/lib/storage/content";
 import { CallbackHandler } from "@langfuse/langchain";
@@ -46,7 +52,7 @@ export async function streamResponse(params: {
     // Type assertion needed for Command union with state update in v1
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const iterable = await agent.stream(inputs as any, {
-      streamMode: ["updates"],
+      streamMode: ["messages", "updates"],
       configurable: { thread_id: threadId },
       ...(langfuseHandler ? { callbacks: [langfuseHandler] } : {}),
     });
@@ -85,7 +91,7 @@ export async function streamResponse(params: {
   // Type assertion needed for Command union with state update in v1
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const iterable = await agent.stream(inputs as any, {
-    streamMode: ["updates"],
+    streamMode: ["messages", "updates"],
     configurable: { thread_id: threadId },
     ...(langfuseHandler ? { callbacks: [langfuseHandler] } : {}),
   });
@@ -97,6 +103,8 @@ export async function streamResponse(params: {
 async function* generator(
   iterable: AsyncIterable<unknown>,
 ): AsyncGenerator<MessageResponse, void, unknown> {
+  const streamedMessageIds = new Set<string>();
+
   for await (const chunk of iterable) {
     if (!chunk) continue;
 
@@ -104,6 +112,64 @@ async function* generator(
     if (Array.isArray(chunk) && chunk.length === 2) {
       const [chunkType, chunkData] = chunk;
 
+      // 1. Real-time token-by-token streaming from ChatModel via "messages" streamMode
+      if (chunkType === "messages") {
+        const [msgChunk, metadata] = Array.isArray(chunkData) ? chunkData : [chunkData, {}];
+        if (!msgChunk) continue;
+
+        const isAIMessage =
+          msgChunk instanceof AIMessageChunk ||
+          msgChunk instanceof AIMessage ||
+          (typeof (msgChunk as { _getType?: () => string })?._getType === "function" &&
+            (msgChunk as { _getType: () => string })._getType() === "ai") ||
+          (msgChunk as Record<string, unknown>)?.type === "ai" ||
+          (msgChunk as Record<string, unknown>)?.constructor?.name === "AIMessageChunk" ||
+          (msgChunk as Record<string, unknown>)?.constructor?.name === "AIMessage";
+
+        if (isAIMessage) {
+          const rawChunk = msgChunk as Record<string, unknown>;
+          let textChunk = "";
+          if (typeof rawChunk.content === "string") {
+            textChunk = rawChunk.content;
+          } else if (Array.isArray(rawChunk.content)) {
+            textChunk = rawChunk.content
+              .filter(
+                (c: unknown) =>
+                  typeof c === "string" || (typeof c === "object" && c && "text" in c),
+              )
+              .map((c: string | { text?: string }) => (typeof c === "string" ? c : c?.text || ""))
+              .join("");
+          }
+
+          const msgId =
+            (rawChunk.id as string) || (metadata?.run_id as string) || "current-ai";
+          const nodeName = (metadata?.langgraph_node as string) || "";
+
+          streamedMessageIds.add(msgId);
+
+          const toolCalls =
+            Array.isArray(rawChunk.tool_calls) && rawChunk.tool_calls.length > 0
+              ? (rawChunk.tool_calls as ToolCall[])
+              : undefined;
+
+          if (textChunk || toolCalls) {
+            yield {
+              type: "ai",
+              data: {
+                id: msgId,
+                content: textChunk,
+                tool_calls: toolCalls,
+                additional_kwargs: {
+                  ...((rawChunk.additional_kwargs as Record<string, unknown>) || {}),
+                  ...(nodeName ? { agentNode: nodeName } : {}),
+                },
+              },
+            };
+          }
+        }
+      }
+
+      // 2. Node state updates (tool execution outputs, and non-streamed node fallback)
       if (
         chunkType === "updates" &&
         chunkData &&
@@ -125,6 +191,57 @@ async function* generator(
 
             for (const message of messages) {
               if (!message) continue;
+
+              const isToolMessage =
+                message instanceof ToolMessage ||
+                (typeof (message as { _getType?: () => string })?._getType === "function" &&
+                  (message as { _getType: () => string })._getType() === "tool") ||
+                (message as Record<string, unknown>)?.type === "tool" ||
+                (message as Record<string, unknown>)?.constructor?.name === "ToolMessage";
+
+              if (isToolMessage) {
+                const msg = message as Record<string, unknown>;
+                const content =
+                  typeof msg.content === "string"
+                    ? msg.content
+                    : JSON.stringify(msg.content ?? "");
+                yield {
+                  type: "tool",
+                  data: {
+                    id: (msg.id as string) || `tool-${Date.now()}`,
+                    content,
+                    status: (msg.status as string) || "success",
+                    tool_call_id: (msg.tool_call_id as string) || "",
+                    name: (msg.name as string) || "",
+                    additional_kwargs:
+                      (msg.additional_kwargs as Record<string, unknown>) || undefined,
+                    response_metadata:
+                      (msg.response_metadata as Record<string, unknown>) || undefined,
+                  },
+                };
+                continue;
+              }
+
+              const msgId = (message as Record<string, unknown>)?.id as string | undefined;
+              // If tokens were already streamed for this message, only forward tool_calls if any:
+              if (msgId && streamedMessageIds.has(msgId)) {
+                const raw = message as Record<string, unknown>;
+                if (Array.isArray(raw.tool_calls) && raw.tool_calls.length > 0) {
+                  yield {
+                    type: "ai",
+                    data: {
+                      id: msgId,
+                      content: "",
+                      tool_calls: raw.tool_calls as ToolCall[],
+                      additional_kwargs: {
+                        ...((raw.additional_kwargs as Record<string, unknown>) || {}),
+                        agentNode: nodeName,
+                      },
+                    },
+                  };
+                }
+                continue;
+              }
 
               const isAIMessage =
                 message instanceof AIMessage ||
@@ -157,21 +274,39 @@ async function* generator(
 
 // Helper function to process any AI message and return the appropriate MessageResponse
 function processAIMessage(message: Record<string, unknown>): MessageResponse | null {
-  // Check if this is a tool call (content is array with functionCall)
-  const hasToolCall =
+  const toolCalls =
+    Array.isArray(message.tool_calls) && message.tool_calls.length > 0
+      ? (message.tool_calls as ToolCall[])
+      : undefined;
+
+  const hasFunctionCallInContent =
     Array.isArray(message.content) &&
     message.content.some(
       (item: unknown) => item && typeof item === "object" && "functionCall" in item,
     );
 
+  const hasToolCall = Boolean(toolCalls && toolCalls.length > 0) || hasFunctionCallInContent;
+
   if (hasToolCall) {
-    // Return full AIMessageData for tool calls to preserve all information
+    let textContent = "";
+    if (typeof message.content === "string") {
+      textContent = message.content;
+    } else if (Array.isArray(message.content)) {
+      textContent = message.content
+        .filter(
+          (c: unknown) =>
+            typeof c === "string" || (typeof c === "object" && c && "text" in c),
+        )
+        .map((c: string | { text?: string }) => (typeof c === "string" ? c : c?.text || ""))
+        .join("");
+    }
+
     return {
       type: "ai",
       data: {
         id: (message.id as string) || Date.now().toString(),
-        content: typeof message.content === "string" ? message.content : "",
-        tool_calls: (message.tool_calls as ToolCall[]) || undefined,
+        content: textContent,
+        tool_calls: toolCalls,
         additional_kwargs: (message.additional_kwargs as Record<string, unknown>) || undefined,
         response_metadata: (message.response_metadata as Record<string, unknown>) || undefined,
       },
@@ -210,7 +345,29 @@ export async function fetchThreadHistory(threadId: string): Promise<MessageRespo
   if (!thread) return [];
   try {
     const history = await getHistory(threadId);
-    return history.map((msg: BaseMessage) => msg.toDict() as MessageResponse);
+    return history.map((msg: BaseMessage) => {
+      if (typeof (msg as { toDict?: () => unknown }).toDict === "function") {
+        return (msg as { toDict: () => unknown }).toDict() as MessageResponse;
+      }
+      const raw = msg as unknown as Record<string, unknown>;
+      if (raw.type && raw.data) {
+        return raw as unknown as MessageResponse;
+      }
+      const type =
+        (typeof (msg as { _getType?: () => string })._getType === "function"
+          ? (msg as { _getType: () => string })._getType()
+          : (raw.type as string)) || "ai";
+      return {
+        type: type === "human" || type === "ai" || type === "tool" ? type : "ai",
+        data: {
+          id: (raw.id as string) || Date.now().toString(),
+          content:
+            typeof raw.content === "string" ? raw.content : JSON.stringify(raw.content || ""),
+          tool_calls: raw.tool_calls,
+          additional_kwargs: raw.additional_kwargs,
+        },
+      } as MessageResponse;
+    });
   } catch (e) {
     console.error("fetchThreadHistory error", e);
     return [];
