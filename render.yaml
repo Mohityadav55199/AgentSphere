@@ -17,17 +17,3 @@ services:
       - key: GROQ_API_KEY
         sync: false
 
-# Optional: Render native Cron Job service (requires a paid Render instance type)
-# For 100% free automated backups, use the included GitHub Actions workflow at:
-# .github/workflows/db-backup.yml
-#
-#   - type: cron
-#     name: agentsphere-db-backup
-#     runtime: node
-#     plan: starter
-#     schedule: "0 2 * * *"
-#     buildCommand: npm install --include=dev
-#     startCommand: npm run db:backup
-#     envVars:
-#       - key: DATABASE_URL
-#         sync: false

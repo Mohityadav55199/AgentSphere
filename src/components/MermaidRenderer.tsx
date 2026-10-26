@@ -1,11 +1,82 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { Check, Copy, Download, Maximize2, Minimize2, RefreshCw } from "lucide-react";
+import { Check, Copy, Download, Maximize2, Minimize2, RefreshCw, AlertTriangle, Code2 } from "lucide-react";
 import { useUISettings } from "@/contexts/UISettingsContext";
 
 interface MermaidRendererProps {
   code: string;
+}
+
+/**
+ * Sanitizes and fixes common LLM-generated Mermaid syntax issues:
+ * 1. Strips accidental markdown backticks
+ * 2. Strips introductory chat text before the diagram keyword
+ * 3. Auto-quotes node labels containing parentheses or slashes (e.g. `[Node (details)]` -> `["Node (details)"]`)
+ */
+function sanitizeMermaidCode(raw: string): string {
+  let text = raw.trim();
+
+  // Strip markdown code fences if wrapped
+  text = text.replace(/^```(?:mermaid)?\s*/i, "").replace(/\s*```$/, "");
+
+  // Diagram initiation keywords
+  const validKeywords = [
+    "graph",
+    "flowchart",
+    "sequenceDiagram",
+    "classDiagram",
+    "stateDiagram",
+    "stateDiagram-v2",
+    "erDiagram",
+    "journey",
+    "gantt",
+    "pie",
+    "quadrantChart",
+    "requirementDiagram",
+    "gitGraph",
+    "C4Context",
+    "mindmap",
+    "timeline",
+    "sankey-beta",
+    "zenuml",
+  ];
+
+  const lines = text.split("\n");
+  const firstKeywordIndex = lines.findIndex((line) => {
+    const trimmed = line.trim();
+    return validKeywords.some((kw) => trimmed.startsWith(kw));
+  });
+
+  if (firstKeywordIndex > 0) {
+    text = lines.slice(firstKeywordIndex).join("\n");
+  }
+
+  // Auto-quote square bracket node labels with parentheses or slashes that aren't quoted:
+  // e.g. A[4.5 Proxy Route (src/routes/proxy.ts)] -> A["4.5 Proxy Route (src/routes/proxy.ts)"]
+  text = text.replace(/\[([^"\]\r\n]*[\(\)\/][^"\]\r\n]*)\]/g, '["$1"]');
+
+  return text.trim();
+}
+
+/**
+ * Removes any stray Mermaid error elements that Mermaid 11 injects into document.body
+ */
+function cleanupMermaidDOMArtifacts(id?: string) {
+  if (typeof document === "undefined") return;
+  try {
+    if (id) {
+      document.getElementById(id)?.remove();
+      document.getElementById(`d${id}`)?.remove();
+    }
+    // Remove any rogue mermaid error svgs or containers attached directly to document.body
+    const rogueElements = document.querySelectorAll(
+      'body > svg[id^="dmermaid-"], body > div[id^="dmermaid-"], body > svg[id*="mermaid-"], body > div.mermaid-error'
+    );
+    rogueElements.forEach((el) => el.remove());
+  } catch {
+    // Ignore cleanup errors
+  }
 }
 
 export const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code }) => {
@@ -15,15 +86,26 @@ export const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code }) => {
   const [copied, setCopied] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isRendering, setIsRendering] = useState(true);
+  const [showRawCode, setShowRawCode] = useState(false);
   const { theme } = useUISettings();
 
   useEffect(() => {
     let isMounted = true;
+    const currentId = `mermaid-${Math.random().toString(36).substring(2, 9)}`;
+
     const renderDiagram = async () => {
       setIsRendering(true);
       setError(null);
 
+      // Clean up any existing body-level rogue elements before rendering
+      cleanupMermaidDOMArtifacts();
+
       try {
+        const cleanCode = sanitizeMermaidCode(code);
+        if (!cleanCode) {
+          throw new Error("Empty Mermaid diagram definition");
+        }
+
         // Dynamically import Mermaid from CDN to prevent heavy SSR bundle overhead
         const cdnUrl = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -33,20 +115,36 @@ export const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code }) => {
 
         mermaid.initialize({
           startOnLoad: false,
+          suppressErrorRendering: true,
           theme: theme === "dark" ? "dark" : "neutral",
           securityLevel: "loose",
           fontFamily: "inherit",
         });
 
-        const id = `mermaid-${Math.random().toString(36).substring(2, 9)}`;
-        const cleanCode = code.trim();
-        const { svg } = await mermaid.render(id, cleanCode);
+        // Validate syntax with parse first if available
+        if (typeof mermaid.parse === "function") {
+          try {
+            const parseResult = await mermaid.parse(cleanCode, { suppressErrors: true });
+            if (parseResult === false) {
+              throw new Error("Mermaid syntax validation failed.");
+            }
+          } catch (parseErr) {
+            cleanupMermaidDOMArtifacts(currentId);
+            throw parseErr;
+          }
+        }
+
+        const { svg } = await mermaid.render(currentId, cleanCode);
+
+        // Immediately clean up temporary render container if still attached to body
+        cleanupMermaidDOMArtifacts(currentId);
 
         if (isMounted) {
           setSvgContent(svg);
           setIsRendering(false);
         }
       } catch (err) {
+        cleanupMermaidDOMArtifacts(currentId);
         if (isMounted) {
           setError(err instanceof Error ? err.message : "Failed to render Mermaid diagram");
           setIsRendering(false);
@@ -58,6 +156,7 @@ export const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code }) => {
 
     return () => {
       isMounted = false;
+      cleanupMermaidDOMArtifacts(currentId);
     };
   }, [code, theme]);
 
@@ -80,21 +179,37 @@ export const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code }) => {
 
   if (error) {
     return (
-      <div className="my-3 rounded-xl border border-red-200 bg-red-50/50 p-3 text-xs text-red-700 dark:border-red-900/50 dark:bg-red-950/20 dark:text-red-300">
-        <div className="mb-1 flex items-center justify-between font-semibold">
-          <span>⚠️ Diagram Rendering Error</span>
-          <button
-            onClick={handleCopy}
-            className="flex items-center gap-1 text-[11px] hover:underline"
-          >
-            {copied ? <Check size={12} /> : <Copy size={12} />}
-            <span>Copy Mermaid Code</span>
-          </button>
+      <div className="my-3 rounded-xl border border-amber-200/70 bg-amber-50/40 p-3 text-xs text-amber-900 shadow-xs dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 font-medium">
+            <AlertTriangle className="h-4 w-4 text-amber-500" />
+            <span>Mermaid Diagram (Syntax Note)</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowRawCode(!showRawCode)}
+              className="flex items-center gap-1 rounded px-2 py-0.5 text-[11px] text-gray-600 hover:bg-amber-100/60 dark:text-gray-300 dark:hover:bg-amber-900/40"
+            >
+              <Code2 size={12} />
+              <span>{showRawCode ? "Hide Code" : "View Code"}</span>
+            </button>
+            <button
+              onClick={handleCopy}
+              className="flex items-center gap-1 rounded px-2 py-0.5 text-[11px] text-gray-600 hover:bg-amber-100/60 dark:text-gray-300 dark:hover:bg-amber-900/40"
+            >
+              {copied ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />}
+              <span>{copied ? "Copied" : "Copy"}</span>
+            </button>
+          </div>
         </div>
-        <p className="font-mono text-[11px] whitespace-pre-wrap">{error}</p>
-        <pre className="mt-2 overflow-x-auto rounded bg-black/5 p-2 font-mono text-[11px] dark:bg-white/5">
-          {code}
-        </pre>
+        <p className="mt-1 font-mono text-[11px] text-amber-700/80 dark:text-amber-300/80">
+          Diagram could not be rendered due to a syntax format issue in the model response.
+        </p>
+        {showRawCode && (
+          <pre className="mt-2.5 max-h-48 overflow-x-auto rounded-lg bg-gray-900 p-2.5 font-mono text-[11px] text-gray-200 dark:bg-black/40">
+            {code}
+          </pre>
+        )}
       </div>
     );
   }

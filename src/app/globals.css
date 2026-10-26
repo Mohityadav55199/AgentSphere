@@ -276,3 +276,18 @@
   padding: 0.125rem 0.35rem !important;
   border-radius: 0.25rem !important;
 }
+
+/* Suppress rogue Mermaid error SVGs/elements appended directly to document.body */
+body > svg[id^="dmermaid-"],
+body > div[id^="dmermaid-"],
+body > svg[id*="mermaid-"],
+body > div.mermaid-error {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  position: absolute !important;
+  top: -9999px !important;
+  left: -9999px !important;
+  height: 0 !important;
+  width: 0 !important;
+}

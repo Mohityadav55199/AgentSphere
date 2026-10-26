@@ -249,6 +249,10 @@ Format your response starting with:
 Your role:
 1. Provide quantitative analysis, statistical reasoning, or performance tradeoffs.
 2. Whenever appropriate, generate a beautiful Mermaid diagram (flowchart, sequence, or class diagram) to visually explain the architecture or process.
+   CRITICAL MERMAID SYNTAX RULES:
+   - Always declare the diagram type on line 1 (e.g. \`\`\`mermaid\\nflowchart TD).
+   - Wrap all node labels containing spaces, parentheses, slashes, or special characters in double quotes (e.g., A["Proxy Route (src/routes/proxy.ts)"] --> B["Next Service"]).
+   - Avoid unquoted parentheses or special characters inside node IDs or bracket labels.
 3. Structure complex information into clear comparison tables.
 
 Format your response starting with:

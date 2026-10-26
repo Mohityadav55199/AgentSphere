@@ -142,12 +142,9 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to experienc
 
 ---
 
-## ⚡ Render Free Tier Keep-Alive & Automated Backups
+## ⚡ Render Free Tier Cold-Start Handling
 
-When deployed on Render's free tier:
+When deployed on Render's free tier, the instance spins down automatically during periods of inactivity to conserve your 750 free monthly instance hours:
 
-- **Free Tier Wake-up Banner**: Embedded across all screens to notify visitors of cold-start wake-up times with live status polling.
-- **Automated Keep-Alive Ping**: Runs every 14 minutes via [`.github/workflows/keep-alive.yml`](file:///c:/Projects/AgentSphere/.github/workflows/keep-alive.yml) to keep the instance warm.
-- **Daily Automated Database Backups**: Runs daily via [`.github/workflows/db-backup.yml`](file:///c:/Projects/AgentSphere/.github/workflows/db-backup.yml) with 30-day artifact retention and optional S3/R2 storage upload.
-
-📖 See [`docs/KEEP-ALIVE-AND-BACKUPS.md`](file:///c:/Projects/AgentSphere/docs/KEEP-ALIVE-AND-BACKUPS.md) for full configuration details.
+- **Free Tier Wake-up Banner**: Embedded across all screens to notify visitors of cold-start wake-up times (~30-50s) with live status polling.
+- **Resource Preserving**: The server sleeps when idle so your free tier hours last the entire month without premature depletion.
