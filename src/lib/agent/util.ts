@@ -60,7 +60,10 @@ function createSingleModel(
         model: googleModel,
         temperature,
         streaming: true,
-        apiKey: process.env.GOOGLE_API_KEY || "missing-api-key",
+        apiKey:
+          process.env.GOOGLE_API_KEY ||
+          process.env.GOOGLE_GENERATIVE_AI_API_KEY ||
+          "missing-api-key",
       });
     }
   }
@@ -83,7 +86,8 @@ export function createChatModel({
 
   for (const fbProvider of providersToCheck) {
     const isConfigured =
-      (fbProvider === "google" && isValidKey(process.env.GOOGLE_API_KEY)) ||
+      (fbProvider === "google" &&
+        isValidKey(process.env.GOOGLE_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY)) ||
       (fbProvider === "groq" && isValidKey(process.env.GROQ_API_KEY)) ||
       (fbProvider === "openai" && isValidKey(process.env.OPENAI_API_KEY)) ||
       (fbProvider === "anthropic" && isValidKey(process.env.ANTHROPIC_API_KEY));
@@ -301,7 +305,8 @@ export function sanitizeTool(tool: DynamicStructuredTool): DynamicStructuredTool
 
 export function getDefaultProvider(): string {
   if (isValidKey(process.env.GROQ_API_KEY)) return "groq";
-  if (isValidKey(process.env.GOOGLE_API_KEY)) return "google";
+  if (isValidKey(process.env.GOOGLE_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY))
+    return "google";
   if (isValidKey(process.env.OPENAI_API_KEY)) return "openai";
   if (isValidKey(process.env.ANTHROPIC_API_KEY)) return "anthropic";
   return "google";

@@ -91,7 +91,10 @@ export async function GET() {
   let foundDefault = false;
 
   for (const [providerName, config] of Object.entries(PROVIDER_CONFIGS)) {
-    const key = process.env[config.envKey];
+    const key =
+      providerName === "google"
+        ? process.env.GOOGLE_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY
+        : process.env[config.envKey];
     const available = isValidKey(key);
 
     let models = config.fallbackModels;
