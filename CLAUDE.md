@@ -14,7 +14,9 @@ pnpm prisma:migrate
 # Development
 pnpm dev                      # Next.js with Turbopack
 pnpm build                    # Production build
-pnpm lint                     # ESLint
+pnpm lint                     # ESLint (eslint-config-next flat config)
+pnpm typecheck                # tsc --noEmit
+pnpm test                     # Vitest unit tests (src/**/*.test.ts)
 pnpm format                   # Prettier formatting
 pnpm format:check             # Check formatting
 

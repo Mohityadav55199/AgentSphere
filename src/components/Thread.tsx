@@ -177,7 +177,7 @@ export const Thread = ({ threadId, onFirstMessageSent }: ThreadProps) => {
                     {item.title}
                   </div>
                   <div className="line-clamp-2 text-[11px] text-gray-500 dark:text-gray-400">
-                    "{item.prompt}"
+                    &ldquo;{item.prompt}&rdquo;
                   </div>
                 </button>
               ))}

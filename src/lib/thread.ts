@@ -1,7 +1,7 @@
 import prisma from "@/lib/database/prisma";
 
-function generateSmartTitle(seed: string): string {
-  let clean = seed
+export function generateSmartTitle(seed: string): string {
+  const clean = seed
     .replace(/[#*`_~]/g, "") // remove markdown
     .replace(/\s+/g, " ")
     .trim();
@@ -27,7 +27,12 @@ function generateSmartTitle(seed: string): string {
 /**
  * Ensure a thread exists; create if missing. Auto-summarizes title from prompt seed.
  */
-export async function ensureThread(threadId: string, titleSeed?: string, userId?: string) {
+export async function ensureThread(
+  threadId: string,
+  titleSeed?: string,
+  userId?: string,
+  guestId?: string,
+) {
   if (!threadId) throw new Error("threadId is required");
 
   const existing = await prisma.thread.findUnique({ where: { id: threadId } });
@@ -75,6 +80,32 @@ export async function ensureThread(threadId: string, titleSeed?: string, userId?
       id: threadId,
       title: smartTitle,
       userId: verifiedUserId,
+      guestId: verifiedUserId ? null : (guestId ?? null),
     },
   });
+}
+
+export type ThreadAccess =
+  | { status: "missing" }
+  | { status: "forbidden" }
+  | { status: "ok"; thread: NonNullable<Awaited<ReturnType<typeof prisma.thread.findUnique>>> };
+
+/**
+ * Ownership check shared by every thread-scoped endpoint.
+ * Threads owned by a signed-in user are limited to that user; guest threads are limited to the
+ * browser holding the matching guest cookie. Legacy threads with no owner at all stay open.
+ */
+export async function checkThreadAccess(
+  threadId: string,
+  userId: string | undefined | null,
+  guestId?: string | null,
+): Promise<ThreadAccess> {
+  const thread = await prisma.thread.findUnique({ where: { id: threadId } });
+  if (!thread) return { status: "missing" };
+  if (thread.userId) {
+    if (thread.userId !== userId) return { status: "forbidden" };
+  } else if (thread.guestId && thread.guestId !== guestId) {
+    return { status: "forbidden" };
+  }
+  return { status: "ok", thread };
 }

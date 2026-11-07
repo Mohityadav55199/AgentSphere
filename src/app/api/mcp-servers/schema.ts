@@ -28,17 +28,17 @@ export const MCPServerResponse = z
 export const CreateMCPServerBody = z
   .discriminatedUnion("type", [
     z.object({
-      name: z.string(),
+      name: z.string().trim().min(1).max(64),
       type: z.literal("stdio"),
-      command: z.string(),
-      args: z.array(z.string()).optional(),
-      env: z.record(z.string(), z.string()).optional(),
+      command: z.string().min(1),
+      args: z.array(z.string()).nullish(),
+      env: z.record(z.string(), z.string()).nullish(),
     }),
     z.object({
-      name: z.string(),
+      name: z.string().trim().min(1).max(64),
       type: z.literal("http"),
       url: z.string().url(),
-      headers: z.record(z.string(), z.string()).optional(),
+      headers: z.record(z.string(), z.string()).nullish(),
     }),
   ])
   .openapi("CreateMCPServerBody");

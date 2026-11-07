@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { ChevronDown, ChevronRight, Sparkles } from "lucide-react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import MDEditor from "@uiw/react-md-editor";
 import rehypeKatex from "rehype-katex";
 import { useUISettings } from "@/contexts/UISettingsContext";

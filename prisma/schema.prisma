@@ -26,8 +26,12 @@ model Thread {
   isPinned  Boolean  @default(false)
   userId    String?
   user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Owner of a thread created while signed out (random id kept in an httpOnly cookie).
+  guestId   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([guestId])
 }
 
 model MCPServer {

@@ -14,8 +14,6 @@ import {
   Trash2,
   Star,
   PanelLeftClose,
-  Pin,
-  Calendar,
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 

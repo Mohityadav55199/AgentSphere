@@ -86,7 +86,7 @@ export function useChatThread({ threadId }: UseChatThreadOptions): UseChatThread
               const newContent =
                 typeof data.content === "string" && typeof existingData.content === "string"
                   ? existingData.content + data.content
-                  : (data.content || existingData.content);
+                  : data.content || existingData.content;
 
               const updatedMsg: MessageResponse = {
                 ...existingMsg,

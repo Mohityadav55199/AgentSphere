@@ -24,6 +24,7 @@ export interface MessageOptions {
   temperature?: number;
   systemPrompt?: string;
   userId?: string;
+  guestId?: string;
   agentMode?: "single" | "multi";
 }
 

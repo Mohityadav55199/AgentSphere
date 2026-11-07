@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { User, Lock, CheckCircle2, AlertCircle, Loader2, X, ShieldCheck } from "lucide-react";
+import { User, CheckCircle2, AlertCircle, Loader2, X, ShieldCheck } from "lucide-react";
 
 interface ProfileModalProps {
   isOpen: boolean;

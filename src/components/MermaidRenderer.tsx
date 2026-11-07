@@ -1,7 +1,16 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { Check, Copy, Download, Maximize2, Minimize2, RefreshCw, AlertTriangle, Code2 } from "lucide-react";
+import {
+  Check,
+  Copy,
+  Download,
+  Maximize2,
+  Minimize2,
+  RefreshCw,
+  AlertTriangle,
+  Code2,
+} from "lucide-react";
 import { useUISettings } from "@/contexts/UISettingsContext";
 
 interface MermaidRendererProps {
@@ -71,7 +80,7 @@ function cleanupMermaidDOMArtifacts(id?: string) {
     }
     // Remove any rogue mermaid error svgs or containers attached directly to document.body
     const rogueElements = document.querySelectorAll(
-      'body > svg[id^="dmermaid-"], body > div[id^="dmermaid-"], body > svg[id*="mermaid-"], body > div.mermaid-error'
+      'body > svg[id^="dmermaid-"], body > div[id^="dmermaid-"], body > svg[id*="mermaid-"], body > div.mermaid-error',
     );
     rogueElements.forEach((el) => el.remove());
   } catch {
@@ -108,7 +117,6 @@ export const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code }) => {
 
         // Dynamically import Mermaid from CDN to prevent heavy SSR bundle overhead
         const cdnUrl = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const importDynamic = new Function("url", "return import(url)");
         const mermaidModule = await importDynamic(cdnUrl);
         const mermaid = mermaidModule.default || mermaidModule;

@@ -5,9 +5,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "node -e \"if(!process.env.DATABASE_URL) process.env.DATABASE_URL='postgresql://dummy:dummy@localhost:5432/dummy'\" && prisma generate && next build",
+    "build": "prisma generate && next build",
     "start": "next start",
-    "lint": "tsc --noEmit",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prisma:generate": "prisma generate",
@@ -72,7 +75,8 @@
     "eslint": "^10.5.0",
     "eslint-config-next": "16.2.9",
     "prettier": "^3.8.4",
-    "prettier-plugin-tailwindcss": "^0.8.0"
+    "prettier-plugin-tailwindcss": "^0.8.0",
+    "vitest": "^3.2.7"
   },
   "packageManager": "pnpm@10.33.0"
 }

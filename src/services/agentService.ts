@@ -28,7 +28,7 @@ export async function streamResponse(params: {
   opts?: MessageOptions;
 }) {
   const { threadId, userText, opts } = params;
-  await ensureThread(threadId, userText, opts?.userId);
+  await ensureThread(threadId, userText, opts?.userId, opts?.guestId);
 
   // If allowTool is present, use Command with resume action instead of regular inputs
   if (opts?.allowTool) {
@@ -141,8 +141,7 @@ async function* generator(
               .join("");
           }
 
-          const msgId =
-            (rawChunk.id as string) || (metadata?.run_id as string) || "current-ai";
+          const msgId = (rawChunk.id as string) || (metadata?.run_id as string) || "current-ai";
           const nodeName = (metadata?.langgraph_node as string) || "";
 
           streamedMessageIds.add(msgId);
@@ -202,9 +201,7 @@ async function* generator(
               if (isToolMessage) {
                 const msg = message as Record<string, unknown>;
                 const content =
-                  typeof msg.content === "string"
-                    ? msg.content
-                    : JSON.stringify(msg.content ?? "");
+                  typeof msg.content === "string" ? msg.content : JSON.stringify(msg.content ?? "");
                 yield {
                   type: "tool",
                   data: {
@@ -294,8 +291,7 @@ function processAIMessage(message: Record<string, unknown>): MessageResponse | n
     } else if (Array.isArray(message.content)) {
       textContent = message.content
         .filter(
-          (c: unknown) =>
-            typeof c === "string" || (typeof c === "object" && c && "text" in c),
+          (c: unknown) => typeof c === "string" || (typeof c === "object" && c && "text" in c),
         )
         .map((c: string | { text?: string }) => (typeof c === "string" ? c : c?.text || ""))
         .join("");

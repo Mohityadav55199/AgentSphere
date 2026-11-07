@@ -3,6 +3,8 @@ import type { Thread } from "@/types/message";
 import prisma from "@/lib/database/prisma";
 import { UpdateThreadBody, DeleteThreadBody } from "./schema";
 import { getCurrentUser } from "@/lib/auth";
+import { checkThreadAccess } from "@/lib/thread";
+import { getGuestId, getOrCreateGuestId } from "@/lib/guest";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -17,9 +19,15 @@ type ThreadEntity = {
 
 export async function GET() {
   const user = await getCurrentUser();
+  const guestId = await getGuestId();
 
-  // If user logged in, fetch their threads or unassigned guest threads
-  const whereCondition = user ? { OR: [{ userId: user.id }, { userId: null }] } : { userId: null };
+  // Signed-in users see their own threads plus the guest threads of this browser;
+  // guests see only the threads created by this browser.
+  const guestCondition = guestId ? [{ userId: null, guestId }] : [];
+  const whereCondition = user
+    ? { OR: [{ userId: user.id }, ...guestCondition] }
+    : guestCondition[0];
+  if (!whereCondition) return NextResponse.json([], { status: 200 });
 
   const dbThreads = await prisma.thread.findMany({
     where: whereCondition,
@@ -47,10 +55,13 @@ export async function POST() {
     userId = dbUser?.id ?? null;
   }
 
+  const guestId = userId ? null : await getOrCreateGuestId();
+
   const created = await prisma.thread.create({
     data: {
       title: "New thread",
       userId,
+      guestId,
     },
   });
   const thread: Thread = {
@@ -71,6 +82,15 @@ export async function PATCH(req: NextRequest) {
     }
     const { id, title, isPinned } = parsed.data;
 
+    const user = await getCurrentUser();
+    const access = await checkThreadAccess(id, user?.id, await getGuestId());
+    if (access.status === "missing") {
+      return NextResponse.json({ error: "Thread not found" }, { status: 404 });
+    }
+    if (access.status === "forbidden") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     const updateData: { title?: string; isPinned?: boolean } = {};
     if (title !== undefined) updateData.title = title;
     if (isPinned !== undefined) updateData.isPinned = isPinned;
@@ -90,8 +110,8 @@ export async function PATCH(req: NextRequest) {
       { status: 200 },
     );
   } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : "Update failed";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("Error updating thread:", e);
+    return NextResponse.json({ error: "Update failed" }, { status: 500 });
   }
 }
 
@@ -102,9 +122,12 @@ export async function DELETE(req: NextRequest) {
 
     if (deleteEmpty) {
       const user = await getCurrentUser();
+      const guestId = await getGuestId();
+      const guestCondition = guestId ? [{ userId: null, guestId }] : [];
       const userCondition = user
-        ? { OR: [{ userId: user.id }, { userId: null }] }
-        : { userId: null };
+        ? { OR: [{ userId: user.id }, ...guestCondition] }
+        : guestCondition[0];
+      if (!userCondition) return NextResponse.json({ success: true, count: 0 }, { status: 200 });
 
       const deleted = await prisma.thread.deleteMany({
         where: {
@@ -134,10 +157,13 @@ export async function DELETE(req: NextRequest) {
     }
     const { id } = parsed.data;
 
-    // First check if thread exists
-    const thread = await prisma.thread.findUnique({ where: { id } });
-    if (!thread) {
+    const user = await getCurrentUser();
+    const access = await checkThreadAccess(id, user?.id, await getGuestId());
+    if (access.status === "missing") {
       return NextResponse.json({ error: "Thread not found" }, { status: 404 });
+    }
+    if (access.status === "forbidden") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     // Delete the thread from Prisma (metadata)
@@ -145,7 +171,7 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (e: unknown) {
-    const message = e instanceof Error ? e.message : "Delete failed";
-    return NextResponse.json({ error: message }, { status: 500 });
+    console.error("Error deleting thread:", e);
+    return NextResponse.json({ error: "Delete failed" }, { status: 500 });
   }
 }

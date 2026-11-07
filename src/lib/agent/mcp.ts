@@ -3,6 +3,7 @@ import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.
 import prisma from "@/lib/database/prisma";
 import { ServerOAuthProvider } from "@/lib/mcp/oauth-provider";
 import { OAuthStatus } from "../mcp/oauth-detection";
+import { isStdioMCPAllowed } from "../mcp/policy";
 import { sanitizeTool } from "./util";
 
 interface StdioMCPServerConfig {
@@ -31,9 +32,18 @@ export async function getMCPServerConfigs(): Promise<Record<string, MCPServerCon
     });
 
     const configs: Record<string, MCPServerConfig> = {};
+    const stdioAllowed = isStdioMCPAllowed();
 
     for (const server of servers) {
       if (server.type === "stdio" && server.command) {
+        // Never spawn commands stored in the DB on deployments where stdio is disabled.
+        if (!stdioAllowed) {
+          console.warn(
+            `Skipping stdio MCP server "${server.name}": MCP_ALLOW_STDIO is not enabled`,
+          );
+          continue;
+        }
+
         const config: StdioMCPServerConfig = {
           transport: "stdio",
           command: server.command,

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { uploadFile, uploadLargeFile } from "@/lib/storage/upload";
-import { validateFile, isValidTextContent } from "@/lib/storage/validation";
+import { validateFile, isValidTextContent, getFileExtension } from "@/lib/storage/validation";
 import { randomUUID } from "crypto";
 
 export const dynamic = "force-dynamic";
@@ -15,9 +15,9 @@ export const runtime = "nodejs";
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    const file = formData.get("file") as File;
+    const file = formData.get("file");
 
-    if (!file) {
+    if (!file || typeof file === "string") {
       return NextResponse.json({ error: "No file provided", field: "file" }, { status: 400 });
     }
 
@@ -37,13 +37,15 @@ export async function POST(request: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Additional validation for application/octet-stream files
-    // TODO: Enable content inspection for production security
-    if (file.type === "application/octet-stream") {
-      const extension = file.name.split(".").pop()?.toLowerCase() || "";
+    // Text uploads (text/* or octet-stream .md/.txt) must really be text, not a renamed binary.
+    {
+      const nameExtension = file.name.split(".").pop()?.toLowerCase() || "";
+      const isTextUpload =
+        file.type.startsWith("text/") ||
+        (file.type === "application/octet-stream" &&
+          ["md", "markdown", "txt"].includes(nameExtension));
 
-      // Validate content is actually text (for .md, .txt files)
-      if (["md", "markdown", "txt"].includes(extension)) {
+      if (isTextUpload) {
         if (!isValidTextContent(buffer)) {
           return NextResponse.json(
             {
@@ -56,8 +58,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Generate unique filename with original extension
-    const extension = file.name.split(".").pop() || "bin";
+    // Generate a unique object key. The extension comes from the user's filename, so restrict it
+    // to short alphanumerics to keep "/", "..", and other path tricks out of the storage key.
+    const rawExtension = file.name.includes(".") ? file.name.split(".").pop() || "" : "";
+    const extension = /^[a-z0-9]{1,10}$/i.test(rawExtension)
+      ? rawExtension.toLowerCase()
+      : getFileExtension(file.type);
     const key = `${randomUUID()}.${extension}`;
 
     // Upload to S3/MinIO (use multipart for files > 5MB)

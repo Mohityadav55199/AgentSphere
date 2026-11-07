@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/database/prisma";
-import { hashPassword, signToken, COOKIE_NAME } from "@/lib/auth";
+import { hashPassword, signToken, COOKIE_NAME, sessionCookieOptions } from "@/lib/auth";
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(req: Request) {
   try {
@@ -13,11 +15,26 @@ export async function POST(req: Request) {
 
     const { name, email, password } = body || {};
 
-    if (!name || !email || !password) {
+    if (
+      typeof name !== "string" ||
+      typeof email !== "string" ||
+      typeof password !== "string" ||
+      !name.trim() ||
+      !email.trim() ||
+      !password
+    ) {
       return NextResponse.json(
         { error: "Name, email, and password are required" },
         { status: 400 },
       );
+    }
+
+    if (!EMAIL_PATTERN.test(email.trim())) {
+      return NextResponse.json({ error: "Please enter a valid email address" }, { status: 400 });
+    }
+
+    if (name.trim().length > 80) {
+      return NextResponse.json({ error: "Name must be 80 characters or fewer" }, { status: 400 });
     }
 
     if (password.length < 6) {
@@ -34,7 +51,7 @@ export async function POST(req: Request) {
     if (existingUser) {
       return NextResponse.json(
         { error: "An account with this email already exists" },
-        { status: 400 },
+        { status: 409 },
       );
     }
 
@@ -52,16 +69,17 @@ export async function POST(req: Request) {
     const token = signToken(sessionUser);
 
     const res = NextResponse.json({ user: sessionUser }, { status: 201 });
-    res.cookies.set(COOKIE_NAME, token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 7 * 24 * 3600,
-      path: "/",
-    });
+    res.cookies.set(COOKIE_NAME, token, sessionCookieOptions());
 
     return res;
   } catch (error) {
+    // Two concurrent sign-ups with the same email: the unique constraint wins the race.
+    if ((error as { code?: string })?.code === "P2002") {
+      return NextResponse.json(
+        { error: "An account with this email already exists" },
+        { status: 409 },
+      );
+    }
     console.error("Register error:", error);
     return NextResponse.json({ error: "Registration failed. Please try again." }, { status: 500 });
   }

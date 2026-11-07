@@ -12,8 +12,13 @@ services:
         value: production
       - key: DATABASE_URL
         sync: false
+      # Required in production: signs session cookies. Render generates a random value once.
+      - key: JWT_SECRET
+        generateValue: true
+      # Keep stdio MCP servers (arbitrary shell commands) disabled on the public demo.
+      - key: MCP_ALLOW_STDIO
+        value: "false"
       - key: GOOGLE_GENERATIVE_AI_API_KEY
         sync: false
       - key: GROQ_API_KEY
         sync: false
-

@@ -1,16 +1,6 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { Button } from "./ui/button";
-import {
-  ArrowUp,
-  Loader2,
-  Eye,
-  EyeOff,
-  Paperclip,
-  X,
-  Mic,
-  MicOff,
-  FileText,
-} from "lucide-react";
+import { ArrowUp, Loader2, Eye, EyeOff, Paperclip, X, Mic, MicOff, FileText } from "lucide-react";
 import { MessageOptions, FileAttachment } from "@/types/message";
 import { SettingsPanel } from "./SettingsPanel";
 import { useUISettings } from "@/contexts/UISettingsContext";

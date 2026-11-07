@@ -133,7 +133,7 @@ export function AuthModal() {
         <div className="mt-5 text-center text-xs text-gray-500">
           {mode === "login" ? (
             <p>
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <button
                 suppressHydrationWarning
                 type="button"

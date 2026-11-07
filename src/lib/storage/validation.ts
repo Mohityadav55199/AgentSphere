@@ -82,30 +82,29 @@ export function getFileExtension(mimeType: string): string {
 }
 
 /**
- * Validate that a buffer contains valid text content (not binary)
- * Currently a placeholder that returns true - can be enhanced later for security
+ * Validate that a buffer contains text rather than binary data.
+ *
+ * Rejects content that contains NUL bytes, is not valid UTF-8, or where fewer than 95% of
+ * characters are printable (tabs, newlines and any non-control Unicode count as printable).
  *
  * @param buffer File buffer to validate
- * @returns true if valid text, false if binary or invalid
- *
- * TODO: Future enhancements for production security:
- * - Check for null bytes (\0) which indicate binary content
- * - Verify UTF-8 encoding validity
- * - Calculate printable character ratio (should be >95% for text)
- * - Detect suspicious patterns or embedded code
- *
- * Example implementation:
- * ```typescript
- * const content = buffer.toString('utf-8');
- * if (content.includes('\0')) return false; // Binary file
- * const printable = content.split('').filter(c => {
- *   const code = c.charCodeAt(0);
- *   return (code >= 32 && code <= 126) || code === 9 || code === 10 || code === 13;
- * }).length;
- * return printable / content.length > 0.95; // 95% printable threshold
- * ```
+ * @returns true if the buffer looks like text
  */
 export function isValidTextContent(buffer: Buffer): boolean {
-  // For now, accept all content - validation can be added later
-  return true;
+  if (buffer.length === 0) return true;
+  if (buffer.includes(0)) return false;
+
+  let content: string;
+  try {
+    content = new TextDecoder("utf-8", { fatal: true }).decode(buffer);
+  } catch {
+    return false; // Invalid UTF-8
+  }
+
+  let printable = 0;
+  for (const char of content) {
+    const code = char.codePointAt(0) ?? 0;
+    if (code === 9 || code === 10 || code === 13 || (code >= 32 && code !== 127)) printable++;
+  }
+  return printable / [...content].length >= 0.95;
 }

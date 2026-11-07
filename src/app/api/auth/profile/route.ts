@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/database/prisma";
-import { getCurrentUser, hashPassword, verifyPassword, signToken, COOKIE_NAME } from "@/lib/auth";
+import {
+  getCurrentUser,
+  hashPassword,
+  verifyPassword,
+  signToken,
+  COOKIE_NAME,
+  sessionCookieOptions,
+} from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -45,12 +52,19 @@ export async function PATCH(req: Request) {
 
     const updateData: { name?: string; password?: string } = {};
 
-    if (name && name.trim().length > 0) {
+    if (typeof name === "string" && name.trim().length > 0) {
+      if (name.trim().length > 80) {
+        return NextResponse.json({ error: "Name must be 80 characters or fewer" }, { status: 400 });
+      }
       updateData.name = name.trim();
     }
 
+    if (newPassword !== undefined && typeof newPassword !== "string") {
+      return NextResponse.json({ error: "New password must be a string" }, { status: 400 });
+    }
+
     if (newPassword) {
-      if (!currentPassword) {
+      if (typeof currentPassword !== "string" || !currentPassword) {
         return NextResponse.json(
           { error: "Current password is required to change password" },
           { status: 400 },
@@ -83,13 +97,7 @@ export async function PATCH(req: Request) {
       message: "Profile updated successfully",
     });
 
-    response.cookies.set(COOKIE_NAME, newToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 7 * 24 * 3600,
-      path: "/",
-    });
+    response.cookies.set(COOKIE_NAME, newToken, sessionCookieOptions());
 
     return response;
   } catch (error) {

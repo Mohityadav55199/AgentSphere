@@ -1,12 +1,9 @@
 import { NextResponse } from "next/server";
-import { COOKIE_NAME } from "@/lib/auth";
+import { COOKIE_NAME, sessionCookieOptions } from "@/lib/auth";
 
 export async function POST() {
   const res = NextResponse.json({ success: true }, { status: 200 });
-  res.cookies.set(COOKIE_NAME, "", {
-    httpOnly: true,
-    expires: new Date(0),
-    path: "/",
-  });
+  // Same attributes as when the cookie was set, so browsers reliably overwrite it.
+  res.cookies.set(COOKIE_NAME, "", { ...sessionCookieOptions(0), expires: new Date(0) });
   return res;
 }

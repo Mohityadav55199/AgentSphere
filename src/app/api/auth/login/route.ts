@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/database/prisma";
-import { verifyPassword, signToken, COOKIE_NAME } from "@/lib/auth";
+import { verifyPassword, signToken, COOKIE_NAME, sessionCookieOptions } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
@@ -13,7 +13,7 @@ export async function POST(req: Request) {
 
     const { email, password } = body || {};
 
-    if (!email || !password) {
+    if (typeof email !== "string" || typeof password !== "string" || !email || !password) {
       return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
     }
 
@@ -34,13 +34,7 @@ export async function POST(req: Request) {
     const token = signToken(sessionUser);
 
     const res = NextResponse.json({ user: sessionUser }, { status: 200 });
-    res.cookies.set(COOKIE_NAME, token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      maxAge: 7 * 24 * 3600,
-      path: "/",
-    });
+    res.cookies.set(COOKIE_NAME, token, sessionCookieOptions());
 
     return res;
   } catch (error) {

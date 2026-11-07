@@ -1,5 +1,5 @@
 import React from "react";
-import { CheckCircle2, ChevronRight, ShieldCheck, Sparkles, Terminal } from "lucide-react";
+import { CheckCircle2, ChevronRight, ShieldCheck, Sparkles } from "lucide-react";
 
 export interface CouncilMember {
   id: "supervisor" | "researcher" | "developer" | "analyst" | "auditor";

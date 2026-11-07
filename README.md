@@ -1,5 +1,7 @@
 # ⚡ AgentSphere - Next-Gen Autonomous AI Agent Platform
 
+[![CI](https://github.com/Mohityadav55199/AgentSphere/actions/workflows/ci.yml/badge.svg)](https://github.com/Mohityadav55199/AgentSphere/actions/workflows/ci.yml)
+
 > **AgentSphere** is a state-of-the-art fullstack AI Agent application built with Next.js 16, React 19, LangGraph.js, Prisma, and Model Context Protocol (MCP). It features interactive agent personas, voice-to-text, text-to-speech read aloud, temperature tuning, drag-and-drop file uploads, and 1-click Markdown export.
 
 ---
@@ -148,3 +150,5 @@ When deployed on Render's free tier, the instance spins down automatically durin
 
 - **Free Tier Wake-up Banner**: Embedded across all screens to notify visitors of cold-start wake-up times (~30-50s) with live status polling.
 - **Resource Preserving**: The server sleeps when idle so your free tier hours last the entire month without premature depletion.
+- **No Keep-Alive Traffic**: There are no cron jobs, GitHub Actions, or scheduled pings. The banner polls `/api/health` only while the server is waking, then stops, and re-checks once when you come back to the tab, so an idle open tab never keeps the instance awake.
+- **Free Plan Config**: [render.yaml](render.yaml) deploys a single `plan: free` web service with no cron or worker services.

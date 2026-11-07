@@ -49,8 +49,9 @@ async function searchDuckDuckGo(query: string, maxResults = 5): Promise<SearchRe
       // Extract title and link from result__a
       const linkMatch =
         /<a[^>]*class="[^"]*result__a[^"]*"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/i.exec(block);
-      const snippetMatch =
-        /<a[^>]*class="[^"]*result__snippet[^"]*"[^>]*>([\s\S]*?)<\/a>/i.exec(block);
+      const snippetMatch = /<a[^>]*class="[^"]*result__snippet[^"]*"[^>]*>([\s\S]*?)<\/a>/i.exec(
+        block,
+      );
 
       let link = linkMatch?.[1] || "";
       if (link.startsWith("//")) link = `https:${link}`;

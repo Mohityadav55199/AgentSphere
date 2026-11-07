@@ -45,26 +45,37 @@ export function FreeTierBanner() {
     checkHealth();
   }, [checkHealth]);
 
-  // Periodic polling:
-  // If down/waking: poll every 5s so it automatically hides the moment the server comes up.
-  // If online: poll every 45s to detect if the server spins down or goes offline.
+  // Polling only while the server is down/waking, so the banner hides as soon as it is ready.
+  // Once online we stop polling entirely: a periodic ping from an idle open tab would count as
+  // traffic and keep the Render free-tier instance from ever spinning down, burning free hours.
   useEffect(() => {
     if (pollTimerRef.current) {
       clearInterval(pollTimerRef.current);
+      pollTimerRef.current = null;
     }
 
-    const interval = serverStatus === "down" ? 5000 : 45000;
+    if (serverStatus !== "down") return;
 
     pollTimerRef.current = setInterval(() => {
-      checkHealth();
-    }, interval);
+      if (document.visibilityState === "visible") checkHealth();
+    }, 5000);
 
     return () => {
       if (pollTimerRef.current) {
         clearInterval(pollTimerRef.current);
+        pollTimerRef.current = null;
       }
     };
   }, [serverStatus, checkHealth]);
+
+  // Re-check once when the user returns to the tab (real user activity, not a background ping).
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") checkHealth();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [checkHealth]);
 
   // If server transitions to down, ensure it shows again even if previously dismissed
   useEffect(() => {
@@ -97,8 +108,8 @@ export function FreeTierBanner() {
 
           {/* Main message */}
           <span className="font-normal text-amber-900/90 dark:text-amber-100/90">
-            Server is waking up (Render instances spin down after 15 minutes of inactivity).
-            Cold starts can take{" "}
+            Server is waking up (Render instances spin down after 15 minutes of inactivity). Cold
+            starts can take{" "}
             <strong className="font-semibold text-amber-950 dark:text-amber-100">
               50+ seconds
             </strong>

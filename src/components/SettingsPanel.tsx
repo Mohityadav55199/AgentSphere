@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp, Settings, Server, Users, Bot, Sparkles } from "lucide-react";
+import { ChevronDown, ChevronUp, Settings, Users, Bot, Sparkles } from "lucide-react";
 import { ModelConfiguration } from "./ModelConfiguration";
 import { useMCPTools } from "@/hooks/useMCPTools";
 import { useUISettings } from "@/contexts/UISettingsContext";

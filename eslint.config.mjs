@@ -1,25 +1,30 @@
-import tsParser from "@typescript-eslint/parser";
+import { defineConfig, globalIgnores } from "eslint/config";
+import nextVitals from "eslint-config-next/core-web-vitals";
+import nextTs from "eslint-config-next/typescript";
 
-const eslintConfig = [
+export default defineConfig([
+  ...nextVitals,
+  ...nextTs,
+  globalIgnores([
+    ".next/**",
+    "node_modules/**",
+    "public/**",
+    "backups/**",
+    "scripts/**",
+    "docs/**",
+    "coverage/**",
+    "next-env.d.ts",
+  ]),
   {
-    ignores: [".next/**", "node_modules/**", "public/**", "backups/**", "scripts/**", "*.config.*"],
-  },
-  {
-    files: ["**/*.ts", "**/*.tsx"],
-    languageOptions: {
-      parser: tsParser,
-      parserOptions: {
-        ecmaVersion: "latest",
-        sourceType: "module",
-        ecmaFeatures: {
-          jsx: true,
-        },
-      },
-    },
+    // Pin the React version: eslint-plugin-react's auto-detection is not compatible with ESLint 10.
+    settings: { react: { version: "19.2" } },
     rules: {
-      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_" },
+      ],
+      // React Compiler advisory rule; the flagged effects are one-off mount initialisations.
+      "react-hooks/set-state-in-effect": "warn",
     },
   },
-];
-
-export default eslintConfig;
+]);

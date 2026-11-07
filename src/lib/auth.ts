@@ -1,8 +1,34 @@
 import crypto from "crypto";
 import { cookies } from "next/headers";
 
-const JWT_SECRET = process.env.JWT_SECRET || "agentsphere_super_secret_jwt_key_2026";
 const COOKIE_NAME = "agentsphere_auth_token";
+const SESSION_MAX_AGE_SECONDS = 7 * 24 * 3600;
+const DEV_FALLBACK_SECRET = "agentsphere-dev-only-secret-do-not-use-in-production";
+
+/**
+ * Resolve the JWT signing secret lazily (so `next build` works without it).
+ * A publicly known fallback secret would let anyone forge a session for any user,
+ * so production refuses to run without a real JWT_SECRET.
+ */
+function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET?.trim();
+  if (secret) return secret;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("JWT_SECRET environment variable must be set in production");
+  }
+  return DEV_FALLBACK_SECRET;
+}
+
+/** Shared cookie options for the session cookie. */
+export function sessionCookieOptions(maxAge = SESSION_MAX_AGE_SECONDS) {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax" as const,
+    maxAge,
+    path: "/",
+  };
+}
 
 export interface UserSession {
   id: string;
@@ -33,11 +59,11 @@ export function verifyPassword(password: string, storedHash: string): boolean {
 export function signToken(payload: UserSession): string {
   const header = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url");
   const body = Buffer.from(
-    JSON.stringify({ ...payload, exp: Math.floor(Date.now() / 1000) + 7 * 24 * 3600 }),
+    JSON.stringify({ ...payload, exp: Math.floor(Date.now() / 1000) + SESSION_MAX_AGE_SECONDS }),
   ).toString("base64url");
 
   const signature = crypto
-    .createHmac("sha256", JWT_SECRET)
+    .createHmac("sha256", getJwtSecret())
     .update(`${header}.${body}`)
     .digest("base64url");
 
@@ -50,7 +76,7 @@ export function verifyToken(token: string): UserSession | null {
     if (!header || !body || !signature) return null;
 
     const expectedSignature = crypto
-      .createHmac("sha256", JWT_SECRET)
+      .createHmac("sha256", getJwtSecret())
       .update(`${header}.${body}`)
       .digest("base64url");
 
@@ -64,6 +90,8 @@ export function verifyToken(token: string): UserSession | null {
     if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
       return null; // Expired
     }
+
+    if (typeof payload.id !== "string" || !payload.id) return null;
 
     return {
       id: payload.id,
