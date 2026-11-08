@@ -39,6 +39,11 @@ export function MCPServerList({ isOpen, onClose }: MCPServerListProps) {
   const [connectingId, setConnectingId] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
+  const reportError = async (response: Response, fallback: string) => {
+    const data = await response.json().catch(() => ({}));
+    alert(data.error || fallback);
+  };
+
   const fetchServers = async () => {
     setLoading(true);
     try {
@@ -68,9 +73,11 @@ export function MCPServerList({ isOpen, onClose }: MCPServerListProps) {
         body: JSON.stringify({ id, enabled }),
       });
       if (response.ok) {
-        setServers(servers.map((s) => (s.id === id ? { ...s, enabled } : s)));
+        setServers((prev) => prev.map((s) => (s.id === id ? { ...s, enabled } : s)));
         // Invalidate MCP tools cache to reload tools after server toggle
         queryClient.invalidateQueries({ queryKey: ["mcp-tools"] });
+      } else {
+        await reportError(response, "Failed to update the server.");
       }
     } catch (error) {
       console.error("Failed to toggle server:", error);
@@ -85,13 +92,15 @@ export function MCPServerList({ isOpen, onClose }: MCPServerListProps) {
 
     setDeletingId(id);
     try {
-      const response = await fetch(`/api/mcp-servers?id=${id}`, {
+      const response = await fetch(`/api/mcp-servers?id=${encodeURIComponent(id)}`, {
         method: "DELETE",
       });
       if (response.ok) {
-        setServers(servers.filter((s) => s.id !== id));
+        setServers((prev) => prev.filter((s) => s.id !== id));
         // Invalidate MCP tools cache to reload tools after server deletion
         queryClient.invalidateQueries({ queryKey: ["mcp-tools"] });
+      } else {
+        await reportError(response, "Failed to delete the server.");
       }
     } catch (error) {
       console.error("Failed to delete server:", error);
@@ -113,6 +122,7 @@ export function MCPServerList({ isOpen, onClose }: MCPServerListProps) {
         window.location.href = data.authorizationUrl;
       } else if (data.error) {
         console.error("[OAuth] Error from API:", data.error);
+        alert(data.error);
       } else {
         // Update local state with OAuth status
         setServers((prevServers) =>

@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 
 export interface User {
   id: string;
@@ -29,6 +30,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
   const [authModalMode, setAuthModalMode] = useState<"login" | "register">("login");
+  const queryClient = useQueryClient();
+
+  // Threads and messages are per account: drop the cached ones whenever the account changes,
+  // otherwise the sidebar kept showing the previous user's chats until a manual refresh.
+  const resetUserData = () => {
+    queryClient.removeQueries({ queryKey: ["messages"] });
+    void queryClient.invalidateQueries({ queryKey: ["threads"] });
+  };
 
   const checkUser = async () => {
     try {
@@ -62,6 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setUser(data.user);
     setShowAuthModal(false);
+    resetUserData();
   };
 
   const register = async (name: string, email: string, password: string) => {
@@ -78,11 +88,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setUser(data.user);
     setShowAuthModal(false);
+    resetUserData();
   };
 
   const logout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     setUser(null);
+    queryClient.clear();
+    // The open thread may belong to the account that just signed out: start fresh.
+    window.location.assign("/");
   };
 
   const openAuthModal = (mode: "login" | "register" = "login") => {

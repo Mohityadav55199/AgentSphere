@@ -39,9 +39,11 @@ export async function streamResponse(params: {
       // "deny" used to resume with action "update" + empty args, which still EXECUTED the tool.
       // Answer the pending tool calls with a refusal instead so nothing runs.
       resume:
-        opts.allowTool === "allow"
-          ? { action: "continue", data: {} }
-          : { action: "feedback", data: TOOL_DENIED_MESSAGE },
+        opts.allowTool !== "allow"
+          ? { action: "feedback", data: TOOL_DENIED_MESSAGE }
+          : opts.toolArgs
+            ? { action: "update", data: { id: opts.toolCallId, args: opts.toolArgs } }
+            : { action: "continue", data: {} },
     });
 
     const agent = await ensureAgent({
@@ -52,6 +54,7 @@ export async function streamResponse(params: {
       temperature: opts?.temperature,
       systemPrompt: opts?.systemPrompt,
       agentMode: opts?.agentMode,
+      council: opts?.council,
     });
 
     // Type assertion needed for Command union with state update in v1
@@ -91,6 +94,7 @@ export async function streamResponse(params: {
     temperature: opts?.temperature,
     systemPrompt: opts?.systemPrompt,
     agentMode: opts?.agentMode,
+    council: opts?.council,
   });
 
   // Type assertion needed for Command union with state update in v1

@@ -6,6 +6,7 @@ import type {
   TextContentItem,
 } from "@/types/message";
 import { UserIcon, FileText, Image as ImageIcon } from "lucide-react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { getMessageContent } from "@/services/messageUtils";
 
@@ -60,9 +61,12 @@ export const HumanMessage = ({ message }: HumanMessageProps) => {
                   {attachment.type.startsWith("image/") ? (
                     <>
                       <ImageIcon className="h-3.5 w-3.5" />
-                      <img
+                      <Image
                         src={attachment.url}
                         alt={attachment.name}
+                        width={80}
+                        height={80}
+                        unoptimized
                         className="my-0 h-20 w-20 rounded object-cover"
                       />
                     </>

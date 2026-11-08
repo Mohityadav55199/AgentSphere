@@ -12,13 +12,17 @@ export default function Home() {
   const [rootThreadId, setRootThreadId] = useState<string | null>(null);
   const isCreatingRef = useRef(false);
 
+  // Pin the most recent thread once threads have loaded. Adjusting state during render (guarded)
+  // avoids an extra effect pass; it is fixed afterwards so later re-sorting cannot swap the chat.
+  if (!rootThreadId && !isLoadingThreads && threads.length > 0) {
+    setRootThreadId(threads[0].id);
+  }
+
   useEffect(() => {
     // Wait until threads query finishes loading
     if (isLoadingThreads) return;
 
-    if (threads.length > 0 && !rootThreadId) {
-      setRootThreadId(threads[0].id);
-    } else if (threads.length === 0 && !rootThreadId && !isCreatingRef.current) {
+    if (threads.length === 0 && !rootThreadId && !isCreatingRef.current) {
       // Only create a thread if the user has absolutely 0 threads
       isCreatingRef.current = true;
       createThread()

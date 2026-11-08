@@ -5,15 +5,21 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Sparkles, X, Mail, Lock, User, Loader2 } from "lucide-react";
 
 export function AuthModal() {
-  const { showAuthModal, closeAuthModal, authModalMode, login, register } = useAuth();
-  const [mode, setMode] = useState<"login" | "register">(authModalMode);
+  const { showAuthModal, authModalMode } = useAuth();
+  // Mount the form only while open: it then starts in the mode that was requested ("Sign Up"
+  // used to open the login form) and never keeps a typed password around after closing.
+  if (!showAuthModal) return null;
+  return <AuthForm initialMode={authModalMode} />;
+}
+
+function AuthForm({ initialMode }: { initialMode: "login" | "register" }) {
+  const { closeAuthModal, login, register } = useAuth();
+  const [mode, setMode] = useState<"login" | "register">(initialMode);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  if (!showAuthModal) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

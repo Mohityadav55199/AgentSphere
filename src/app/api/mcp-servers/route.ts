@@ -94,9 +94,20 @@ export async function PATCH(request: Request) {
 
     const parsed = UpdateMCPServerBody.safeParse(await request.json().catch(() => null));
     if (!parsed.success) {
-      return NextResponse.json({ error: "ID is required" }, { status: 400 });
+      const issue = parsed.error.issues[0];
+      return NextResponse.json(
+        { error: issue ? `${issue.path.join(".") || "body"}: ${issue.message}` : "Invalid body" },
+        { status: 400 },
+      );
     }
-    const { id, name, type, command, args, env, url, headers, enabled } = parsed.data;
+    // null means "not applicable to this type": treat it like an omitted field.
+    const orUndefined = <T>(v: T | null | undefined) => (v === null ? undefined : v);
+    const { id, name, type, enabled } = parsed.data;
+    const command = orUndefined(parsed.data.command);
+    const args = orUndefined(parsed.data.args);
+    const env = orUndefined(parsed.data.env);
+    const url = orUndefined(parsed.data.url);
+    const headers = orUndefined(parsed.data.headers);
 
     const changesStdioConfig =
       type === "stdio" || command !== undefined || args !== undefined || env !== undefined;

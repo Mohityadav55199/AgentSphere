@@ -1,10 +1,11 @@
 import React from "react";
-import { Zap, DollarSign, Clock, ShieldCheck } from "lucide-react";
+import { Zap, DollarSign, ShieldCheck } from "lucide-react";
 
 interface TelemetryBarProps {
   content: string;
   modelName?: string;
   provider?: string;
+  /** True only when the Auditor actually reviewed this answer (multi-agent mode). */
   hasAuditorCheck?: boolean;
 }
 
@@ -26,7 +27,7 @@ export const TelemetryBar: React.FC<TelemetryBarProps> = ({
   content,
   modelName = "llama-3.3-70b-versatile",
   provider = "groq",
-  hasAuditorCheck = true,
+  hasAuditorCheck = false,
 }) => {
   // Approximate tokens from character & word count (~4 characters per token)
   const estimatedTokens = Math.max(12, Math.round(content.length / 3.8));
@@ -44,15 +45,12 @@ export const TelemetryBar: React.FC<TelemetryBarProps> = ({
 
   const estimatedCost = (estimatedTokens * (pricePerMillion / 1_000_000)).toFixed(5);
 
-  // Latency estimation heuristic based on token length and provider
-  const estimatedLatency = Math.max(0.4, estimatedTokens / 450).toFixed(1);
-
   return (
     <div className="mt-2.5 flex flex-wrap items-center gap-2 text-[11px] text-gray-500 select-none dark:text-gray-400">
       {/* Token Pill */}
       <span
         className="inline-flex items-center gap-1 rounded-md border border-gray-200/80 bg-gray-50/80 px-2 py-0.5 font-mono dark:border-gray-800 dark:bg-gray-900/60"
-        title="Estimated tokens generated in this response"
+        title="Estimate from the response length (~4 characters per token), not a provider count"
       >
         <Zap className="h-3 w-3 text-amber-500" />
         <span>~{estimatedTokens.toLocaleString()} tokens</span>
@@ -61,29 +59,20 @@ export const TelemetryBar: React.FC<TelemetryBarProps> = ({
       {/* FinOps Cost Pill */}
       <span
         className="inline-flex items-center gap-0.5 rounded-md border border-gray-200/80 bg-gray-50/80 px-2 py-0.5 font-mono dark:border-gray-800 dark:bg-gray-900/60"
-        title="Estimated LLM inference cost based on published API pricing"
+        title="Rough output-cost estimate at the currently selected model's list price"
       >
         <DollarSign className="h-3 w-3 text-emerald-500" />
         <span>${estimatedCost}</span>
-      </span>
-
-      {/* Latency Pill */}
-      <span
-        className="inline-flex items-center gap-1 rounded-md border border-gray-200/80 bg-gray-50/80 px-2 py-0.5 font-mono dark:border-gray-800 dark:bg-gray-900/60"
-        title="Approximate generation & tool execution latency"
-      >
-        <Clock className="h-3 w-3 text-blue-500" />
-        <span>~{estimatedLatency}s</span>
       </span>
 
       {/* Auditor Security Badge */}
       {hasAuditorCheck && (
         <span
           className="inline-flex items-center gap-1 rounded-md border border-indigo-200/80 bg-indigo-50/80 px-2 py-0.5 font-medium text-indigo-700 dark:border-indigo-900/50 dark:bg-indigo-950/40 dark:text-indigo-300"
-          title="Reviewed and validated by Chief Auditor agent"
+          title="The Auditor agent reviewed this answer"
         >
           <ShieldCheck className="h-3 w-3 text-indigo-600 dark:text-indigo-400" />
-          <span>Council Verified</span>
+          <span>Auditor reviewed</span>
         </span>
       )}
     </div>

@@ -3,6 +3,7 @@ import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import type { BaseMessage } from "@langchain/core/messages";
+import type { CouncilAgentSettings } from "./council";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 
 export interface CreateChatModelOptions {
@@ -123,6 +124,7 @@ export interface AgentConfigOptions {
   approveAllTools?: boolean; // if true, skip tool approval prompts
   temperature?: number;
   agentMode?: "single" | "multi";
+  council?: CouncilAgentSettings[]; // Agent Studio settings (multi-agent mode only)
 }
 
 /**
@@ -363,4 +365,23 @@ export function bindModelTools(model: BaseChatModel, tools: unknown[]): Invokabl
     }
   }
   return model as unknown as Invokable;
+}
+
+/**
+ * Apply an "approve with edits" decision to one tool call. `reviewData` is
+ * `{ id, args }` from the approval card; only the call with that id (or, if no id was sent,
+ * the call that triggered the interrupt) gets the new arguments.
+ */
+export function applyToolEdit<T extends { id?: string; args: Record<string, unknown> }>(
+  toolCall: T,
+  interruptedId: string | undefined,
+  reviewData: unknown,
+): T {
+  const edit = (reviewData ?? {}) as { id?: unknown; args?: unknown };
+  const targetId = typeof edit.id === "string" && edit.id ? edit.id : interruptedId;
+  const args = edit.args;
+  if (toolCall.id !== targetId || !args || typeof args !== "object" || Array.isArray(args)) {
+    return toolCall;
+  }
+  return { ...toolCall, args: args as Record<string, unknown> };
 }

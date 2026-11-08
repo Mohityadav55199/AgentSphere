@@ -49,11 +49,12 @@ export const UpdateMCPServerBody = z
     name: z.string().optional(),
     type: ServerType.optional(),
     enabled: z.boolean().optional(),
-    command: z.string().optional(),
-    args: z.array(z.string()).optional(),
-    env: z.record(z.string(), z.string()).optional(),
-    url: z.string().url().optional(),
-    headers: z.record(z.string(), z.string()).optional(),
+    // The edit form sends null for fields that do not apply to the server type; accept and ignore.
+    command: z.string().nullish(),
+    args: z.array(z.string()).nullish(),
+    env: z.record(z.string(), z.string()).nullish(),
+    url: z.string().url().nullish(),
+    headers: z.record(z.string(), z.string()).nullish(),
   })
   .openapi("UpdateMCPServerBody");
 

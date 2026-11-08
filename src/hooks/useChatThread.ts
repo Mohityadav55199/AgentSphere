@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { MessageOptions, MessageResponse, AIMessageData } from "@/types/message";
 import { createMessageStream, fetchMessageHistory } from "@/services/chatService";
+import type { MessageStream } from "@/services/sseClient";
 
 interface UseChatThreadOptions {
   threadId: string | null;
@@ -15,12 +16,16 @@ export interface UseChatThreadReturn {
   sendError: Error | null;
   sendMessage: (text: string, opts?: MessageOptions) => Promise<void>;
   refetchMessages: () => Promise<unknown>;
-  approveToolExecution: (toolCallId: string, action: "allow" | "deny") => Promise<void>;
+  approveToolExecution: (
+    toolCallId: string,
+    action: "allow" | "deny",
+    editedArgs?: Record<string, unknown>,
+  ) => Promise<void>;
 }
 
 export function useChatThread({ threadId }: UseChatThreadOptions): UseChatThreadReturn {
   const queryClient = useQueryClient();
-  const streamRef = useRef<EventSource | null>(null);
+  const streamRef = useRef<MessageStream | null>(null);
   const currentMessageRef = useRef<MessageResponse | null>(null);
   const [sendError, setSendError] = useState<Error | null>(null);
   const [isSending, setIsSending] = useState(false);
@@ -194,14 +199,17 @@ export function useChatThread({ threadId }: UseChatThreadOptions): UseChatThread
   );
 
   const approveToolExecution = useCallback(
-    async (toolCallId: string, action: "allow" | "deny") => {
+    async (toolCallId: string, action: "allow" | "deny", editedArgs?: Record<string, unknown>) => {
       if (!threadId) return;
 
       // Handle the streaming response with allowTool parameter, empty content since we're resuming
       await handleStreamResponse({
         threadId,
         text: "",
-        opts: { allowTool: action },
+        opts: {
+          allowTool: action,
+          ...(action === "allow" && editedArgs ? { toolCallId, toolArgs: editedArgs } : {}),
+        },
       });
     },
     [threadId, handleStreamResponse],

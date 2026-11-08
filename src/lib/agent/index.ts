@@ -67,12 +67,23 @@ async function createAgent(cfg?: AgentConfigOptions) {
   const isMultiAgent = cfg?.agentMode === "multi";
 
   if (isMultiAgent) {
+    // Agent Studio: each enabled role can run at its own temperature.
+    const roleModels = Object.fromEntries(
+      (cfg?.council ?? [])
+        .filter((role) => role.enabled)
+        .map((role) => [
+          role.id,
+          createChatModel({ provider, model: modelName, temperature: role.temperature }),
+        ]),
+    );
     return new MultiAgentBuilder({
       llm,
       tools: allTools,
       prompt: cfg?.systemPrompt || SYSTEM_PROMPT,
       checkpointer: postgresCheckpointer,
       approveAllTools: cfg?.approveAllTools || false,
+      council: cfg?.council,
+      roleModels,
     }).build();
   }
 
@@ -101,6 +112,7 @@ export async function ensureAgent(cfg?: AgentConfigOptions) {
     temperature: cfg?.temperature,
     systemPrompt: cfg?.systemPrompt,
     agentMode: cfg?.agentMode || "single",
+    council: cfg?.agentMode === "multi" ? cfg?.council : undefined,
     // Rebuild when MCP servers were added/changed so the agent does not keep stale tools.
     mcpVersion: getMCPToolsVersion(),
   });

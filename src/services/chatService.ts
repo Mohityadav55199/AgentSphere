@@ -1,4 +1,6 @@
 import type { MessageOptions, MessageResponse, Thread } from "@/types/message";
+import { openPostEventStream, type MessageStream } from "./sseClient";
+import { readSavedCouncilSettings } from "@/lib/agent/council";
 
 export interface ChatServiceConfig {
   baseUrl?: string;
@@ -36,26 +38,32 @@ export async function fetchMessageHistory(threadId: string): Promise<MessageResp
   return data as MessageResponse[];
 }
 
+/**
+ * Open the SSE response stream for a message (or a tool-approval resume).
+ * Sent as a POST with a JSON body so long and non-ASCII messages are not limited by URL length.
+ */
 export function createMessageStream(
   threadId: string,
   message: string,
   opts?: MessageOptions,
-): EventSource {
-  const params = new URLSearchParams({ content: message, threadId });
-  if (opts?.model) params.set("model", opts.model);
-  if (opts?.provider) params.set("provider", opts.provider);
-  if (opts?.tools?.length) params.set("tools", opts.tools.join(","));
-  if (opts?.allowTool) params.set("allowTool", opts.allowTool);
-  if (opts?.approveAllTools !== undefined)
-    params.set("approveAllTools", opts.approveAllTools ? "true" : "false");
-  if (opts?.temperature !== undefined) params.set("temperature", opts.temperature.toString());
-  if (opts?.systemPrompt) params.set("systemPrompt", opts.systemPrompt);
-  if (opts?.agentMode) params.set("agentMode", opts.agentMode);
-  if (opts?.attachments && opts.attachments.length > 0) {
-    // Serialize attachments as JSON string for query parameter
-    params.set("attachments", JSON.stringify(opts.attachments));
-  }
-  return new EventSource(`${getUrl("stream")}?${params}`);
+): MessageStream {
+  return openPostEventStream(getUrl("stream"), {
+    threadId,
+    content: message,
+    model: opts?.model,
+    provider: opts?.provider,
+    tools: opts?.tools?.length ? opts.tools : undefined,
+    allowTool: opts?.allowTool,
+    toolCallId: opts?.toolCallId,
+    toolArgs: opts?.toolArgs,
+    approveAllTools: opts?.approveAllTools,
+    temperature: opts?.temperature,
+    systemPrompt: opts?.systemPrompt,
+    agentMode: opts?.agentMode,
+    attachments: opts?.attachments?.length ? opts.attachments : undefined,
+    // Agent Studio settings apply to the 5-agent council only.
+    council: opts?.agentMode === "multi" ? (opts.council ?? readSavedCouncilSettings()) : undefined,
+  });
 }
 
 export async function fetchThreads(): Promise<Thread[]> {

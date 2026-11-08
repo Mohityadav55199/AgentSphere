@@ -86,7 +86,7 @@ This is a Next.js 15 fullstack AI agent chat application using LangGraph.js with
 ### API Route Patterns
 
 - Stream endpoints use `dynamic = "force-dynamic"` and `runtime = "nodejs"`
-- Query params for streaming: `content`, `threadId`, `model`, `provider`, `allowTool`, `approveAllTools`
+- Streaming: `POST /api/agent/stream` with a JSON body (`threadId`, `content`, `model`, `provider`, `allowTool`, `toolCallId`/`toolArgs`, `approveAllTools`, `agentMode`, `council`, ...); the client reads SSE via `src/services/sseClient.ts`. The GET query-string form is kept for compatibility only
 - MCP server CRUD follows REST patterns in `/api/mcp-servers/route.ts`
 - File upload endpoint: `/api/agent/upload` accepts multipart/form-data, returns file metadata
 

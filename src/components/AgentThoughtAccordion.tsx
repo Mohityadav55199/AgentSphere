@@ -4,6 +4,9 @@ import React, { useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import MDEditor from "@uiw/react-md-editor";
 import rehypeKatex from "rehype-katex";
+import rehypeSanitize from "rehype-sanitize";
+import { markdownSanitizeSchema } from "@/lib/markdown-sanitize";
+import { markdownComponents } from "./MarkdownCode";
 import { useUISettings } from "@/contexts/UISettingsContext";
 
 interface AgentThoughtAccordionProps {
@@ -69,7 +72,9 @@ export const AgentThoughtAccordion: React.FC<AgentThoughtAccordionProps> = ({
                 fontSize: "0.8125rem",
                 lineHeight: "1.5",
               }}
-              rehypePlugins={[rehypeKatex]}
+              rehypePlugins={[[rehypeSanitize, markdownSanitizeSchema], rehypeKatex]}
+              // Same renderer as the main answer: the Analyst puts its Mermaid diagram here.
+              components={markdownComponents}
             />
           </div>
         </div>

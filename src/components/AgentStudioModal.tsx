@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   X,
   Sliders,
@@ -10,6 +10,12 @@ import {
   ShieldCheck,
   Check,
 } from "lucide-react";
+import {
+  COUNCIL_STORAGE_KEY,
+  REQUIRED_COUNCIL_ROLES,
+  readSavedCouncilSettings,
+  type CouncilRole,
+} from "@/lib/agent/council";
 
 interface AgentStudioModalProps {
   isOpen: boolean;
@@ -75,26 +81,31 @@ const DEFAULT_COUNCIL_CONFIG: AgentRoleConfig[] = [
   },
 ];
 
+/** Saved settings layered over the defaults (names, roles and icons always come from the defaults). */
+function loadCouncilConfig(): AgentRoleConfig[] {
+  const saved = readSavedCouncilSettings();
+  if (!saved) return DEFAULT_COUNCIL_CONFIG;
+  return DEFAULT_COUNCIL_CONFIG.map((agent) => {
+    const s = saved.find((x) => x.id === agent.id);
+    return s
+      ? { ...agent, enabled: s.enabled, temperature: s.temperature, customPrompt: s.customPrompt }
+      : agent;
+  });
+}
+
+const isRequiredRole = (id: string) => REQUIRED_COUNCIL_ROLES.includes(id as CouncilRole);
+
 export const AgentStudioModal: React.FC<AgentStudioModalProps> = ({ isOpen, onClose }) => {
-  const [agents, setAgents] = useState<AgentRoleConfig[]>(DEFAULT_COUNCIL_CONFIG);
+  // Mount the editor only while open, so it always starts from the saved settings and
+  // unsaved edits are discarded on close.
+  if (!isOpen) return null;
+  return <AgentStudioPanel onClose={onClose} />;
+};
+
+const AgentStudioPanel = ({ onClose }: { onClose: () => void }) => {
+  const [agents, setAgents] = useState<AgentRoleConfig[]>(loadCouncilConfig);
   const [selectedAgentId, setSelectedAgentId] = useState<string>("supervisor");
   const [savedSuccess, setSavedSuccess] = useState(false);
-
-  // Load from localStorage if present
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("agentsphere_council_settings");
-      if (saved) {
-        try {
-          setAgents(JSON.parse(saved));
-        } catch {
-          // fallback to default
-        }
-      }
-    }
-  }, [isOpen]);
-
-  if (!isOpen) return null;
 
   const selectedAgent = agents.find((a) => a.id === selectedAgentId) || agents[0];
 
@@ -104,7 +115,18 @@ export const AgentStudioModal: React.FC<AgentStudioModalProps> = ({ isOpen, onCl
 
   const handleSave = () => {
     if (typeof window !== "undefined") {
-      localStorage.setItem("agentsphere_council_settings", JSON.stringify(agents));
+      // Sent with every 5-agent council request (see chatService.createMessageStream).
+      localStorage.setItem(
+        COUNCIL_STORAGE_KEY,
+        JSON.stringify(
+          agents.map(({ id, enabled, temperature, customPrompt }) => ({
+            id,
+            enabled,
+            temperature,
+            customPrompt,
+          })),
+        ),
+      );
     }
     setSavedSuccess(true);
     setTimeout(() => {
@@ -116,7 +138,7 @@ export const AgentStudioModal: React.FC<AgentStudioModalProps> = ({ isOpen, onCl
   const handleResetDefaults = () => {
     setAgents(DEFAULT_COUNCIL_CONFIG);
     if (typeof window !== "undefined") {
-      localStorage.removeItem("agentsphere_council_settings");
+      localStorage.removeItem(COUNCIL_STORAGE_KEY);
     }
   };
 
@@ -152,6 +174,7 @@ export const AgentStudioModal: React.FC<AgentStudioModalProps> = ({ isOpen, onCl
               </h2>
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 Customize persona temperature, system directives, and active specialist roles
+                (applies in 5-Agent Council mode)
               </p>
             </div>
           </div>
@@ -213,6 +236,12 @@ export const AgentStudioModal: React.FC<AgentStudioModalProps> = ({ isOpen, onCl
                 <input
                   type="checkbox"
                   checked={selectedAgent.enabled}
+                  disabled={isRequiredRole(selectedAgent.id)}
+                  title={
+                    isRequiredRole(selectedAgent.id)
+                      ? "The Developer writes the final answer and cannot be disabled"
+                      : undefined
+                  }
                   onChange={(e) => updateSelectedAgent({ enabled: e.target.checked })}
                   className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
                 />

@@ -149,6 +149,13 @@ export const UISettingsProvider = ({ children }: UISettingsProviderProps) => {
               saveSetting("model", activeMod);
             }
 
+            // A saved model the provider no longer lists would fail every request.
+            const providerModels: string[] = data.providers[activeProv]?.models ?? [];
+            if (providerModels.length > 0 && !providerModels.includes(activeMod)) {
+              activeMod = data.providers[activeProv]?.defaultModel || data.defaultModel;
+              saveSetting("model", activeMod);
+            }
+
             // If selected provider isn't available, fallback to available default
             if (!data.providers[activeProv]?.available && data.defaultProvider) {
               activeProv = data.defaultProvider;

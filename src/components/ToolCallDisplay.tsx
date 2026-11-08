@@ -57,44 +57,56 @@ const getToolIcon = (name: string) => {
   return <Settings2Icon className="h-4 w-4 text-gray-600 dark:text-gray-400" />;
 };
 
+type Decision = "approved" | "denied" | null;
+
 const ToolCallItem: React.FC<{
   name: string;
   args: Record<string, unknown>;
   id?: string;
   approvalCallbacks?: ToolApprovalCallbacks;
   showApprovalButtons?: boolean;
-}> = ({ name, args, id, approvalCallbacks, showApprovalButtons }) => {
+  /** Shared by every call in the message: one approval resumes the whole batch. */
+  decision: Decision;
+  onDecide: (decision: Exclude<Decision, null>) => void;
+}> = ({ name, args, id, approvalCallbacks, showApprovalButtons, decision, onDecide }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [decision, setDecision] = useState<"approved" | "denied" | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedArgs, setEditedArgs] = useState(() => JSON.stringify(args, null, 2));
   const [jsonError, setJsonError] = useState<string | null>(null);
 
   const sensitive = isSensitiveTool(name);
 
-  const handleApprove = () => {
-    setDecision("approved");
+  const handleApprove = (editedArgs?: Record<string, unknown>) => {
+    onDecide("approved");
     if (id && approvalCallbacks) {
-      approvalCallbacks.onApprove(id);
+      approvalCallbacks.onApprove(id, editedArgs);
     }
   };
 
   const handleDeny = () => {
-    setDecision("denied");
+    onDecide("denied");
     if (id && approvalCallbacks) {
       approvalCallbacks.onDeny(id);
     }
   };
 
   const handleSaveEditAndApprove = () => {
+    let parsed: unknown;
     try {
-      JSON.parse(editedArgs);
-      setJsonError(null);
-      setIsEditing(false);
-      handleApprove();
+      parsed = JSON.parse(editedArgs);
     } catch {
       setJsonError("Invalid JSON format. Please verify before approving.");
+      return;
     }
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      setJsonError("Tool arguments must be a JSON object.");
+      return;
+    }
+    setJsonError(null);
+    setIsEditing(false);
+    // Previously the edited JSON was only validated and then discarded, so the tool ran with
+    // the ORIGINAL arguments. Send the edits along with the approval.
+    handleApprove(parsed as Record<string, unknown>);
   };
 
   return (
@@ -214,7 +226,7 @@ const ToolCallItem: React.FC<{
           ) : (
             <button
               suppressHydrationWarning
-              onClick={handleApprove}
+              onClick={() => handleApprove()}
               className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-gradient-to-r from-emerald-600 to-green-600 px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs transition-all hover:brightness-110 active:scale-95"
             >
               <Check className="h-3.5 w-3.5" />
@@ -233,6 +245,7 @@ export const ToolCallDisplay: React.FC<ToolCallDisplayProps> = ({
   approvalCallbacks,
   showApprovalButtons = false,
 }) => {
+  const [decision, setDecision] = useState<Decision>(null);
   const hasToolCalls = toolCalls.length > 0;
   const hasFunctionCalls = functionCalls.length > 0;
 
@@ -252,6 +265,8 @@ export const ToolCallDisplay: React.FC<ToolCallDisplayProps> = ({
               id={toolCall.id}
               approvalCallbacks={approvalCallbacks}
               showApprovalButtons={showApprovalButtons}
+              decision={decision}
+              onDecide={setDecision}
             />
           ))}
         </div>
@@ -266,6 +281,8 @@ export const ToolCallDisplay: React.FC<ToolCallDisplayProps> = ({
               args={functionCall.args}
               approvalCallbacks={approvalCallbacks}
               showApprovalButtons={showApprovalButtons}
+              decision={decision}
+              onDecide={setDecision}
             />
           ))}
         </div>

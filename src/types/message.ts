@@ -1,3 +1,4 @@
+import type { CouncilAgentSettings } from "@/lib/agent/council";
 export interface Thread {
   id: string;
   title?: string;
@@ -19,6 +20,10 @@ export interface MessageOptions {
   provider?: string;
   tools?: string[];
   allowTool?: "allow" | "deny";
+  /** Tool call whose arguments were edited in the approval card. */
+  toolCallId?: string;
+  /** Replacement arguments for `toolCallId` (approve-with-edits). */
+  toolArgs?: Record<string, unknown>;
   approveAllTools?: boolean; // if true, skip tool approval prompts
   attachments?: FileAttachment[];
   temperature?: number;
@@ -26,6 +31,8 @@ export interface MessageOptions {
   userId?: string;
   guestId?: string;
   agentMode?: "single" | "multi";
+  /** Agent Studio settings, sent in multi-agent mode. */
+  council?: CouncilAgentSettings[];
 }
 
 export interface MessageRequest {
@@ -91,7 +98,8 @@ export interface BasicMessageData {
 }
 
 export interface ToolApprovalCallbacks {
-  onApprove: (toolCallId: string) => void;
+  /** `editedArgs` is set when the user edited the tool inputs before approving. */
+  onApprove: (toolCallId: string, editedArgs?: Record<string, unknown>) => void;
   onDeny: (toolCallId: string) => void;
 }
 

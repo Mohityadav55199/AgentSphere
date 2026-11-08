@@ -81,8 +81,13 @@ export const Header = ({ toggleSidebar, isSidebarOpen = true, onOpenMCPConfig }:
     : null;
 
   const handleNewChat = async () => {
-    const thread = await createThread();
-    router.push(`/thread/${thread.id}`);
+    try {
+      const thread = await createThread();
+      router.push(`/thread/${thread.id}`);
+    } catch (error) {
+      console.error("Failed to create a new chat:", error);
+      alert("Could not start a new chat. The server may be waking up; please try again.");
+    }
   };
 
   return (

@@ -9,38 +9,39 @@ interface ToastState {
   message: string;
 }
 
+function toastFromParams(params: URLSearchParams): ToastState | null {
+  const serverName = params.get("server");
+  if (params.get("oauth_success") === "true") {
+    return {
+      type: "success",
+      message: serverName
+        ? `Successfully connected to "${serverName}"`
+        : "OAuth connection successful",
+    };
+  }
+  const oauthError = params.get("oauth_error");
+  return oauthError ? { type: "error", message: `OAuth error: ${oauthError}` } : null;
+}
+
 export function OAuthToast() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [toast, setToast] = useState<ToastState | null>(null);
+  // useSearchParams makes this subtree client-rendered, so reading the URL in the initial
+  // state is safe (no hydration mismatch) and avoids copying it into state from an effect.
+  const [toast, setToast] = useState<ToastState | null>(() =>
+    toastFromParams(new URLSearchParams(searchParams.toString())),
+  );
+  const hasOAuthResult = searchParams.has("oauth_success") || searchParams.has("oauth_error");
 
+  // Clean up the OAuth params and go back to where the flow was started.
   useEffect(() => {
-    const oauthSuccess = searchParams.get("oauth_success");
-    const oauthError = searchParams.get("oauth_error");
-    const serverName = searchParams.get("server");
-
-    if (oauthSuccess === "true") {
-      setToast({
-        type: "success",
-        message: serverName
-          ? `Successfully connected to "${serverName}"`
-          : "OAuth connection successful",
-      });
-      // Clean up URL params and redirect to original path
-      const returnPath = sessionStorage.getItem("oauth_return_path") || "/";
-      sessionStorage.removeItem("oauth_return_path");
-      router.replace(returnPath, { scroll: false });
-    } else if (oauthError) {
-      setToast({
-        type: "error",
-        message: `OAuth error: ${oauthError}`,
-      });
-      // Clean up URL params and redirect to original path
-      const returnPath = sessionStorage.getItem("oauth_return_path") || "/";
-      sessionStorage.removeItem("oauth_return_path");
-      router.replace(returnPath, { scroll: false });
-    }
-  }, [searchParams, router]);
+    if (!hasOAuthResult) return;
+    const returnPath = sessionStorage.getItem("oauth_return_path") || "/";
+    sessionStorage.removeItem("oauth_return_path");
+    // Only same-site paths: never follow a stored absolute or protocol-relative URL.
+    const safePath = returnPath.startsWith("/") && !returnPath.startsWith("//") ? returnPath : "/";
+    router.replace(safePath, { scroll: false });
+  }, [hasOAuthResult, router]);
 
   // Auto-dismiss after 5 seconds
   useEffect(() => {

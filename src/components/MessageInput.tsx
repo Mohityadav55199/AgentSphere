@@ -1,21 +1,30 @@
-import { FormEvent, useEffect, useRef, useState } from "react";
+import { FormEvent, Ref, useEffect, useImperativeHandle, useRef, useState } from "react";
+import Image from "next/image";
 import { Button } from "./ui/button";
 import { ArrowUp, Loader2, Eye, EyeOff, Paperclip, X, Mic, MicOff, FileText } from "lucide-react";
 import { MessageOptions, FileAttachment } from "@/types/message";
 import { SettingsPanel } from "./SettingsPanel";
 import { useUISettings } from "@/contexts/UISettingsContext";
 import { MAX_ATTACHMENTS } from "@/lib/storage/validation";
+import { MAX_MESSAGE_LENGTH } from "@/lib/limits";
+
+/** Lets the surrounding thread hand over files dropped anywhere on the chat. */
+export interface MessageInputHandle {
+  addFiles: (files: File[]) => Promise<void>;
+}
 
 interface MessageInputProps {
   onSendMessage: (message: string, opts?: MessageOptions) => Promise<void>;
   isLoading?: boolean;
   maxLength?: number;
+  ref?: Ref<MessageInputHandle>;
 }
 
 export const MessageInput = ({
   onSendMessage,
   isLoading = false,
-  maxLength = 2000,
+  maxLength = MAX_MESSAGE_LENGTH,
+  ref,
 }: MessageInputProps) => {
   const [message, setMessage] = useState("");
   const [isFocused, setIsFocused] = useState(false);
@@ -40,6 +49,8 @@ export const MessageInput = ({
   } = useUISettings();
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recognitionRef = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const toggleSpeechRecognition = () => {
@@ -54,6 +65,8 @@ export const MessageInput = ({
     }
 
     if (isListening) {
+      // Actually stop the recogniser; flipping the flag alone kept the mic recording.
+      recognitionRef.current?.stop();
       setIsListening(false);
       return;
     }
@@ -64,8 +77,12 @@ export const MessageInput = ({
       recognition.interimResults = false;
       recognition.lang = "en-US";
 
+      recognitionRef.current = recognition;
       recognition.onstart = () => setIsListening(true);
-      recognition.onend = () => setIsListening(false);
+      recognition.onend = () => {
+        setIsListening(false);
+        recognitionRef.current = null;
+      };
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       recognition.onresult = (event: any) => {
         const transcript = event.results[0]?.[0]?.transcript;
@@ -115,8 +132,9 @@ export const MessageInput = ({
         });
 
         if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error || "Upload failed");
+          // Proxies return HTML for errors like 413; don't surface a JSON parse error instead.
+          const error = await response.json().catch(() => ({}));
+          throw new Error(error.error || `Upload failed (HTTP ${response.status})`);
         }
 
         const data = await response.json();
@@ -141,6 +159,8 @@ export const MessageInput = ({
       }
     }
   };
+
+  useImperativeHandle(ref, () => ({ addFiles: uploadFiles }));
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -241,9 +261,14 @@ export const MessageInput = ({
                     className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50/90 p-1.5 pr-2.5 text-xs text-gray-800 shadow-xs dark:border-gray-700 dark:bg-gray-800/80 dark:text-gray-200"
                   >
                     {isImg ? (
-                      <img
+                      // Uploads live on MinIO/S3 under arbitrary hosts: skip Next's optimizer
+                      // (no remotePatterns needed, no image-optimization quota used).
+                      <Image
                         src={attachment.url}
                         alt={attachment.name}
+                        width={32}
+                        height={32}
+                        unoptimized
                         className="h-8 w-8 rounded border border-gray-200 object-cover dark:border-gray-700"
                       />
                     ) : (
@@ -290,7 +315,8 @@ export const MessageInput = ({
             aria-label="Message input"
             disabled={isLoading}
             onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
+              // Ignore Enter while an IME (Hindi, Chinese, Japanese...) is composing a word.
+              if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
                 e.preventDefault();
                 handleSubmit(e);
               }

@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
 import type { MessageResponse, ToolApprovalCallbacks } from "@/types/message";
-import { Copy, Check, Sparkles, Volume2, VolumeX, Download } from "lucide-react";
+import { Copy, Check, Sparkles, Volume2, VolumeX } from "lucide-react";
 import rehypeKatex from "rehype-katex";
+import rehypeSanitize from "rehype-sanitize";
+import { markdownSanitizeSchema } from "@/lib/markdown-sanitize";
 import { cn } from "@/lib/utils";
 import { getMessageContent, hasToolCalls, getToolCalls } from "@/services/messageUtils";
 import { ToolCallDisplay } from "./ToolCallDisplay";
 import { useUISettings } from "@/contexts/UISettingsContext";
 import MDEditor from "@uiw/react-md-editor";
 import { AgentCouncilTimeline } from "./AgentCouncilTimeline";
-import { MermaidRenderer } from "./MermaidRenderer";
+import { markdownComponents } from "./MarkdownCode";
 import { AgentThoughtAccordion } from "./AgentThoughtAccordion";
 import { TelemetryBar } from "./TelemetryBar";
 
@@ -228,87 +230,18 @@ export const AIMessage = ({
                   fontSize: "0.875rem",
                   lineHeight: "1.55",
                 }}
-                rehypePlugins={[rehypeKatex]}
-                components={{
-                  code({ className, children, ...props }) {
-                    const match = /language-(\w+)/.exec(className || "");
-                    const lang = match ? match[1].toLowerCase() : "";
-                    const codeString = String(children).replace(/\n$/, "");
-
-                    if (lang === "mermaid") {
-                      return <MermaidRenderer code={codeString} />;
-                    }
-
-                    if (match) {
-                      return (
-                        <div className="my-3 overflow-hidden rounded-xl border border-gray-200 bg-[#0d1117] text-gray-200 shadow-xs dark:border-gray-800">
-                          <div className="flex items-center justify-between border-b border-gray-800 bg-[#161b22] px-3.5 py-1.5 font-mono text-xs text-gray-400">
-                            <span className="text-[11px] font-bold tracking-wider text-indigo-400 uppercase">
-                              {lang}
-                            </span>
-                            <div className="flex items-center gap-2">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const ext =
-                                    lang === "typescript"
-                                      ? "ts"
-                                      : lang === "javascript"
-                                        ? "js"
-                                        : lang === "python"
-                                          ? "py"
-                                          : lang;
-                                  const blob = new Blob([codeString], { type: "text/plain" });
-                                  const url = URL.createObjectURL(blob);
-                                  const a = document.createElement("a");
-                                  a.href = url;
-                                  a.download = `code-${Date.now()}.${ext}`;
-                                  a.click();
-                                  setTimeout(() => URL.revokeObjectURL(url), 1000);
-                                }}
-                                className="flex cursor-pointer items-center gap-1 text-[11px] transition-colors hover:text-white"
-                                title="Download code file"
-                              >
-                                <Download size={12} />
-                                <span>Save</span>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={async () => {
-                                  await navigator.clipboard.writeText(codeString);
-                                }}
-                                className="flex cursor-pointer items-center gap-1 text-[11px] transition-colors hover:text-white"
-                                title="Copy code"
-                              >
-                                <Copy size={12} />
-                                <span>Copy</span>
-                              </button>
-                            </div>
-                          </div>
-                          <pre className="overflow-x-auto bg-[#0d1117] p-3.5 font-mono text-xs leading-relaxed">
-                            <code className={className} {...props}>
-                              {children}
-                            </code>
-                          </pre>
-                        </div>
-                      );
-                    }
-
-                    return (
-                      <code
-                        className="rounded bg-gray-100 px-1 py-0.5 font-mono text-[0.88em] text-indigo-600 dark:bg-gray-800 dark:text-indigo-400"
-                        {...props}
-                      >
-                        {children}
-                      </code>
-                    );
-                  },
-                }}
+                rehypePlugins={[[rehypeSanitize, markdownSanitizeSchema], rehypeKatex]}
+                components={markdownComponents}
               />
             </div>
 
             {/* Real-Time Token, Cost & Latency Telemetry */}
-            <TelemetryBar content={messageContent} modelName={model} provider={provider} />
+            <TelemetryBar
+              content={messageContent}
+              modelName={model}
+              provider={provider}
+              hasAuditorCheck={/### 🛡️\s*Security Audit/i.test(messageContent)}
+            />
 
             {/* Quick Actions & Analytics Bar */}
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-gray-100 pt-2.5 text-xs text-gray-400 dark:border-gray-800">

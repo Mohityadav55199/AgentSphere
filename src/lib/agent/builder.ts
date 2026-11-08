@@ -12,7 +12,7 @@ import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { SystemMessage, ToolMessage, ContentBlock } from "@langchain/core/messages";
 import { ToolCall } from "@langchain/core/messages/tool";
 import { DynamicTool } from "@langchain/core/tools";
-import { bindModelTools } from "./util";
+import { applyToolEdit, bindModelTools } from "./util";
 
 export class AgentBuilder {
   private toolNode: ToolNode;
@@ -95,7 +95,7 @@ export class AgentBuilder {
           content: lastMessage.content,
           // Only the reviewed call gets new args; any parallel calls are kept as they were.
           tool_calls: lastMessage.tool_calls!.map((tc) =>
-            tc.id === toolCall.id ? { ...tc, args: reviewData } : tc,
+            applyToolEdit(tc, toolCall.id, reviewData),
           ),
           id: lastMessage.id,
         };

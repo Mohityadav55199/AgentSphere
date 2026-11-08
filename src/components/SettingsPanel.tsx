@@ -10,7 +10,6 @@ interface SettingsPanelProps {
   setProvider: (provider: string) => void;
   model: string;
   setModel: (model: string) => void;
-  onOpenMCPConfig?: () => void;
 }
 
 export const SettingsPanel = ({
@@ -20,7 +19,6 @@ export const SettingsPanel = ({
   setProvider,
   model,
   setModel,
-  onOpenMCPConfig,
 }: SettingsPanelProps) => {
   const { data: mcpToolsData } = useMCPTools();
   const { agentMode, setAgentMode } = useUISettings();

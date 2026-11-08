@@ -79,6 +79,9 @@ export const AgentCouncilTimeline: React.FC<AgentCouncilTimelineProps> = ({
   content,
   activeNode,
 }) => {
+  // Single-agent replies carry the LangGraph node name "agent"; only council roles count.
+  const isCouncilNode = COUNCIL_MEMBERS.some((member) => member.id === activeNode);
+
   // Check which council members participated in this message
   const participatingMembers = COUNCIL_MEMBERS.map((member) => {
     const hasSection = member.headingMatch.test(content);
@@ -92,7 +95,7 @@ export const AgentCouncilTimeline: React.FC<AgentCouncilTimelineProps> = ({
   const activeCount = participatingMembers.filter((m) => m.participated).length;
 
   // If this message doesn't contain multi-agent participation, don't show the bar
-  if (activeCount === 0 && !activeNode) {
+  if (activeCount === 0 && !isCouncilNode) {
     return null;
   }
 

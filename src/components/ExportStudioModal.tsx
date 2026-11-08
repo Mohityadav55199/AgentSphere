@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { X, FileText, Printer, Code, Copy, Check, Download, Share2, Sparkles } from "lucide-react";
+import type { MessageResponse } from "@/types/message";
+import { getMessageContent } from "@/services/messageUtils";
 
 interface ExportStudioModalProps {
   isOpen: boolean;
@@ -44,10 +46,9 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
             ? "✨ AgentSphere Council"
             : "🛠️ Tool Execution";
 
-      let content =
-        typeof msg.data?.content === "string"
-          ? msg.data.content
-          : JSON.stringify(msg.data?.content || "", null, 2);
+      // Use the text parts only: multimodal messages hold base64 images/PDFs, which used to be
+      // dumped into the report as megabytes of JSON.
+      let content = getMessageContent(msg as MessageResponse);
 
       if (!includeThoughtAccordions && msg.type === "ai") {
         // Strip out thought headings if user unchecked
@@ -63,21 +64,39 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
     return md;
   };
 
-  const handleExportMarkdown = async () => {
-    const messages = await fetchHistory();
-    const md = generateMarkdown(messages);
-    const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
+  /** Revoke after the browser has started the download (immediate revoke can cancel it). */
+  const downloadBlob = (blob: Blob, filename: string) => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `AgentSphere-Report-${threadId.slice(0, 8)}.md`;
+    a.download = filename;
     a.click();
-    URL.revokeObjectURL(url);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
+  const loadOrAlert = async () => {
+    try {
+      return await fetchHistory();
+    } catch {
+      alert("Could not load this conversation for export. Please try again.");
+      return null;
+    }
+  };
+
+  const handleExportMarkdown = async () => {
+    const messages = await loadOrAlert();
+    if (!messages) return;
+    const md = generateMarkdown(messages);
+    downloadBlob(
+      new Blob([md], { type: "text/markdown;charset=utf-8" }),
+      `AgentSphere-Report-${threadId.slice(0, 8)}.md`,
+    );
     onClose();
   };
 
   const handleExportJSON = async () => {
-    const messages = await fetchHistory();
+    const messages = await loadOrAlert();
+    if (!messages) return;
     const json = JSON.stringify(
       {
         platform: "AgentSphere",
@@ -89,20 +108,23 @@ export const ExportStudioModal: React.FC<ExportStudioModalProps> = ({
       null,
       2,
     );
-    const blob = new Blob([json], { type: "application/json;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `AgentSphere-Audit-${threadId.slice(0, 8)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadBlob(
+      new Blob([json], { type: "application/json;charset=utf-8" }),
+      `AgentSphere-Audit-${threadId.slice(0, 8)}.json`,
+    );
     onClose();
   };
 
   const handleCopyClipboard = async () => {
-    const messages = await fetchHistory();
+    const messages = await loadOrAlert();
+    if (!messages) return;
     const md = generateMarkdown(messages);
-    await navigator.clipboard.writeText(md);
+    try {
+      await navigator.clipboard.writeText(md);
+    } catch {
+      alert("Copy to clipboard was blocked by the browser.");
+      return;
+    }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

@@ -1,4 +1,5 @@
-import { MessageInput } from "./MessageInput";
+import Link from "next/link";
+import { MessageInput, type MessageInputHandle } from "./MessageInput";
 import MessageList from "./MessageList";
 import { useChatThread } from "@/hooks/useChatThread";
 import { Loader2, UploadCloud } from "lucide-react";
@@ -12,32 +13,33 @@ interface ThreadProps {
 }
 
 export const Thread = ({ threadId, onFirstMessageSent }: ThreadProps) => {
-  const { messages, isLoadingHistory, isSending, sendMessage, approveToolExecution } =
+  const { messages, isLoadingHistory, historyError, isSending, sendMessage, approveToolExecution } =
     useChatThread({ threadId });
-  const firstMessageInitiatedRef = useRef(false);
   const [awaitingFirstResponse, setAwaitingFirstResponse] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const dragCounter = useRef(0);
+  const inputRef = useRef<MessageInputHandle>(null);
+  const redirectedRef = useRef(false);
 
   const handleSendMessage = async (message: string, opts?: MessageOptions) => {
     const wasEmpty = messages.length === 0;
     await sendMessage(message, opts);
-    if (wasEmpty) {
-      firstMessageInitiatedRef.current = true;
-      setAwaitingFirstResponse(true);
-    }
+    if (wasEmpty) setAwaitingFirstResponse(true);
   };
 
+  /** Only react to drags that carry files (not selected text or links). */
+  const isFileDrag = (e: React.DragEvent) => Array.from(e.dataTransfer.types).includes("Files");
+
   const handleDragEnter = (e: React.DragEvent) => {
+    if (!isFileDrag(e)) return;
     e.preventDefault();
     e.stopPropagation();
     dragCounter.current += 1;
-    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
-      setIsDragging(true);
-    }
+    setIsDragging(true);
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
+    if (!isFileDrag(e)) return;
     e.preventDefault();
     e.stopPropagation();
     dragCounter.current -= 1;
@@ -47,33 +49,59 @@ export const Thread = ({ threadId, onFirstMessageSent }: ThreadProps) => {
   };
 
   const handleDragOver = (e: React.DragEvent) => {
+    if (!isFileDrag(e)) return;
     e.preventDefault();
     e.stopPropagation();
   };
 
   const handleDrop = (e: React.DragEvent) => {
+    if (!isFileDrag(e)) return;
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
     dragCounter.current = 0;
+    // The overlay covers the whole thread (including the input), so the drop lands here.
+    // Previously the files were silently discarded; hand them to the input's uploader.
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) void inputRef.current?.addFiles(files);
   };
 
-  // Detect first AI/tool/error message arrival after initial user message to trigger redirect
+  // After the first exchange on the home page, move to the thread's own URL (once).
+  const firstResponseArrived =
+    awaitingFirstResponse && !isSending && messages.some((m) => m.type !== "human");
   useEffect(() => {
-    if (awaitingFirstResponse && !isSending) {
-      const hasNonHuman = messages.some((m) => m.type !== "human");
-      if (hasNonHuman) {
-        setAwaitingFirstResponse(false);
-        if (onFirstMessageSent) onFirstMessageSent(threadId);
-      }
+    if (firstResponseArrived && !redirectedRef.current) {
+      redirectedRef.current = true;
+      onFirstMessageSent?.(threadId);
     }
-  }, [awaitingFirstResponse, isSending, messages, onFirstMessageSent, threadId]);
+  }, [firstResponseArrived, onFirstMessageSent, threadId]);
 
   if (isLoadingHistory) {
     return (
       <div className="bg-background/95 supports-[backdrop-filter]:bg-background/60 absolute inset-0 flex items-center justify-center backdrop-blur">
         <Loader2 className="text-primary h-8 w-8 animate-spin" />
         <p className="text-muted-foreground mt-2">Loading conversation history...</p>
+      </div>
+    );
+  }
+
+  // A failed load (e.g. someone else's thread, or a network error) used to fall through to the
+  // empty "new chat" screen, inviting the user to type into a thread they cannot use.
+  if (historyError) {
+    return (
+      <div className="flex h-full w-full flex-col items-center justify-center gap-3 px-4 text-center">
+        <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+          This conversation could not be loaded.
+        </p>
+        <p className="max-w-sm text-xs text-gray-500 dark:text-gray-400">
+          It may belong to another account, have been deleted, or the server may be waking up.
+        </p>
+        <Link
+          href="/"
+          className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700"
+        >
+          Start a new chat
+        </Link>
       </div>
     );
   }
@@ -136,7 +164,11 @@ export const Thread = ({ threadId, onFirstMessageSent }: ThreadProps) => {
           </div>
           <div className="flex-shrink-0 border-t border-gray-200/50 p-3 backdrop-blur-xs sm:p-4 dark:border-gray-800/50 dark:bg-gray-950/40">
             <div className="mx-auto max-w-3xl">
-              <MessageInput onSendMessage={handleSendMessage} isLoading={isSending} />
+              <MessageInput
+                ref={inputRef}
+                onSendMessage={handleSendMessage}
+                isLoading={isSending}
+              />
             </div>
           </div>
         </div>
@@ -185,7 +217,11 @@ export const Thread = ({ threadId, onFirstMessageSent }: ThreadProps) => {
 
             {/* Input Box */}
             <div className="pt-1">
-              <MessageInput onSendMessage={handleSendMessage} isLoading={isSending} />
+              <MessageInput
+                ref={inputRef}
+                onSendMessage={handleSendMessage}
+                isLoading={isSending}
+              />
             </div>
           </div>
         </div>

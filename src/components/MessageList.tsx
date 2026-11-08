@@ -16,7 +16,11 @@ const ToolMessage = dynamic(() => import("./ToolMessage").then((m) => m.ToolMess
 
 interface MessageListProps {
   messages: MessageResponse[];
-  approveToolExecution?: (toolCallId: string, action: "allow" | "deny") => Promise<void>;
+  approveToolExecution?: (
+    toolCallId: string,
+    action: "allow" | "deny",
+    editedArgs?: Record<string, unknown>,
+  ) => Promise<void>;
 }
 
 const MessageList = ({ messages, approveToolExecution }: MessageListProps) => {
@@ -30,7 +34,8 @@ const MessageList = ({ messages, approveToolExecution }: MessageListProps) => {
   // Create approval callbacks for tool execution
   const approvalCallbacks: ToolApprovalCallbacks | undefined = approveToolExecution
     ? {
-        onApprove: (toolCallId: string) => approveToolExecution(toolCallId, "allow"),
+        onApprove: (toolCallId: string, editedArgs?: Record<string, unknown>) =>
+          approveToolExecution(toolCallId, "allow", editedArgs),
         onDeny: (toolCallId: string) => approveToolExecution(toolCallId, "deny"),
       }
     : undefined;
@@ -53,7 +58,9 @@ const MessageList = ({ messages, approveToolExecution }: MessageListProps) => {
             <AIMessage
               key={getMessageId(message)}
               message={message}
-              showApprovalButtons={index === messages.length - 1} // Show buttons only on the latest AI message
+              // Only the latest message can have a pending approval. Compare with the deduplicated
+              // list: `index` comes from it, so `messages.length` was off whenever duplicates existed.
+              showApprovalButtons={index === uniqueMessages.length - 1}
               approvalCallbacks={approvalCallbacks}
             />
           );

@@ -121,8 +121,7 @@ export const ToolMessage = ({ message }: ToolMessageProps) => {
   const contentType = detectContentType(content);
   const contentStats = getContentStats(content);
 
-  const handleCopy = async (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(content);
       setCopied(true);
@@ -134,35 +133,36 @@ export const ToolMessage = ({ message }: ToolMessageProps) => {
 
   return (
     <div className="rounded border border-gray-200 bg-gray-50 transition-colors hover:bg-gray-100">
-      <button
-        suppressHydrationWarning
-        className="flex w-full cursor-pointer items-center justify-between p-4 text-left focus:ring-2 focus:ring-blue-500 focus:outline-none focus:ring-inset"
-        onClick={() => setOpen((o) => !o)}
-      >
-        <div className="flex items-center space-x-2">
-          <span className="font-medium text-gray-900">{displayText}</span>
-          <span className="text-xs text-gray-500">({contentStats})</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <button
-            suppressHydrationWarning
-            onClick={handleCopy}
-            className="rounded p-1 text-gray-500 hover:bg-gray-200 hover:text-gray-700 focus:outline-none"
-            title="Copy content"
-          >
-            {copied ? (
-              <CheckIcon className="h-3 w-3 text-green-600" />
-            ) : (
-              <CopyIcon className="h-3 w-3" />
-            )}
-          </button>
+      {/* Toggle and copy are sibling buttons: a <button> inside a <button> is invalid HTML. */}
+      <div className="flex w-full items-center justify-between gap-2 p-4">
+        <button
+          type="button"
+          aria-expanded={open}
+          className="flex flex-1 cursor-pointer items-center gap-2 text-left focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          onClick={() => setOpen((o) => !o)}
+        >
           {open ? (
             <ChevronDownIcon className="h-4 w-4 text-gray-500 transition-transform" />
           ) : (
             <ChevronRightIcon className="h-4 w-4 text-gray-500 transition-transform" />
           )}
-        </div>
-      </button>
+          <span className="font-medium text-gray-900">{displayText}</span>
+          <span className="text-xs text-gray-500">({contentStats})</span>
+        </button>
+        <button
+          type="button"
+          onClick={handleCopy}
+          className="rounded p-1 text-gray-500 hover:bg-gray-200 hover:text-gray-700 focus:outline-none"
+          title="Copy content"
+          aria-label="Copy tool output"
+        >
+          {copied ? (
+            <CheckIcon className="h-3 w-3 text-green-600" />
+          ) : (
+            <CopyIcon className="h-3 w-3" />
+          )}
+        </button>
+      </div>
 
       {!open && content && (
         <div className="px-4 pb-3">{formatContent(content, contentType, true)}</div>

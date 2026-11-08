@@ -32,6 +32,30 @@ function buildContentDispositionAttachment(originalFilename: string): string | u
   return `attachment; filename="${quotedFallback}"; filename*=UTF-8''${encoded}`;
 }
 
+/**
+ * Public URL for an object. Previously this was always `${S3_ENDPOINT}/${bucket}/${key}`, which
+ * is a broken relative path ("/uploads/key") on AWS S3 where S3_ENDPOINT is empty.
+ *   - S3_PUBLIC_URL set (CDN / R2 public bucket): `${S3_PUBLIC_URL}/${key}`
+ *   - custom endpoint (MinIO, R2): path-style or virtual-hosted per S3_FORCE_PATH_STYLE
+ *   - no endpoint: AWS virtual-hosted URL for S3_REGION
+ */
+export function getPublicObjectUrl(key: string): string {
+  const encodedKey = key.split("/").map(encodeURIComponent).join("/");
+  const publicBase = process.env.S3_PUBLIC_URL?.trim().replace(/\/+$/, "");
+  if (publicBase) return `${publicBase}/${encodedKey}`;
+
+  const endpoint = process.env.S3_ENDPOINT?.trim().replace(/\/+$/, "");
+  if (endpoint) {
+    if (process.env.S3_FORCE_PATH_STYLE === "true")
+      return `${endpoint}/${BUCKET_NAME}/${encodedKey}`;
+    const url = new URL(endpoint);
+    return `${url.protocol}//${BUCKET_NAME}.${url.host}/${encodedKey}`;
+  }
+
+  const region = process.env.S3_REGION || "us-east-1";
+  return `https://${BUCKET_NAME}.s3.${region}.amazonaws.com/${encodedKey}`;
+}
+
 export async function uploadFile(
   buffer: Buffer,
   key: string,
@@ -57,8 +81,7 @@ export async function uploadFile(
 
   await client.send(command);
 
-  const endpoint = process.env.S3_ENDPOINT || "";
-  return `${endpoint}/${BUCKET_NAME}/${key}`;
+  return getPublicObjectUrl(key);
 }
 
 export async function uploadLargeFile(
@@ -91,8 +114,7 @@ export async function uploadLargeFile(
 
   await upload.done();
 
-  const endpoint = process.env.S3_ENDPOINT || "";
-  return `${endpoint}/${BUCKET_NAME}/${key}`;
+  return getPublicObjectUrl(key);
 }
 
 export async function getFile(key: string): Promise<Buffer> {
