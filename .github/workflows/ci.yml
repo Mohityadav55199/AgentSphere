@@ -101,8 +101,16 @@ jobs:
         with:
           node-version: 24 # Render's default Node version
 
-      - name: Install with npm (no lockfile, as on Render)
+      # NODE_ENV=production makes npm skip devDependencies (vitest, eslint, prettier...), as Render's
+      # service does. The build must not need them, e.g. `next build` type-checks every file that
+      # tsconfig.json includes, so test files must stay excluded there.
+      - name: Install with npm (no lockfile, production mode, as on Render)
         run: npm install
+        env:
+          NODE_ENV: production
+
+      - name: devDependencies are really absent (guards this job's meaning)
+        run: test ! -d node_modules/vitest
 
       - name: Every OpenTelemetry peer of @langfuse/otel must resolve
         run: |
