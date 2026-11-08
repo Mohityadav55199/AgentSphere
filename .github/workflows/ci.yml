@@ -85,3 +85,40 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+  # Render builds with `npm install && npm run build` and no lockfile (package-lock.json is not
+  # committed), so npm resolves versions fresh. This job repeats that exactly, because the pnpm jobs
+  # above resolve differently (auto-install-peers) and cannot catch npm-only failures.
+  render-npm-build:
+    name: Render parity (npm install + build)
+    runs-on: ubuntu-latest
+    needs: quality
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24 # Render's default Node version
+
+      - name: Install with npm (no lockfile, as on Render)
+        run: npm install
+
+      - name: Every OpenTelemetry peer of @langfuse/otel must resolve
+        run: |
+          node -e '
+          const path = require("path");
+          const req = require("module").createRequire(path.resolve("node_modules/@langfuse/otel/dist/index.mjs"));
+          const mods = ["@opentelemetry/api", "@opentelemetry/core", "@opentelemetry/exporter-trace-otlp-http", "@opentelemetry/otlp-exporter-base", "@opentelemetry/sdk-trace-base"];
+          let bad = 0;
+          for (const m of mods) {
+            try { req.resolve(m); console.log("ok  ", m); } catch (e) { bad++; console.log("FAIL", m); }
+          }
+          process.exit(bad ? 1 : 0);
+          '
+
+      - name: Build
+        run: npm run build
+
+      - name: Production dependencies have no known vulnerabilities
+        run: npm audit --omit=dev
