@@ -143,7 +143,9 @@ export const UISettingsProvider = ({ children }: UISettingsProviderProps) => {
             if (
               !activeMod ||
               activeMod === "llama-3.3-70b-versatile" ||
-              activeMod === "gemini-3-flash-preview"
+              activeMod === "gemini-3-flash-preview" ||
+              // Was handed out as the default by mistake (first entry of Groq's unordered list).
+              activeMod === "allam-2-7b"
             ) {
               activeMod = data.providers[activeProv]?.defaultModel || data.defaultModel;
               saveSetting("model", activeMod);
@@ -187,7 +189,7 @@ export const UISettingsProvider = ({ children }: UISettingsProviderProps) => {
     if (typeof saved.provider === "string") setProviderState(saved.provider);
     if (typeof saved.model === "string") {
       const sanitized =
-        saved.model === "llama-3.3-70b-versatile"
+        saved.model === "llama-3.3-70b-versatile" || saved.model === "allam-2-7b"
           ? "openai/gpt-oss-120b"
           : saved.model === "gemini-3-flash-preview"
             ? "gemini-2.5-flash"

@@ -67,7 +67,8 @@ async function fetchGroqModels(apiKey: string): Promise<string[]> {
           );
         });
       if (models.length > 0) {
-        return models;
+        // Stable, readable order in the picker.
+        return [...models].sort((x: string, y: string) => x.localeCompare(y));
       }
     }
   } catch (err) {
@@ -102,7 +103,11 @@ export async function GET() {
       models = await fetchGroqModels(key);
     }
 
-    const providerDefault = models[0] || config.defaultModel;
+    // Groq returns its model list in arbitrary order, so models[0] made e.g. "allam-2-7b" the
+    // default. Prefer the curated default whenever the provider offers it.
+    const providerDefault = models.includes(config.defaultModel)
+      ? config.defaultModel
+      : models[0] || config.defaultModel;
 
     providers[providerName] = {
       available,
