@@ -8,5 +8,12 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["src/**/*.test.{ts,tsx}"],
+    server: {
+      deps: {
+        // The markdown preview's ESM build imports .css files; let Vite transform it instead of
+        // handing it to Node (which cannot import CSS).
+        inline: [/@uiw\/react-md-editor/, /@uiw\/react-markdown-preview/],
+      },
+    },
   },
 });

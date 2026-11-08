@@ -10,3 +10,8 @@ overrides:
   jws@<3.2.3: ">=3.2.3"
   mdast-util-to-hast@>=13.0.0 <13.2.1: ">=13.2.1"
   next@>=15.5.0-canary.0 <15.5.7: ">=15.5.7"
+  # Security patches for transitive dependencies (pnpm audit)
+  "@opentelemetry/propagator-jaeger@<2.9.0": ^2.9.0
+  "postcss-selector-parser@<6.1.5": ^6.1.5
+  "deepmerge-ts@<8.0.0": ^8.0.0
+  "katex@<0.18.2": ^0.18.2

@@ -76,7 +76,7 @@ Things I worked through that are worth calling out:
 
 - **Council routing with tools.** Any specialist that requests a tool goes through approval → tools → back to
   _that same_ specialist. Routing a Researcher's tool call straight to the next agent leaves an unanswered tool
-  call in the history, which every provider rejects. Disabled roles are not added to the graph at all.
+  call in the history, which every provider rejects. Disabled roles are not added to the graph at all, and each specialist has a tool budget (3 rounds per message) so a model that keeps searching cannot loop until the run aborts.
 - **Tools + provider fallback.** A fallback-wrapped model has no `bindTools`, so tools have to be bound to the
   primary model and to each fallback before the chain is rebuilt; otherwise tools silently stop working.
 - **Security on a public demo.**
@@ -99,7 +99,7 @@ Things I worked through that are worth calling out:
 | AI       | LangGraph.js, LangChain providers, MCP (`@langchain/mcp-adapters`), optional Langfuse tracing |
 | Backend  | Next.js route handlers, Prisma, PostgreSQL (Neon in production), Zod + OpenAPI 3.1            |
 | Storage  | S3-compatible object storage (MinIO locally)                                                  |
-| Quality  | Vitest (74 tests), ESLint, Prettier, GitHub Actions CI, Dependabot                            |
+| Quality  | Vitest (77 tests), ESLint, Prettier, GitHub Actions CI, Dependabot                            |
 | Hosting  | Render and Vercel                                                                             |
 
 ---

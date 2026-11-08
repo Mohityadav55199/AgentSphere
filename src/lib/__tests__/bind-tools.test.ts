@@ -32,7 +32,7 @@ describe("bindModelTools", () => {
     const bound = bindModelTools(model as unknown as BaseChatModel, tools) as unknown as {
       boundFrom: string;
     };
-    expect(model.bindTools).toHaveBeenCalledWith(tools);
+    expect(model.bindTools).toHaveBeenCalledWith(tools, undefined);
     expect(bound.boundFrom).toBe("a");
   });
 
@@ -49,9 +49,9 @@ describe("bindModelTools", () => {
       fallbacks: { boundFrom: string }[];
     };
 
-    expect(primary.bindTools).toHaveBeenCalledWith(tools);
-    expect(fb1.bindTools).toHaveBeenCalledWith(tools);
-    expect(fb2.bindTools).toHaveBeenCalledWith(tools);
+    expect(primary.bindTools).toHaveBeenCalledWith(tools, undefined);
+    expect(fb1.bindTools).toHaveBeenCalledWith(tools, undefined);
+    expect(fb2.bindTools).toHaveBeenCalledWith(tools, undefined);
     expect(result.primary).toBe("primary");
     expect(result.fallbacks.map((f) => f.boundFrom)).toEqual(["fb1", "fb2"]);
   });

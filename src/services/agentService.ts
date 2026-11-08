@@ -61,6 +61,8 @@ export async function streamResponse(params: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const iterable = await agent.stream(inputs as any, {
       streamMode: ["messages", "updates"],
+      // Council runs take many graph steps (each tool round = approval + tools + agent).
+      recursionLimit: 100,
       configurable: { thread_id: threadId },
       ...(langfuseHandler ? { callbacks: [langfuseHandler] } : {}),
     });
@@ -101,6 +103,8 @@ export async function streamResponse(params: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const iterable = await agent.stream(inputs as any, {
     streamMode: ["messages", "updates"],
+    // Council runs take many graph steps (each tool round = approval + tools + agent).
+    recursionLimit: 100,
     configurable: { thread_id: threadId },
     ...(langfuseHandler ? { callbacks: [langfuseHandler] } : {}),
   });

@@ -3,42 +3,53 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Zap, Clock, X, RefreshCw } from "lucide-react";
 
+type Status = "checking" | "online" | "down";
+
+/** One health probe (5s timeout). A disconnected database counts as "still waking up". */
+async function probeHealth(): Promise<Exclude<Status, "checking">> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 5000);
+  try {
+    const res = await fetch("/api/health", { signal: controller.signal, cache: "no-store" });
+    if (!res.ok) return "down";
+    const data = await res.json().catch(() => null);
+    return data && data.database === "disconnected" ? "down" : "online";
+  } catch {
+    // Timeout, gateway error (502/504), or network error
+    return "down";
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 export function FreeTierBanner() {
-  const [dismissed, setDismissed] = useState<boolean>(false);
-  const [serverStatus, setServerStatus] = useState<"checking" | "online" | "down">("checking");
+  const [serverStatus, setServerStatus] = useState<Status>("checking");
   const [isRetrying, setIsRetrying] = useState<boolean>(false);
+  // Each outage gets a number; dismissing hides the banner for that outage only, so it comes back
+  // if the server goes down again later.
+  const [outage, setOutage] = useState(0);
+  const [dismissedOutage, setDismissedOutage] = useState(-1);
+  const statusRef = useRef<Status>("checking");
   const pollTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const checkHealth = useCallback(async () => {
-    setIsRetrying(true);
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout for status ping
-
-    try {
-      const res = await fetch("/api/health", {
-        signal: controller.signal,
-        cache: "no-store",
-      });
-
-      if (res.ok) {
-        const data = await res.json().catch(() => null);
-        // If the database is marked as disconnected, consider it waking/down
-        if (data && data.database === "disconnected") {
-          setServerStatus("down");
-        } else {
-          setServerStatus("online");
-        }
-      } else {
-        setServerStatus("down");
-      }
-    } catch {
-      // Timeout, gateway error (502/504), or network error
-      setServerStatus("down");
-    } finally {
-      clearTimeout(timeoutId);
-      setIsRetrying(false);
-    }
+  const applyStatus = useCallback((next: Status) => {
+    if (next === "down" && statusRef.current !== "down") setOutage((n) => n + 1);
+    statusRef.current = next;
+    setServerStatus(next);
   }, []);
+
+  /** Background check (mount, polling, tab focus): state is only set once the probe resolves. */
+  const checkHealth = useCallback(() => {
+    void probeHealth().then(applyStatus);
+  }, [applyStatus]);
+
+  /** Manual refresh button: also shows the spinner. */
+  const retryNow = () => {
+    setIsRetrying(true);
+    void probeHealth()
+      .then(applyStatus)
+      .finally(() => setIsRetrying(false));
+  };
 
   // Initial check on mount
   useEffect(() => {
@@ -77,19 +88,12 @@ export function FreeTierBanner() {
     return () => document.removeEventListener("visibilitychange", onVisible);
   }, [checkHealth]);
 
-  // If server transitions to down, ensure it shows again even if previously dismissed
-  useEffect(() => {
-    if (serverStatus === "down") {
-      setDismissed(false);
-    }
-  }, [serverStatus]);
-
   const handleDismiss = () => {
-    setDismissed(true);
+    setDismissedOutage(outage);
   };
 
-  // If server is up, checking, or dismissed, hide the bar completely
-  if (serverStatus === "online" || serverStatus === "checking" || dismissed) {
+  // Only visible while the server is down, unless this outage was dismissed
+  if (serverStatus !== "down" || dismissedOutage === outage) {
     return null;
   }
 
@@ -127,7 +131,7 @@ export function FreeTierBanner() {
             </span>
 
             <button
-              onClick={() => checkHealth()}
+              onClick={retryNow}
               disabled={isRetrying}
               className="cursor-pointer rounded p-1 text-amber-700 hover:bg-amber-200/50 hover:text-amber-900 dark:text-amber-300 dark:hover:bg-amber-900/50 dark:hover:text-amber-100"
               title="Refresh server status"

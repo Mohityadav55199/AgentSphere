@@ -28,8 +28,18 @@ You are a helpful, professional AI assistant similar to ChatGPT. You have access
 
 
 Always provide your final response with proper Markdown formatting, ensuring important information is highlighted appropriately.
-
-Current date: ${new Date().toISOString().split("T")[0]} (YYYY-MM-DD format)
 `;
 
 export const DEFAULT_SYSTEM_PROMPT = SYSTEM_PROMPT;
+
+/**
+ * Append today's date to a system prompt.
+ *
+ * Computed per model call: the date used to be baked into SYSTEM_PROMPT at server start (stale on a
+ * long-running server) and was missing entirely whenever a persona or custom prompt was used, which
+ * is always the case from the UI. Without it, models answer "latest"/"today" questions with their
+ * training cutoff.
+ */
+export function withCurrentDate(prompt: string, now: Date = new Date()): string {
+  return `${prompt.trimEnd()}\n\nCurrent date: ${now.toISOString().split("T")[0]} (YYYY-MM-DD).`;
+}

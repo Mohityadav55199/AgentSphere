@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { X, Plus, Edit, Trash2, Server, Globe, Loader2, RefreshCcw, Link2 } from "lucide-react";
 import { MCPServerForm } from "./MCPServerForm";
 import { OAuthStatusBadge, type OAuthStatusType } from "./OAuthStatusBadge";
@@ -30,9 +30,25 @@ interface MCPServerListProps {
   onClose: () => void;
 }
 
+async function fetchServerList(): Promise<MCPServer[] | null> {
+  try {
+    const response = await fetch("/api/mcp-servers");
+    return response.ok ? ((await response.json()) as MCPServer[]) : null;
+  } catch (error) {
+    console.error("Failed to fetch MCP servers:", error);
+    return null;
+  }
+}
+
 export function MCPServerList({ isOpen, onClose }: MCPServerListProps) {
+  // Mounted only while open, so the list is fetched fresh each time the dialog opens.
+  if (!isOpen) return null;
+  return <MCPServerListPanel onClose={onClose} />;
+}
+
+function MCPServerListPanel({ onClose }: { onClose: () => void }) {
   const [servers, setServers] = useState<MCPServer[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingServer, setEditingServer] = useState<MCPServer | undefined>();
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -44,26 +60,26 @@ export function MCPServerList({ isOpen, onClose }: MCPServerListProps) {
     alert(data.error || fallback);
   };
 
+  /** Load the list; state is only set once the request resolves. */
+  const loadServers = useCallback(
+    () =>
+      fetchServerList()
+        .then((list) => {
+          if (list) setServers(list);
+        })
+        .finally(() => setLoading(false)),
+    [],
+  );
+
+  /** Manual refresh (button, after saving): show the spinner, then reload. */
   const fetchServers = async () => {
     setLoading(true);
-    try {
-      const response = await fetch("/api/mcp-servers");
-      if (response.ok) {
-        const data = await response.json();
-        setServers(data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch MCP servers:", error);
-    } finally {
-      setLoading(false);
-    }
+    await loadServers();
   };
 
   useEffect(() => {
-    if (isOpen) {
-      fetchServers();
-    }
-  }, [isOpen]);
+    void loadServers();
+  }, [loadServers]);
 
   const toggleServer = async (id: string, enabled: boolean) => {
     try {
@@ -119,7 +135,7 @@ export function MCPServerList({ isOpen, onClose }: MCPServerListProps) {
         // Store current path to return after OAuth
         sessionStorage.setItem("oauth_return_path", window.location.pathname);
         // Redirect to OAuth authorization
-        window.location.href = data.authorizationUrl;
+        window.location.assign(data.authorizationUrl);
       } else if (data.error) {
         console.error("[OAuth] Error from API:", data.error);
         alert(data.error);
@@ -167,8 +183,6 @@ export function MCPServerList({ isOpen, onClose }: MCPServerListProps) {
     setShowForm(false);
     setEditingServer(undefined);
   };
-
-  if (!isOpen) return null;
 
   return (
     <>

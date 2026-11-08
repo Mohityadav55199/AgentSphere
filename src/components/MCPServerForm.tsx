@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import {
   X,
   Loader2,
@@ -105,87 +105,84 @@ const MCP_PRESETS: PresetServer[] = [
   },
 ];
 
-export function MCPServerForm({ isOpen, onClose, onSaved, server }: MCPServerFormProps) {
+type Pair = { key: string; value: string };
+
+/** Initial form values: the server being edited, or the defaults for a new one. */
+function initialFormState(server?: MCPServer) {
+  if (server) {
+    const config: Record<string, unknown> = { transport: server.type };
+    if (server.type === "stdio") {
+      config.command = server.command;
+      if (server.args) config.args = server.args;
+      if (server.env) config.env = server.env;
+    } else {
+      config.url = server.url;
+      if (server.headers) config.headers = server.headers;
+    }
+    return {
+      name: server.name,
+      type: server.type,
+      command: server.command || "npx",
+      argsString: Array.isArray(server.args) ? server.args.join(" ") : "",
+      url: server.url || "",
+      envPairs: Object.entries(server.env ?? {}).map(([k, v]) => ({ key: k, value: String(v) })),
+      headerPairs: Object.entries(server.headers ?? {}).map(([k, v]) => ({
+        key: k,
+        value: String(v),
+      })),
+      jsonInput: JSON.stringify({ mcpServers: { [server.name]: config } }, null, 2),
+    };
+  }
+  return {
+    name: "",
+    type: "stdio" as MCPServerType,
+    command: "npx",
+    argsString: "-y @modelcontextprotocol/server-fetch",
+    url: "http://localhost:8000/mcp",
+    envPairs: [] as Pair[],
+    headerPairs: [] as Pair[],
+    jsonInput: JSON.stringify(
+      {
+        mcpServers: {
+          web_fetch: {
+            transport: "stdio",
+            command: "npx",
+            args: ["-y", "@modelcontextprotocol/server-fetch"],
+          },
+        },
+      },
+      null,
+      2,
+    ),
+  };
+}
+
+export function MCPServerForm(props: MCPServerFormProps) {
+  // Mount a fresh form for each open (and per server), so it starts from that server's values
+  // instead of copying props into state from an effect.
+  if (!props.isOpen) return null;
+  return <MCPServerFormDialog key={props.server?.id ?? "new"} {...props} />;
+}
+
+function MCPServerFormDialog({ onClose, onSaved, server }: MCPServerFormProps) {
   const [activeTab, setActiveTab] = useState<"form" | "presets" | "json">("form");
 
   // Visual Form state
-  const [name, setName] = useState(server?.name || "");
-  const [type, setType] = useState<MCPServerType>(server?.type || "stdio");
-  const [command, setCommand] = useState(server?.command || "npx");
-  const [argsString, setArgsString] = useState(
-    Array.isArray(server?.args) ? server.args.join(" ") : "",
-  );
-  const [url, setUrl] = useState(server?.url || "");
-  const [envPairs, setEnvPairs] = useState<Array<{ key: string; value: string }>>([]);
-  const [headerPairs, setHeaderPairs] = useState<Array<{ key: string; value: string }>>([]);
+  const [initial] = useState(() => initialFormState(server));
+  const [name, setName] = useState(initial.name);
+  const [type, setType] = useState<MCPServerType>(initial.type);
+  const [command, setCommand] = useState(initial.command);
+  const [argsString, setArgsString] = useState(initial.argsString);
+  const [url, setUrl] = useState(initial.url);
+  const [envPairs, setEnvPairs] = useState<Pair[]>(initial.envPairs);
+  const [headerPairs, setHeaderPairs] = useState<Pair[]>(initial.headerPairs);
 
   // Raw JSON state
-  const [jsonInput, setJsonInput] = useState("");
+  const [jsonInput, setJsonInput] = useState(initial.jsonInput);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  // Sync state when editing an existing server
-  useEffect(() => {
-    if (server) {
-      setName(server.name);
-      setType(server.type);
-      setCommand(server.command || "npx");
-      setArgsString(Array.isArray(server.args) ? server.args.join(" ") : "");
-      setUrl(server.url || "");
-
-      if (server.env) {
-        setEnvPairs(Object.entries(server.env).map(([k, v]) => ({ key: k, value: String(v) })));
-      } else {
-        setEnvPairs([]);
-      }
-
-      if (server.headers) {
-        setHeaderPairs(
-          Object.entries(server.headers).map(([k, v]) => ({ key: k, value: String(v) })),
-        );
-      } else {
-        setHeaderPairs([]);
-      }
-
-      // Populate JSON representation
-      const config: Record<string, unknown> = { transport: server.type };
-      if (server.type === "stdio") {
-        config.command = server.command;
-        if (server.args) config.args = server.args;
-        if (server.env) config.env = server.env;
-      } else {
-        config.url = server.url;
-        if (server.headers) config.headers = server.headers;
-      }
-      setJsonInput(JSON.stringify({ mcpServers: { [server.name]: config } }, null, 2));
-    } else {
-      // Defaults for new server
-      setName("");
-      setType("stdio");
-      setCommand("npx");
-      setArgsString("-y @modelcontextprotocol/server-fetch");
-      setUrl("http://localhost:8000/mcp");
-      setEnvPairs([]);
-      setHeaderPairs([]);
-      setJsonInput(
-        JSON.stringify(
-          {
-            mcpServers: {
-              web_fetch: {
-                transport: "stdio",
-                command: "npx",
-                args: ["-y", "@modelcontextprotocol/server-fetch"],
-              },
-            },
-          },
-          null,
-          2,
-        ),
-      );
-    }
-  }, [server]);
 
   // Load a preset into the form
   const applyPreset = (preset: PresetServer) => {
@@ -327,8 +324,6 @@ export function MCPServerForm({ isOpen, onClose, onSaved, server }: MCPServerFor
       setSaving(false);
     }
   };
-
-  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-xs">

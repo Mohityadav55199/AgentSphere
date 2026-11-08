@@ -32,7 +32,7 @@ pnpm prisma:studio            # Database UI
 
 ## Architecture Overview
 
-This is a Next.js 15 fullstack AI agent chat application using LangGraph.js with Model Context Protocol (MCP) server integration.
+This is a Next.js 16 fullstack AI agent chat application using LangGraph.js with Model Context Protocol (MCP) server integration.
 
 ### Core Agent System
 

@@ -2,7 +2,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
-import type { BaseMessage } from "@langchain/core/messages";
+import { AIMessage, type BaseMessage } from "@langchain/core/messages";
 import type { CouncilAgentSettings } from "./council";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 
@@ -334,7 +334,7 @@ export const DEFAULT_MODEL_PROVIDER = getDefaultProvider();
 export const DEFAULT_MODEL_NAME = getDefaultModel(DEFAULT_MODEL_PROVIDER);
 
 type ToolBindable = {
-  bindTools?: (tools: unknown[]) => unknown;
+  bindTools?: (tools: unknown[], options?: Record<string, unknown>) => unknown;
   withFallbacks?: (args: { fallbacks: unknown[] }) => unknown;
 };
 type Invokable = { invoke: (messages: BaseMessage[]) => Promise<BaseMessage> };
@@ -347,17 +347,22 @@ type Invokable = { invoke: (messages: BaseMessage[]) => Promise<BaseMessage> };
  * therefore silently skipped tool binding (the agent never called any tool). This binds the tools
  * onto the primary model and every fallback, then rebuilds the fallback chain.
  */
-export function bindModelTools(model: BaseChatModel, tools: unknown[]): Invokable {
+export function bindModelTools(
+  model: BaseChatModel,
+  tools: unknown[],
+  options?: Record<string, unknown>,
+): Invokable {
   if (tools.length === 0) return model as unknown as Invokable;
 
   const m = model as unknown as ToolBindable & {
     runnable?: ToolBindable;
     fallbacks?: ToolBindable[];
   };
-  if (typeof m.bindTools === "function") return m.bindTools(tools) as Invokable;
+  if (typeof m.bindTools === "function") return m.bindTools(tools, options) as Invokable;
 
   if (m.runnable && Array.isArray(m.fallbacks)) {
-    const bind = (r: ToolBindable) => (typeof r.bindTools === "function" ? r.bindTools(tools) : r);
+    const bind = (r: ToolBindable) =>
+      typeof r.bindTools === "function" ? r.bindTools(tools, options) : r;
     const primary = bind(m.runnable) as ToolBindable;
     const fallbacks = m.fallbacks.map(bind);
     if (typeof primary.withFallbacks === "function") {
@@ -384,4 +389,39 @@ export function applyToolEdit<T extends { id?: string; args: Record<string, unkn
     return toolCall;
   }
   return { ...toolCall, args: args as Record<string, unknown> };
+}
+
+/** Tool-calling rounds made since the user's latest message, optionally only by one council role. */
+export function countToolRounds(
+  messages: BaseMessage[],
+  isFromRole: (message: BaseMessage) => boolean = () => true,
+): number {
+  let rounds = 0;
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const message = messages[i];
+    const type = (message as { _getType?: () => string })._getType?.();
+    if (type === "human") break;
+    const calls = (message as { tool_calls?: unknown[] }).tool_calls;
+    if (type === "ai" && Array.isArray(calls) && calls.length > 0 && isFromRole(message)) rounds++;
+  }
+  return rounds;
+}
+
+/**
+ * Drop tool calls from a model reply. Used once an agent has spent its tool budget: a tool call
+ * that is never executed would leave the history invalid for every provider.
+ */
+export function withoutToolCalls(message: BaseMessage): BaseMessage {
+  const m = message as AIMessage;
+  const calls = m.tool_calls ?? [];
+  if (calls.length === 0) return message;
+  const text =
+    typeof m.content === "string" && m.content.trim()
+      ? m.content
+      : "I have gathered enough information from the tools above and will continue without further tool calls.";
+  return new AIMessage({
+    id: m.id,
+    content: text,
+    response_metadata: m.response_metadata,
+  });
 }

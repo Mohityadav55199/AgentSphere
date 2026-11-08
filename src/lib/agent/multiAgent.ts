@@ -19,7 +19,8 @@ import {
 } from "@langchain/core/messages";
 import { ToolCall } from "@langchain/core/messages/tool";
 import { DynamicTool } from "@langchain/core/tools";
-import { applyToolEdit, bindModelTools } from "./util";
+import { applyToolEdit, bindModelTools, countToolRounds, withoutToolCalls } from "./util";
+import { withCurrentDate } from "./prompt";
 import type { CouncilAgentSettings, CouncilRole } from "./council";
 
 /** Roles whose model calls may request tools; tool results are routed back to the caller. */
@@ -27,6 +28,12 @@ type ToolCallerRole = "researcher" | "developer" | "analyst";
 const TOOL_CALLERS: readonly ToolCallerRole[] = ["researcher", "developer", "analyst"];
 
 type State = typeof MessagesAnnotation.State;
+
+/**
+ * Tool rounds each specialist may use per user message. Without a cap a model can keep
+ * searching until LangGraph's recursion limit aborts the whole run with an error.
+ */
+export const MAX_TOOL_ROUNDS_PER_ROLE = 3;
 
 function hasToolCalls(message: BaseMessage | undefined): message is AIMessage {
   return (
@@ -114,6 +121,11 @@ export class MultiAgentBuilder {
     this.approveAllTools = approveAllTools || false;
     this.roleModels = roleModels ?? {};
     this.settings = Object.fromEntries((council ?? []).map((c) => [c.id, c]));
+  }
+
+  /** System message for a council role, stamped with today's date. */
+  private system(text: string): SystemMessage {
+    return new SystemMessage(withCurrentDate(text));
   }
 
   private isEnabled(role: CouncilRole): boolean {
@@ -204,7 +216,7 @@ export class MultiAgentBuilder {
       "[ROUTE: DEVELOPER] (for coding, engineering, troubleshooting, or general technical requests)",
     ].filter(Boolean);
 
-    const supervisorPrompt = new SystemMessage(
+    const supervisorPrompt = this.system(
       `You are the 🎯 Orchestration Supervisor of the AgentSphere 5-Agent Council.
 Your council members:
 - 🔍 Researcher: Web retrieval, APIs, documentation search.
@@ -247,10 +259,21 @@ Format:
   }
 
   /**
-   * Helper to safely bind tools to a role's model if supported
+   * Bind a role's tools and enforce its tool budget for this user message. Once spent, the prompt
+   * tells the model to answer now, and any tool calls it still returns are dropped so the history
+   * stays valid. (tool_choice "none" is deliberately not used: Groq rejects the whole request
+   * with a 400 if the model attempts a call anyway.)
    */
-  private getInvoker(role: CouncilRole, tools: DynamicTool[]) {
-    return bindModelTools(this.modelFor(role), tools);
+  private toolBudget(role: ToolCallerRole, state: State, tools: DynamicTool[]) {
+    const used = countToolRounds(state.messages, (m) => roleOf(m) === role);
+    const exhausted = used >= MAX_TOOL_ROUNDS_PER_ROLE;
+    return {
+      invoker: bindModelTools(this.modelFor(role), tools),
+      note: exhausted
+        ? `\n\nYou have already used tools ${used} times for this request. Do not call any more tools: answer now using the results above.`
+        : "",
+      finalize: (response: BaseMessage) => (exhausted ? withoutToolCalls(response) : response),
+    };
   }
 
   /**
@@ -258,9 +281,9 @@ Format:
    * Gathers external intelligence, documentation, and references.
    */
   private async researcherNode(state: State) {
-    const invoker = this.getInvoker("researcher", this.getResearcherTools());
+    const budget = this.toolBudget("researcher", state, this.getResearcherTools());
 
-    const researcherPrompt = new SystemMessage(
+    const researcherPrompt = this.system(
       `You are the 🔍 Lead Researcher in the AgentSphere Council.
 Your role:
 1. Gather necessary facts, documentation, API signatures, or live web data required for the user's goal.
@@ -269,11 +292,11 @@ Your role:
 
 Format your response starting with:
 ### 🔍 Research & Context Findings
-[Your synthesized facts, references, and prerequisites for the Developer and Analyst]${this.directive("researcher")}`,
+[Your synthesized facts, references, and prerequisites for the Developer and Analyst]${this.directive("researcher")}${budget.note}`,
     );
 
-    const response = await invoker.invoke([researcherPrompt, ...state.messages]);
-    return { messages: [tagRole(response, "researcher")] };
+    const response = await budget.invoker.invoke([researcherPrompt, ...state.messages]);
+    return { messages: [tagRole(budget.finalize(response), "researcher")] };
   }
 
   /**
@@ -281,9 +304,9 @@ Format your response starting with:
    * Writes robust code, implementations, and calls system/developer MCP tools.
    */
   private async developerNode(state: State) {
-    const invoker = this.getInvoker("developer", this.getDeveloperTools());
+    const budget = this.toolBudget("developer", state, this.getDeveloperTools());
 
-    const devPrompt = new SystemMessage(
+    const devPrompt = this.system(
       `${this.systemPrompt}
 
 You are the 💻 Principal Software Engineer in the AgentSphere Council.
@@ -294,11 +317,11 @@ Your role:
 
 Format your response starting with:
 ### 💻 Developer Implementation
-[Your detailed implementation, code blocks, and system explanations]${this.directive("developer")}`,
+[Your detailed implementation, code blocks, and system explanations]${this.directive("developer")}${budget.note}`,
     );
 
-    const response = await invoker.invoke([devPrompt, ...state.messages]);
-    return { messages: [tagRole(response, "developer")] };
+    const response = await budget.invoker.invoke([devPrompt, ...state.messages]);
+    return { messages: [tagRole(budget.finalize(response), "developer")] };
   }
 
   /**
@@ -306,9 +329,9 @@ Format your response starting with:
    * Handles quantitative logic, structured data tables, and Mermaid architecture diagrams.
    */
   private async analystNode(state: State) {
-    const invoker = this.getInvoker("analyst", this.getAnalystTools());
+    const budget = this.toolBudget("analyst", state, this.getAnalystTools());
 
-    const analystPrompt = new SystemMessage(
+    const analystPrompt = this.system(
       `You are the 📊 Lead Data Scientist & Architecture Analyst in the AgentSphere Council.
 Your role:
 1. Provide quantitative analysis, statistical reasoning, or performance tradeoffs.
@@ -321,11 +344,11 @@ Your role:
 
 Format your response starting with:
 ### 📊 Data & Architecture Analysis
-[Your quantitative insights, comparison tables, and/or Mermaid visual diagram]${this.directive("analyst")}`,
+[Your quantitative insights, comparison tables, and/or Mermaid visual diagram]${this.directive("analyst")}${budget.note}`,
     );
 
-    const response = await invoker.invoke([analystPrompt, ...state.messages]);
-    return { messages: [tagRole(response, "analyst")] };
+    const response = await budget.invoker.invoke([analystPrompt, ...state.messages]);
+    return { messages: [tagRole(budget.finalize(response), "analyst")] };
   }
 
   /**
@@ -346,7 +369,7 @@ Format your response starting with:
       return { messages: [] };
     }
 
-    const auditorPrompt = new SystemMessage(
+    const auditorPrompt = this.system(
       `You are the 🛡️ Chief Security Auditor & Quality Critic in the AgentSphere Council.
 Your role:
 1. Review all code and proposals produced by the team above.

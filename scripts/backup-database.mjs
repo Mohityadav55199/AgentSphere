@@ -11,7 +11,7 @@
  *   npm run db:backup
  */
 
-import { execSync } from "child_process";
+import { execFileSync } from "child_process";
 import fs from "fs";
 import path from "path";
 import zlib from "zlib";
@@ -39,20 +39,39 @@ console.log(`📁 Backup directory: ${BACKUP_DIR}`);
 // Helper to check if pg_dump is available on the system
 function hasPgDump() {
   try {
-    execSync("pg_dump --version", { stdio: "ignore" });
+    execFileSync("pg_dump", ["--version"], { stdio: "ignore" });
     return true;
   } catch {
     return false;
   }
 }
 
+/**
+ * Prisma-only query parameters (e.g. `?schema=public` from .env.example) make pg_dump fail with
+ * "invalid URI query parameter", so drop them before handing the URL to libpq.
+ */
+function toLibpqUrl(url) {
+  try {
+    const parsed = new URL(url);
+    for (const key of ["schema", "connection_limit", "pool_timeout", "pgbouncer"]) {
+      parsed.searchParams.delete(key);
+    }
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
 if (hasPgDump()) {
   console.log("📦 Found pg_dump. Performing full database dump...");
   try {
-    // Run pg_dump directly with connection string
-    execSync(`pg_dump "${DATABASE_URL}" --no-owner --no-acl --file="${sqlFilePath}"`, {
-      stdio: "inherit",
-    });
+    // Arguments are passed directly (no shell), so passwords with quotes or $ cannot break the
+    // command or be interpreted by the shell.
+    execFileSync(
+      "pg_dump",
+      [toLibpqUrl(DATABASE_URL), "--no-owner", "--no-acl", `--file=${sqlFilePath}`],
+      { stdio: "inherit" },
+    );
 
     console.log("🗜️ Compressing backup with gzip...");
     const fileContents = fs.readFileSync(sqlFilePath);

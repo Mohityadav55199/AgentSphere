@@ -17,8 +17,8 @@ export function buildOpenApiDocument() {
       title: "AgentSphere API",
       version: "0.1.0",
       description:
-        "HTTP API for the fullstack LangGraph.js agent template: chat streaming, " +
-        "thread management, MCP server configuration, file uploads, and OAuth.",
+        "HTTP API for AgentSphere: chat streaming, authentication, thread management, " +
+        "MCP server configuration, file uploads, and OAuth.",
     },
     servers: [{ url: "/", description: "This deployment" }],
   });

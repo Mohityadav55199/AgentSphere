@@ -183,9 +183,11 @@ export const UISettingsProvider = ({ children }: UISettingsProviderProps) => {
     };
   }, []);
 
-  // Sync settings from localStorage after client hydration
+  // Sync settings from localStorage after client hydration. This must run in an effect: reading
+  // localStorage during render would make the first client render differ from the server HTML.
   useEffect(() => {
     const saved = loadSettings();
+    /* eslint-disable react-hooks/set-state-in-effect -- one-time hydration from localStorage */
     if (typeof saved.provider === "string") setProviderState(saved.provider);
     if (typeof saved.model === "string") {
       const sanitized =
@@ -216,6 +218,7 @@ export const UISettingsProvider = ({ children }: UISettingsProviderProps) => {
     if (saved.agentMode === "single" || saved.agentMode === "multi") {
       setAgentModeState(saved.agentMode);
     }
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
 
   const toggleToolMessages = () => setHideToolMessages((prev) => !prev);

@@ -3,7 +3,7 @@ import { Command, MemorySaver } from "@langchain/langgraph";
 import { AIMessage, ToolMessage, type BaseMessage } from "@langchain/core/messages";
 import { DynamicTool } from "@langchain/core/tools";
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
-import { MultiAgentBuilder } from "@/lib/agent/multiAgent";
+import { MAX_TOOL_ROUNDS_PER_ROLE, MultiAgentBuilder } from "@/lib/agent/multiAgent";
 import { normalizeCouncilSettings, type CouncilRole } from "@/lib/agent/council";
 
 type Responder = (messages: BaseMessage[]) => AIMessage;
@@ -156,5 +156,44 @@ describe("MultiAgentBuilder", () => {
     expect(calls).toEqual(["supervisor", "researcher", "researcher", "developer", "auditor"]);
     const reply = result.messages.find((m: BaseMessage) => m instanceof ToolMessage);
     expect(reply?.content).toBe("The user denied permission.");
+  });
+
+  // Regression: a Researcher that keeps searching used to hit LangGraph's recursion limit and
+  // abort the whole run with an error.
+  it("caps a specialist's tool rounds and still finishes with a valid history", async () => {
+    let n = 0;
+    const alwaysSearch: Responder = () =>
+      new AIMessage({
+        content: "",
+        tool_calls: [{ id: `call_${++n}`, name: "web_search", args: { input: "more" } }],
+      });
+    const { model, calls } = fakeModel({
+      supervisor: () => new AIMessage("plan\n[ROUTE: RESEARCHER]"),
+      researcher: alwaysSearch,
+    });
+    const graph = new MultiAgentBuilder({
+      llm: model,
+      tools: [webSearch],
+      prompt: "base",
+      checkpointer: new MemorySaver(),
+      approveAllTools: true,
+    }).build();
+
+    const result = await graph.invoke(
+      { messages: [{ role: "user", content: "hi" }] },
+      { ...config("f"), recursionLimit: 100 },
+    );
+
+    expect(calls.filter((c) => c === "researcher")).toHaveLength(MAX_TOOL_ROUNDS_PER_ROLE + 1);
+    expect(calls.slice(-2)).toEqual(["developer", "auditor"]);
+    const toolMessages = result.messages.filter(
+      (m: BaseMessage) => m instanceof ToolMessage,
+    ) as ToolMessage[];
+    expect(toolMessages).toHaveLength(MAX_TOOL_ROUNDS_PER_ROLE);
+    // Every tool call left in the history has a matching tool result.
+    const answered = new Set(toolMessages.map((m) => m.tool_call_id));
+    for (const m of result.messages as BaseMessage[]) {
+      for (const tc of (m as AIMessage).tool_calls ?? []) expect(answered.has(tc.id!)).toBe(true);
+    }
   });
 });

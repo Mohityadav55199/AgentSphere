@@ -12,7 +12,11 @@ import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { SystemMessage, ToolMessage, ContentBlock } from "@langchain/core/messages";
 import { ToolCall } from "@langchain/core/messages/tool";
 import { DynamicTool } from "@langchain/core/tools";
-import { applyToolEdit, bindModelTools } from "./util";
+import { applyToolEdit, bindModelTools, countToolRounds, withoutToolCalls } from "./util";
+
+/** Tool rounds the single agent may use per user message before it must answer. */
+export const MAX_TOOL_ROUNDS = 8;
+import { withCurrentDate } from "./prompt";
 
 export class AgentBuilder {
   private toolNode: ToolNode;
@@ -126,14 +130,23 @@ export class AgentBuilder {
     if (!this.model) {
       throw new Error("Invalid or missing language model (llm)");
     }
+    // Tool budget per user message. Tools stay bound (Groq rejects tool_choice "none" with a 400
+    // when the model still tries a call); the note asks it to answer and extra calls are dropped.
+    // The note goes into the one leading system message: Anthropic and Gemini reject system
+    // messages anywhere else.
+    const exhausted = countToolRounds(state.messages) >= MAX_TOOL_ROUNDS;
+    const budgetNote = exhausted
+      ? "\n\nYou have used the maximum number of tool calls for this request. Do not call any more tools: answer now using the results above."
+      : "";
     const messages = [
       // Add always system prompt so it is not duplicated in the messages
-      new SystemMessage(this.systemPrompt),
+      new SystemMessage(withCurrentDate(this.systemPrompt + budgetNote)),
       ...state.messages,
     ];
     const modelInvoker = bindModelTools(this.model, this.tools);
     const response = await modelInvoker.invoke(messages);
-    return { messages: response };
+    // Over budget: never leave an unexecuted tool call in the history.
+    return { messages: exhausted ? withoutToolCalls(response) : response };
   }
 
   build() {
