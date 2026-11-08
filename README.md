@@ -1,154 +1,164 @@
-# ⚡ AgentSphere - Next-Gen Autonomous AI Agent Platform
+# AgentSphere
 
 [![CI](https://github.com/Mohityadav55199/AgentSphere/actions/workflows/ci.yml/badge.svg)](https://github.com/Mohityadav55199/AgentSphere/actions/workflows/ci.yml)
 
-> **AgentSphere** is a state-of-the-art fullstack AI Agent application built with Next.js 16, React 19, LangGraph.js, Prisma, and Model Context Protocol (MCP). It features interactive agent personas, voice-to-text, text-to-speech read aloud, temperature tuning, drag-and-drop file uploads, and 1-click Markdown export.
+A full-stack AI agent chat app built with **Next.js 16, React 19, TypeScript and LangGraph.js**. It streams
+answers from multiple LLM providers, can run a **5-agent "council"** (Supervisor, Researcher, Developer,
+Analyst, Auditor) instead of a single agent, and uses tools — built-in web search and any
+**Model Context Protocol (MCP)** server — behind a **human-in-the-loop approval** step.
+
+| Live demo                                                             | Notes                                                     |
+| --------------------------------------------------------------------- | --------------------------------------------------------- |
+| [agent-sphere-self.vercel.app](https://agent-sphere-self.vercel.app/) | Vercel                                                    |
+| [agentsphere.onrender.com](https://agentsphere.onrender.com/)         | Render free tier: the first request after idle takes ~50s |
+
+<!-- Add a screenshot or short GIF of the app here, e.g. ![AgentSphere](docs/screenshots/chat.png) -->
 
 ---
 
-## 🌐 Live Demos
+## Features
 
-| Platform   | Status  | Live Link                                                                     |
-| ---------- | ------- | ----------------------------------------------------------------------------- |
-| **Vercel** | 🟢 Live | [https://agent-sphere-self.vercel.app](https://agent-sphere-self.vercel.app/) |
-| **Render** | 🟢 Live | [https://agentsphere.onrender.com](https://agentsphere.onrender.com/)         |
+**Chat & agents**
 
----
+- Streaming responses (Server-Sent Events) from **Groq, Google Gemini, OpenAI or Anthropic**, with automatic
+  fallback to another configured provider when one fails or is rate-limited.
+- **Single-agent mode** with selectable personas and custom system instructions, or **5-agent council mode**:
+  a Supervisor plans and routes to a Researcher, Developer or Analyst, and an Auditor reviews the result.
+- **Agent Studio**: switch council roles on/off, and set each role's temperature and extra instructions.
+- **Tool approval**: the agent pauses before running a tool; you can allow it, deny it, or **edit its
+  arguments** first. Built-in `web_search` (DuckDuckGo, or Tavily with an API key) plus tools from MCP servers.
+- Renders Markdown, code blocks (copy / download) and **Mermaid diagrams**.
 
-## ✨ Features at a Glance
+**App**
 
-### ⚡ Powered by Multi-Provider LLM & Fast Inference
-
-- Integrated with **Groq**, **Google Gemini**, **OpenAI**, and **Anthropic**.
-- Real-time Server-Sent Events (SSE) streaming for zero-latency AI responses.
-
-### 🎭 Specialized Agent Personas & System Instructions
-
-- **✨ General Assistant**: Everyday tasks and general Q&A.
-- **💻 Senior Developer**: Production-ready code, architecture, and bug fixes.
-- **📊 Data Scientist**: Quantitative logic, statistics, and data insights.
-- **✍️ Content Strategist**: Persuasive copywriting, emails, and social content.
-- **🛡️ Security Auditor**: Security reviews, vulnerability scans, and OWASP compliance.
-- Customizable **System Instructions** text input to tune agent prompts on the fly.
-
-### 🎛️ Real-Time Temperature Control
-
-- Fine-tune model creativity from `0.0` (_Precise & Deterministic_) to `1.0` (_Creative & Diverse_).
-
-### 🌙 Dark & Light Mode Theme Switcher
-
-- Seamless 1-click theme toggling with Sun/Moon icons and persistent preference memory.
-
-### 🔊 Text-to-Speech & 🎙️ Voice Input
-
-- **Voice-to-Text**: Dictate prompts using the Web Speech API with an active recording pulse indicator.
-- **Read Aloud**: Listen to AI responses hands-free using browser Web Speech Synthesis.
-
-### 📊 Real-Time Response Analytics
-
-- Automatic **Word Count** and **Estimated Reading Time** displayed on every AI response bubble.
-
-### 📁 Drag-and-Drop File Upload Overlay
-
-- Visual glassmorphic dropzone overlay when dragging images, PDFs, or documents onto the chat window.
-
-### 📥 1-Click Chat Export (Markdown `.md`)
-
-- Export complete conversation history as cleanly formatted Markdown files.
-
-### 👥 5-Agent Autonomous Council Architecture
-
-AgentSphere is powered by a genuine **5-Agent Council** orchestrating via LangGraph, replacing monolithic prompts with specialized autonomous roles:
-
-1. 🎯 **Orchestration Supervisor (_The Strategist_)**: Evaluates complexity, decomposes objectives into execution DAGs, tracks state, and routes to specialists.
-2. 🔍 **Lead Researcher (_The Knowledge Engine_)**: Hunts live web data, documentation, and external APIs using search/fetch MCP tools without polluting the developer's context.
-3. 💻 **Principal Developer (_The Builder_)**: Specializes in clean, modular code, TypeScript typing, database queries, and filesystem interactions.
-4. 📊 **Data & Architecture Analyst (_The Insight Engine_)**: Delivers quantitative reasoning, structured comparisons, and auto-generates visual **Mermaid.js diagrams**.
-5. 🛡️ **Chief Security Auditor (_The Critic & Verifier_)**: Zero-trust code review scanning for OWASP top 10 vulnerabilities, edge cases, and hallucinations before synthesizing final delivery.
-6. 🚦 **Human-in-the-Loop Safety Governor**: Intercepts high-risk MCP tool calls for user confirmation before execution.
-
-#### 💡 Why 5+ Agents are Architecturally Justified:
-
-- **Zero Context Pollution**: Web scrapes and noisy tool outputs stay in the Researcher's context; the Developer receives only distilled specifications.
-- **Elimination of Self-Validation Bias**: The Auditor operates with an adversarial prompt to catch bugs that the Developer's forward pass misses.
-- **Higher Tool Accuracy (>98%)**: Scoping specific MCP tools to specific worker agents prevents tool confusion when 20+ MCP functions are bound.
-
-### 🛠️ Model Context Protocol (MCP) Server Studio
-
-- Access MCP server configuration anywhere directly from the top navigation bar with live tool count badges.
-- **Visual Creation Form**: Configure local STDIO CLI commands or remote HTTP/SSE servers with key-value environment and header editors.
-- **1-Click MCP Presets**: Instantly connect popular MCP servers:
-  - 🌐 **Fetch MCP**: Read and scrape live web pages into markdown.
-  - 🗄️ **SQLite MCP**: Execute SQL queries and inspect databases.
-  - 🧠 **Memory MCP**: Knowledge graph entity memory.
-  - 📁 **Filesystem MCP**: Safe file inspection and reading.
-  - 🔍 **Brave Search MCP**: Live web search API.
-  - ☁️ **Remote HTTP / SSE MCP**: Custom remote endpoints.
-- **Claude Desktop & Cursor Compatible**: Import or export raw JSON configs with auto-formatting and instant validation.
-- **Human-in-the-Loop Governance**: Real-time allow/deny approval controls before tools execute.
+- Accounts (email + password) with per-user chat history; guests get private chats tied to their browser.
+- Thread sidebar with search, pinning, rename and automatic titles.
+- File attachments (images, PDF, Markdown/text) stored in S3-compatible storage (MinIO locally).
+- Voice input and read-aloud (Web Speech API), dark mode, export to Markdown / JSON / print.
+- MCP server manager (HTTP and local stdio servers, presets, JSON import, OAuth for protected servers).
+- OpenAPI 3.1 spec at `/api/openapi` and interactive docs at `/api-docs`.
 
 ---
 
-## 🛠️ Tech Stack
+## Architecture
 
-- **Frontend**: Next.js 16, React 19, TypeScript, Tailwind CSS v4, Lucide Icons, UIW Markdown Editor.
-- **AI Engine**: LangGraph.js, `@langchain/google-genai`, `@langchain/openai`, `@langchain/anthropic`.
-- **Backend & Database**: Node.js, Prisma ORM, PostgreSQL (`NeonDB`).
-- **Audio & Media**: Web Speech API (`SpeechRecognition` & `SpeechSynthesis`).
+```mermaid
+flowchart LR
+  UI["Next.js / React UI<br/>(TanStack Query)"] -- "POST /api/agent/stream<br/>(SSE response)" --> API["Route handlers<br/>(Node.js runtime)"]
+  API --> SVC["agentService"]
+  SVC --> G{"LangGraph graph"}
+  G -- "single mode" --> A["agent → tool_approval → tools"]
+  G -- "council mode" --> C["Supervisor → Researcher / Developer / Analyst → Auditor"]
+  A --> LLM["LLM providers<br/>(Groq · Gemini · OpenAI · Anthropic)"]
+  C --> LLM
+  A --> T["Tools: web_search + MCP servers"]
+  C --> T
+  G -- "checkpoints (conversation memory)" --> PG[("PostgreSQL")]
+  API -- "Prisma: users, threads, MCP config" --> PG
+  API -- "uploads" --> S3[("S3 / MinIO")]
+```
+
+- **Conversation state** lives in LangGraph's Postgres checkpointer; Prisma stores users, thread metadata and
+  MCP server configuration.
+- **Tool approval** uses LangGraph `interrupt()`; the UI resumes the graph with a `Command` carrying
+  _allow_, _deny_ or _edited arguments_.
+- **Streaming** is a POST request whose response is an SSE stream, read by a small client parser
+  (`src/services/sseClient.ts`), so long and non-ASCII messages are not limited by URL length.
+
+More detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · [docs/API.md](docs/API.md) ·
+[docs/OAUTH.md](docs/OAUTH.md) · [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md)
 
 ---
 
-## 🚀 Quick Start
+## Engineering notes
 
-### Prerequisites
+Things I worked through that are worth calling out:
 
-- **Node.js**: v18 or higher
-- **API Keys**: Google Gemini API Key or Groq API Key
+- **Council routing with tools.** Any specialist that requests a tool goes through approval → tools → back to
+  _that same_ specialist. Routing a Researcher's tool call straight to the next agent leaves an unanswered tool
+  call in the history, which every provider rejects. Disabled roles are not added to the graph at all.
+- **Tools + provider fallback.** A fallback-wrapped model has no `bindTools`, so tools have to be bound to the
+  primary model and to each fallback before the chain is rebuilt; otherwise tools silently stop working.
+- **Security on a public demo.**
+  - Thread ownership checks for every read/write; guest chats are isolated with an httpOnly cookie.
+  - Session tokens are HMAC-signed and require `JWT_SECRET` in production; passwords use scrypt.
+  - stdio MCP servers (arbitrary shell commands) are disabled in production, and HTTP MCP URLs pointing at
+    private/loopback/metadata addresses are rejected (SSRF).
+  - Rate limits on login, sign-up and chat; LLM Markdown is sanitized (`rehype-sanitize`); Mermaid runs in
+    strict mode; the MCP OAuth callback verifies a `state` cookie.
+- **Free-tier hosting.** No cron jobs or keep-alive pings; the "server is waking up" banner polls only while the
+  server is down, so an idle tab never keeps the Render instance awake.
 
-### 1. Clone Repository
+---
+
+## Tech stack
+
+| Area     | Tools                                                                                         |
+| -------- | --------------------------------------------------------------------------------------------- |
+| Frontend | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS v4, TanStack Query                |
+| AI       | LangGraph.js, LangChain providers, MCP (`@langchain/mcp-adapters`), optional Langfuse tracing |
+| Backend  | Next.js route handlers, Prisma, PostgreSQL (Neon in production), Zod + OpenAPI 3.1            |
+| Storage  | S3-compatible object storage (MinIO locally)                                                  |
+| Quality  | Vitest (74 tests), ESLint, Prettier, GitHub Actions CI, Dependabot                            |
+| Hosting  | Render and Vercel                                                                             |
+
+---
+
+## Running locally
+
+**Requirements:** Node.js 20.9+, pnpm (via `corepack enable`), Docker (for Postgres + MinIO), and at least one
+LLM API key (Groq and Google Gemini both have free tiers).
 
 ```bash
 git clone https://github.com/Mohityadav55199/AgentSphere.git
 cd AgentSphere
+corepack enable
+pnpm install
+
+cp .env.example .env          # then fill in at least one API key and JWT_SECRET
+docker compose up -d          # Postgres on :5434, MinIO on :9000 (console :9001)
+pnpm exec prisma db push      # create the tables
+pnpm dev                      # http://localhost:3000
 ```
 
-### 2. Install Dependencies
+Key environment variables (see [.env.example](.env.example) for all of them):
 
-```bash
-npm install
-```
+| Variable                                                                   | Purpose                                                    |
+| -------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `DATABASE_URL`                                                             | PostgreSQL connection string                               |
+| `GROQ_API_KEY` / `GOOGLE_API_KEY` / `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | LLM providers (any one is enough)                          |
+| `JWT_SECRET`                                                               | Signs session cookies; **required in production**          |
+| `S3_*`                                                                     | Upload storage (MinIO defaults work with `docker compose`) |
+| `MCP_ALLOW_STDIO`                                                          | Allow local stdio MCP servers in production (default off)  |
 
-### 3. Environment Setup
-
-Create a `.env` file in the project root:
-
-```env
-DATABASE_URL="postgresql://<user>:<password>@<host>/<dbname>?sslmode=require"
-GOOGLE_GENERATIVE_AI_API_KEY="your_gemini_api_key_here"
-GROQ_API_KEY="gsk_your_groq_api_key_here"
-```
-
-### 4. Initialize Database
-
-```bash
-npx prisma db push
-```
-
-### 5. Run Development Server
-
-```bash
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) in your browser to experience **AgentSphere**!
+| Command                                              | What it does                   |
+| ---------------------------------------------------- | ------------------------------ |
+| `pnpm dev`                                           | Development server (Turbopack) |
+| `pnpm build` / `pnpm start`                          | Production build / server      |
+| `pnpm test`                                          | Unit and integration tests     |
+| `pnpm lint` · `pnpm typecheck` · `pnpm format:check` | Static checks                  |
 
 ---
 
-## ⚡ Render Free Tier Cold-Start Handling
+## Known limitations
 
-When deployed on Render's free tier, the instance spins down automatically during periods of inactivity to conserve your 750 free monthly instance hours:
+- Rate limits are kept in memory, which is fine for one instance but not shared across several.
+- MCP server configuration is global: any signed-in user can change it.
+- Token and cost figures under each answer are estimates from text length, not provider usage data.
+- On free LLM tiers, council mode (several model calls per message) can hit per-minute token limits.
 
-- **Free Tier Wake-up Banner**: Embedded across all screens to notify visitors of cold-start wake-up times (~30-50s) with live status polling.
-- **Resource Preserving**: The server sleeps when idle so your free tier hours last the entire month without premature depletion.
-- **No Keep-Alive Traffic**: There are no cron jobs, GitHub Actions, or scheduled pings. The banner polls `/api/health` only while the server is waking, then stops, and re-checks once when you come back to the tab, so an idle open tab never keeps the instance awake.
-- **Free Plan Config**: [render.yaml](render.yaml) deploys a single `plan: free` web service with no cron or worker services.
+---
+
+## Acknowledgements
+
+AgentSphere started from the open-source
+[fullstack-langgraph-nextjs-agent](https://github.com/agentailor/fullstack-langgraph-nextjs-agent) template
+(MIT License, Copyright (c) 2025 Ali Ibrahim Jr), which provided the base single-agent graph with tool
+approval, MCP loading and OAuth, Postgres-backed memory, SSE streaming, file uploads, Langfuse and the
+OpenAPI setup. On top of it I built the accounts and guest isolation, the 5-agent council and Agent Studio,
+multi-provider support with fallback, web search, Mermaid/Markdown rendering, voice, export, the security
+hardening, the POST streaming client, the test suite and CI, and the Render/Vercel deployment.
+
+---
+
+Built by [Mohit Yadav](https://github.com/Mohityadav55199).

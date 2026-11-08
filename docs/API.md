@@ -1,8 +1,13 @@
 # API Documentation (OpenAPI)
 
+> **Note:** This document comes from the [upstream template](https://github.com/agentailor/fullstack-langgraph-nextjs-agent) and covers the parts AgentSphere inherited from it. For what AgentSphere adds (accounts, 5-agent council, POST streaming, security hardening), see the [README](../README.md).
+
 The template ships a machine-readable **OpenAPI 3.1** spec and an interactive explorer so you
 can see the full HTTP API surface at a glance — and so adopters can expose their own endpoints in
 the same shape.
+
+The chat stream is `POST /api/agent/stream` (JSON body, SSE response). The older `GET` form with query
+parameters is still documented for compatibility.
 
 ## Where to find it
 

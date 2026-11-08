@@ -1,5 +1,7 @@
 # 🏗️ Architecture Documentation
 
+> **Note:** This document comes from the [upstream template](https://github.com/agentailor/fullstack-langgraph-nextjs-agent) and covers the parts AgentSphere inherited from it. For what AgentSphere adds (accounts, 5-agent council, POST streaming, security hardening), see the [README](../README.md).
+
 This document provides a comprehensive overview of the LangGraph.js AI Agent Template architecture, designed to help developers understand the system's design patterns and extend functionality.
 
 ## 📋 Table of Contents

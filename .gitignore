@@ -57,3 +57,9 @@ prisma/*.db
 *.sql
 *.sql.gz
 
+
+# Personal study notes (kept locally, not published)
+/docs/agentsphere-study-guide/
+
+# pnpm is the package manager (pnpm-lock.yaml); don't commit an npm lockfile
+package-lock.json

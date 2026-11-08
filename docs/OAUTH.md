@@ -1,5 +1,7 @@
 # OAuth Support for MCP HTTP Servers
 
+> **Note:** This document comes from the [upstream template](https://github.com/agentailor/fullstack-langgraph-nextjs-agent) and covers the parts AgentSphere inherited from it. For what AgentSphere adds (accounts, 5-agent council, POST streaming, security hardening), see the [README](../README.md).
+
 Some MCP HTTP servers require OAuth 2.0/2.1 authentication. This document explains how OAuth is implemented in this template.
 
 ## Overview
