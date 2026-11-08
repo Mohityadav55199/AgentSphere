@@ -72,12 +72,17 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.7",
-    "@shadcn/ui": "^0.0.4",
     "eslint": "^10.14.0",
     "eslint-config-next": "16.4.5",
     "prettier": "^3.9.10",
     "prettier-plugin-tailwindcss": "^0.8.1",
-    "vitest": "^3.2.7"
+    "vitest": "^4.1.12"
   },
-  "packageManager": "pnpm@10.33.0"
+  "packageManager": "pnpm@10.33.0",
+  "overrides": {
+    "@opentelemetry/propagator-jaeger": "^2.9.0",
+    "deepmerge-ts": "^8.0.0",
+    "katex": "^0.18.2",
+    "postcss-selector-parser": "^6.1.5"
+  }
 }
