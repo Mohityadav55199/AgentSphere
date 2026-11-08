@@ -99,7 +99,7 @@ Things I worked through that are worth calling out:
 | AI       | LangGraph.js, LangChain providers, MCP (`@langchain/mcp-adapters`), optional Langfuse tracing |
 | Backend  | Next.js route handlers, Prisma, PostgreSQL (Neon in production), Zod + OpenAPI 3.1            |
 | Storage  | S3-compatible object storage (MinIO locally)                                                  |
-| Quality  | Vitest (77 tests), ESLint, Prettier, GitHub Actions CI, Dependabot                            |
+| Quality  | Vitest (81 tests), ESLint, Prettier, GitHub Actions CI, Dependabot                            |
 | Hosting  | Render and Vercel                                                                             |
 
 ---
