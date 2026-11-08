@@ -3,6 +3,7 @@ import { streamResponse } from "@/services/agentService";
 import type { MessageResponse, FileAttachment } from "@/types/message";
 import { getCurrentUser } from "@/lib/auth";
 import { checkThreadAccess } from "@/lib/thread";
+import { getClientIp, rateLimit } from "@/lib/rate-limit";
 import { getGuestId, getOrCreateGuestId } from "@/lib/guest";
 
 const MAX_CONTENT_LENGTH = 20_000;
@@ -66,6 +67,12 @@ export async function GET(req: NextRequest) {
     } catch (error) {
       console.error("Failed to parse attachments:", error);
     }
+  }
+
+  // Every request spends LLM API credits, so cap how fast one client can fire them.
+  const limit = rateLimit(`stream:ip:${getClientIp(req)}`, 30, 60 * 1000);
+  if (!limit.ok) {
+    return sseError(`Too many requests. Please wait ${limit.retryAfter}s and try again.`);
   }
 
   // Without a thread id, every such request would share one checkpoint ("unknown").

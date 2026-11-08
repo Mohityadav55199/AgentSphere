@@ -1,8 +1,19 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/database/prisma";
 import { verifyPassword, signToken, COOKIE_NAME, sessionCookieOptions } from "@/lib/auth";
+import { getClientIp, rateLimit } from "@/lib/rate-limit";
+
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 
 export async function POST(req: Request) {
+  const ip = getClientIp(req);
+  const ipLimit = rateLimit(`login:ip:${ip}`, 30, LOGIN_WINDOW_MS);
+  if (!ipLimit.ok)
+    return NextResponse.json(
+      { error: "Too many attempts. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(ipLimit.retryAfter) } },
+    );
+
   try {
     let body;
     try {
@@ -16,6 +27,18 @@ export async function POST(req: Request) {
     if (typeof email !== "string" || typeof password !== "string" || !email || !password) {
       return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
     }
+
+    // Brute-force guard for a single account, independent of the IP-wide limit above.
+    const accountLimit = rateLimit(
+      `login:acct:${ip}:${email.toLowerCase().trim()}`,
+      8,
+      LOGIN_WINDOW_MS,
+    );
+    if (!accountLimit.ok)
+      return NextResponse.json(
+        { error: "Too many attempts. Please try again later." },
+        { status: 429, headers: { "Retry-After": String(accountLimit.retryAfter) } },
+      );
 
     const user = await prisma.user.findUnique({
       where: { email: email.toLowerCase().trim() },

@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { randomUUID } from "crypto";
 import prisma from "@/lib/database/prisma";
+import { getCurrentUser } from "@/lib/auth";
+import { oauthStateCookie, oauthStateCookieOptions } from "@/lib/mcp/oauth-state";
 import {
   detectOAuthRequirement,
   updateServerOAuthStatus,
@@ -38,6 +41,19 @@ export async function GET(
   { params }: { params: Promise<{ serverId: string }> },
 ): Promise<NextResponse<CheckOAuthResponse>> {
   const { serverId } = await params;
+
+  if (!(await getCurrentUser())) {
+    return NextResponse.json(
+      {
+        serverId,
+        requiresAuth: false,
+        connected: false,
+        oauthStatus: OAuthStatus.UNKNOWN,
+        error: "Sign in to connect MCP servers",
+      },
+      { status: 401 },
+    );
+  }
 
   // Fetch HTTP server from database (only HTTP servers can use OAuth)
   console.log(`[OAuth API] Fetching server with id: ${serverId} from database...`);
@@ -156,22 +172,27 @@ export async function GET(
     }
 
     // Start authorization and get the URL
+    // `state` binds the callback to this browser; the callback rejects a mismatch (login CSRF).
+    const state = randomUUID();
     const { authorizationUrl, codeVerifier } = await startAuthorization(authServerUrl, {
       metadata,
       clientInformation: clientInfo,
       redirectUrl: authProvider.redirectUrl,
+      state,
     });
 
     // Save code verifier for the callback
     await authProvider.saveCodeVerifier(codeVerifier);
 
-    return NextResponse.json({
+    const res = NextResponse.json({
       serverId,
       requiresAuth: true,
       connected: false,
       oauthStatus: OAuthStatus.REQUIRED,
       authorizationUrl: authorizationUrl.toString(),
     });
+    res.cookies.set(oauthStateCookie(serverId), state, oauthStateCookieOptions());
+    return res;
   } catch (error) {
     console.error("[OAuth API] Error:", error);
     return NextResponse.json({

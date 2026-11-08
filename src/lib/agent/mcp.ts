@@ -110,6 +110,18 @@ export async function createMCPClient(): Promise<MultiServerMCPClient | null> {
 
 type SanitizedTool = ReturnType<typeof sanitizeTool>;
 let mcpToolsCache: { tools: SanitizedTool[]; ts: number } | null = null;
+let mcpToolsVersion = 0;
+
+/** Call after MCP server rows change so the next agent run reloads tools instead of using stale ones. */
+export function invalidateMCPToolsCache() {
+  mcpToolsCache = null;
+  mcpToolsVersion++;
+}
+
+/** Changes whenever the tool set may have changed; used as part of the agent cache key. */
+export function getMCPToolsVersion() {
+  return mcpToolsVersion;
+}
 const MCP_CACHE_TTL_MS = 60_000; // 60 seconds
 
 const MCP_TOOL_TIMEOUT_MS = 30_000; // 30s execution timeout per tool
@@ -135,21 +147,22 @@ export async function getMCPTools() {
     const tools = await client.getTools();
     const sanitizedTools = tools.map((tool) => {
       const sanitized = sanitizeTool(tool);
-      // Attach 30-second execution timeout guard
+      // Attach 30-second execution timeout guard. LangGraph's ToolNode runs tools through
+      // `invoke`, so that is what must be wrapped (the deprecated `call` is never used).
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const originalCall = (sanitized as any).call?.bind(sanitized);
-      if (originalCall) {
+      const originalInvoke = (sanitized as any).invoke?.bind(sanitized);
+      if (originalInvoke) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (sanitized as any).call = async (arg: any, config?: any) => {
+        (sanitized as any).invoke = async (arg: any, config?: any) => {
           let timer: NodeJS.Timeout | undefined;
-          const timeoutPromise = new Promise((_, reject) => {
+          const timeoutPromise = new Promise<never>((_, reject) => {
             timer = setTimeout(
               () => reject(new Error(`MCP tool '${sanitized.name}' execution timed out after 30s`)),
               MCP_TOOL_TIMEOUT_MS,
             );
           });
           try {
-            return await Promise.race([originalCall(arg, config), timeoutPromise]);
+            return await Promise.race([originalInvoke(arg, config), timeoutPromise]);
           } finally {
             if (timer) clearTimeout(timer);
           }

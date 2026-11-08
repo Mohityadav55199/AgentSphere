@@ -116,7 +116,7 @@ export const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code }) => {
         }
 
         // Dynamically import Mermaid from CDN to prevent heavy SSR bundle overhead
-        const cdnUrl = "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+        const cdnUrl = "https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.esm.min.mjs";
         const importDynamic = new Function("url", "return import(url)");
         const mermaidModule = await importDynamic(cdnUrl);
         const mermaid = mermaidModule.default || mermaidModule;
@@ -125,7 +125,7 @@ export const MermaidRenderer: React.FC<MermaidRendererProps> = ({ code }) => {
           startOnLoad: false,
           suppressErrorRendering: true,
           theme: theme === "dark" ? "dark" : "neutral",
-          securityLevel: "loose",
+          securityLevel: "strict", // diagram text comes from an LLM, so never allow HTML/click handlers
           fontFamily: "inherit",
         });
 

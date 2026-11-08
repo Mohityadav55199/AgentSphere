@@ -1,10 +1,18 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/database/prisma";
 import { hashPassword, signToken, COOKIE_NAME, sessionCookieOptions } from "@/lib/auth";
+import { getClientIp, rateLimit } from "@/lib/rate-limit";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(req: Request) {
+  const limit = rateLimit(`register:ip:${getClientIp(req)}`, 10, 60 * 60 * 1000);
+  if (!limit.ok)
+    return NextResponse.json(
+      { error: "Too many attempts. Please try again later." },
+      { status: 429, headers: { "Retry-After": String(limit.retryAfter) } },
+    );
+
   try {
     let body;
     try {

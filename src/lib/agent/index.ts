@@ -7,7 +7,7 @@ import {
   DEFAULT_MODEL_NAME,
   DEFAULT_MODEL_PROVIDER,
 } from "./util";
-import { getMCPTools } from "./mcp";
+import { getMCPTools, getMCPToolsVersion } from "./mcp";
 import { AgentBuilder } from "./builder";
 import { MultiAgentBuilder } from "./multiAgent";
 
@@ -101,6 +101,8 @@ export async function ensureAgent(cfg?: AgentConfigOptions) {
     temperature: cfg?.temperature,
     systemPrompt: cfg?.systemPrompt,
     agentMode: cfg?.agentMode || "single",
+    // Rebuild when MCP servers were added/changed so the agent does not keep stale tools.
+    mcpVersion: getMCPToolsVersion(),
   });
 
   if (!agentCache || agentCache.key !== key) {

@@ -4,6 +4,8 @@ import { ServerOAuthProvider } from "@/lib/mcp/oauth-provider";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import { OAuthStatus } from "@/lib/mcp/oauth-detection";
 import { getAppUrl } from "@/lib/config/app-url";
+import { getCurrentUser } from "@/lib/auth";
+import { oauthStateCookie, oauthStateCookieOptions } from "@/lib/mcp/oauth-state";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -21,6 +23,17 @@ export async function GET(
   const { serverId } = await params;
   const { searchParams } = new URL(request.url);
   const appUrl = getAppUrl();
+
+  if (!(await getCurrentUser())) {
+    return NextResponse.redirect(new URL("/?oauth_error=sign_in_required", appUrl));
+  }
+
+  // The state must match the cookie set when this flow was started from this browser.
+  const expectedState = request.cookies.get(oauthStateCookie(serverId))?.value;
+  const returnedState = searchParams.get("state");
+  if (!expectedState || !returnedState || expectedState !== returnedState) {
+    return NextResponse.redirect(new URL("/?oauth_error=invalid_state", appUrl));
+  }
 
   const code = searchParams.get("code");
   const error = searchParams.get("error");
@@ -69,9 +82,13 @@ export async function GET(
     });
 
     // Redirect back to app with success
-    return NextResponse.redirect(
-      new URL(`/?oauth_success=true&server=${encodeURIComponent(server.name)}`, appUrl),
-    );
+    {
+      const ok = NextResponse.redirect(
+        new URL(`/?oauth_success=true&server=${encodeURIComponent(server.name)}`, appUrl),
+      );
+      ok.cookies.set(oauthStateCookie(serverId), "", { ...oauthStateCookieOptions(), maxAge: 0 });
+      return ok;
+    }
   } catch (err) {
     console.error("OAuth callback error:", err);
 

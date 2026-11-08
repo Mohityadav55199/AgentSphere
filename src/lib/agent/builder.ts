@@ -12,6 +12,7 @@ import { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { SystemMessage, ToolMessage, ContentBlock } from "@langchain/core/messages";
 import { ToolCall } from "@langchain/core/messages/tool";
 import { DynamicTool } from "@langchain/core/tools";
+import { bindModelTools } from "./util";
 
 export class AgentBuilder {
   private toolNode: ToolNode;
@@ -92,13 +93,10 @@ export class AgentBuilder {
         const updatedMessage = {
           role: "ai",
           content: lastMessage.content,
-          tool_calls: [
-            {
-              id: toolCall.id,
-              name: toolCall.name,
-              args: reviewData,
-            },
-          ],
+          // Only the reviewed call gets new args; any parallel calls are kept as they were.
+          tool_calls: lastMessage.tool_calls!.map((tc) =>
+            tc.id === toolCall.id ? { ...tc, args: reviewData } : tc,
+          ),
           id: lastMessage.id,
         };
         return new Command({
@@ -106,14 +104,18 @@ export class AgentBuilder {
           update: { messages: [updatedMessage] },
         });
       } else if (reviewAction === "feedback") {
-        const toolMessage = new ToolMessage({
-          name: toolCall.name,
-          content: reviewData,
-          tool_call_id: toolCall.id,
-        });
+        // Every tool call in the message needs a reply, otherwise the next model call is rejected.
+        const toolMessages = lastMessage.tool_calls!.map(
+          (tc) =>
+            new ToolMessage({
+              name: tc.name,
+              content: reviewData,
+              tool_call_id: tc.id ?? "",
+            }),
+        );
         return new Command({
           goto: "agent",
-          update: { messages: [toolMessage] },
+          update: { messages: toolMessages },
         });
       }
       throw new Error("Invalid review action");
@@ -129,12 +131,7 @@ export class AgentBuilder {
       new SystemMessage(this.systemPrompt),
       ...state.messages,
     ];
-    const modelInvoker =
-      this.tools.length > 0 &&
-      "bindTools" in this.model &&
-      typeof this.model.bindTools === "function"
-        ? this.model.bindTools(this.tools)
-        : this.model;
+    const modelInvoker = bindModelTools(this.model, this.tools);
     const response = await modelInvoker.invoke(messages);
     return { messages: response };
   }

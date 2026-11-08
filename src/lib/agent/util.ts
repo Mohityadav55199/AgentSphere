@@ -2,6 +2,7 @@ import { ChatOpenAI } from "@langchain/openai";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { BaseChatModel } from "@langchain/core/language_models/chat_models";
+import type { BaseMessage } from "@langchain/core/messages";
 import { DynamicStructuredTool } from "@langchain/core/tools";
 
 export interface CreateChatModelOptions {
@@ -329,3 +330,37 @@ export function getDefaultModel(provider?: string): string {
 
 export const DEFAULT_MODEL_PROVIDER = getDefaultProvider();
 export const DEFAULT_MODEL_NAME = getDefaultModel(DEFAULT_MODEL_PROVIDER);
+
+type ToolBindable = {
+  bindTools?: (tools: unknown[]) => unknown;
+  withFallbacks?: (args: { fallbacks: unknown[] }) => unknown;
+};
+type Invokable = { invoke: (messages: BaseMessage[]) => Promise<BaseMessage> };
+
+/**
+ * Bind tools to a chat model.
+ *
+ * `createChatModel` wraps the primary model in a `RunnableWithFallbacks` whenever more than one
+ * provider key is configured, and that wrapper has no `bindTools`. Checking `"bindTools" in model`
+ * therefore silently skipped tool binding (the agent never called any tool). This binds the tools
+ * onto the primary model and every fallback, then rebuilds the fallback chain.
+ */
+export function bindModelTools(model: BaseChatModel, tools: unknown[]): Invokable {
+  if (tools.length === 0) return model as unknown as Invokable;
+
+  const m = model as unknown as ToolBindable & {
+    runnable?: ToolBindable;
+    fallbacks?: ToolBindable[];
+  };
+  if (typeof m.bindTools === "function") return m.bindTools(tools) as Invokable;
+
+  if (m.runnable && Array.isArray(m.fallbacks)) {
+    const bind = (r: ToolBindable) => (typeof r.bindTools === "function" ? r.bindTools(tools) : r);
+    const primary = bind(m.runnable) as ToolBindable;
+    const fallbacks = m.fallbacks.map(bind);
+    if (typeof primary.withFallbacks === "function") {
+      return primary.withFallbacks({ fallbacks }) as Invokable;
+    }
+  }
+  return model as unknown as Invokable;
+}

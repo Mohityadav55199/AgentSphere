@@ -14,6 +14,9 @@ import { Command } from "@langchain/langgraph";
 import { processAttachmentsForAI } from "@/lib/storage/content";
 import { CallbackHandler } from "@langfuse/langchain";
 
+const TOOL_DENIED_MESSAGE =
+  "The user denied permission to run this tool. Do not call it again; explain what you could not do and offer an alternative.";
+
 // Only instantiate when tracing is explicitly enabled to avoid silent errors
 // when Langfuse credentials are absent.
 const langfuseHandler = process.env.LANGFUSE_ENABLED === "true" ? new CallbackHandler() : null;
@@ -33,10 +36,12 @@ export async function streamResponse(params: {
   // If allowTool is present, use Command with resume action instead of regular inputs
   if (opts?.allowTool) {
     const inputs = new Command({
-      resume: {
-        action: opts.allowTool === "allow" ? "continue" : "update",
-        data: {},
-      },
+      // "deny" used to resume with action "update" + empty args, which still EXECUTED the tool.
+      // Answer the pending tool calls with a refusal instead so nothing runs.
+      resume:
+        opts.allowTool === "allow"
+          ? { action: "continue", data: {} }
+          : { action: "feedback", data: TOOL_DENIED_MESSAGE },
     });
 
     const agent = await ensureAgent({

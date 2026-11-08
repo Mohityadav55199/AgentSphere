@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/database/prisma";
 import { getCurrentUser } from "@/lib/auth";
-import { isStdioMCPAllowed, STDIO_DISABLED_MESSAGE, toPublicMCPServer } from "@/lib/mcp/policy";
+import {
+  isStdioMCPAllowed,
+  STDIO_DISABLED_MESSAGE,
+  toPublicMCPServer,
+  validateMCPUrl,
+} from "@/lib/mcp/policy";
+import { invalidateMCPToolsCache } from "@/lib/agent/mcp";
 import { CreateMCPServerBody, UpdateMCPServerBody } from "./schema";
 
 export const dynamic = "force-dynamic";
@@ -47,6 +53,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: STDIO_DISABLED_MESSAGE }, { status: 403 });
     }
 
+    if (body.type === "http") {
+      const urlError = validateMCPUrl(body.url);
+      if (urlError) return NextResponse.json({ error: urlError }, { status: 400 });
+    }
+
     const server = await prisma.mCPServer.create({
       data:
         body.type === "stdio"
@@ -65,6 +76,7 @@ export async function POST(request: Request) {
             },
     });
 
+    invalidateMCPToolsCache();
     return NextResponse.json(toPublicMCPServer(server), { status: 201 });
   } catch (error) {
     console.error("Error creating MCP server:", error);
@@ -92,6 +104,11 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: STDIO_DISABLED_MESSAGE }, { status: 403 });
     }
 
+    if (url !== undefined) {
+      const urlError = validateMCPUrl(url);
+      if (urlError) return NextResponse.json({ error: urlError }, { status: 400 });
+    }
+
     const updateData: Record<string, unknown> = {};
     if (name !== undefined) updateData.name = name;
     if (type !== undefined) updateData.type = type;
@@ -116,6 +133,7 @@ export async function PATCH(request: Request) {
       data: updateData,
     });
 
+    invalidateMCPToolsCache();
     return NextResponse.json(toPublicMCPServer(server));
   } catch (error) {
     console.error("Error updating MCP server:", error);
@@ -146,6 +164,7 @@ export async function DELETE(request: Request) {
       where: { id },
     });
 
+    invalidateMCPToolsCache();
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting MCP server:", error);

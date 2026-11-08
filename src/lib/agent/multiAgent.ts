@@ -18,6 +18,7 @@ import {
 } from "@langchain/core/messages";
 import { ToolCall } from "@langchain/core/messages/tool";
 import { DynamicTool } from "@langchain/core/tools";
+import { bindModelTools } from "./util";
 
 /**
  * 5-Agent Council Architecture:
@@ -174,14 +175,7 @@ Format:
    * Helper to safely bind tools to model if supported
    */
   private getInvoker(tools: DynamicTool[]) {
-    if (
-      tools.length > 0 &&
-      "bindTools" in this.model &&
-      typeof this.model.bindTools === "function"
-    ) {
-      return this.model.bindTools(tools);
-    }
-    return this.model;
+    return bindModelTools(this.model, tools);
   }
 
   /**
@@ -361,13 +355,9 @@ Format your response starting with:
         const updatedMessage = {
           role: "ai",
           content: lastMessage.content,
-          tool_calls: [
-            {
-              id: toolCall.id,
-              name: toolCall.name,
-              args: reviewData,
-            },
-          ],
+          tool_calls: lastMessage.tool_calls!.map((tc) =>
+            tc.id === toolCall.id ? { ...tc, args: reviewData } : tc,
+          ),
           id: lastMessage.id,
         };
         return new Command({
@@ -375,14 +365,17 @@ Format your response starting with:
           update: { messages: [updatedMessage] },
         });
       } else if (reviewAction === "feedback") {
-        const toolMessage = new ToolMessage({
-          name: toolCall.name,
-          content: reviewData,
-          tool_call_id: toolCall.id,
-        });
+        const toolMessages = lastMessage.tool_calls!.map(
+          (tc) =>
+            new ToolMessage({
+              name: tc.name,
+              content: reviewData,
+              tool_call_id: tc.id ?? "",
+            }),
+        );
         return new Command({
           goto: "developer",
-          update: { messages: [toolMessage] },
+          update: { messages: toolMessages },
         });
       }
       throw new Error("Invalid review action");

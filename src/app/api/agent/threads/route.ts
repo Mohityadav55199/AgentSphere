@@ -4,6 +4,7 @@ import prisma from "@/lib/database/prisma";
 import { UpdateThreadBody, DeleteThreadBody } from "./schema";
 import { getCurrentUser } from "@/lib/auth";
 import { checkThreadAccess } from "@/lib/thread";
+import { postgresCheckpointer } from "@/lib/agent/memory";
 import { getGuestId, getOrCreateGuestId } from "@/lib/guest";
 
 export const dynamic = "force-dynamic";
@@ -168,6 +169,14 @@ export async function DELETE(req: NextRequest) {
 
     // Delete the thread from Prisma (metadata)
     await prisma.thread.delete({ where: { id } });
+
+    // The messages live in the LangGraph checkpoint tables, not in the Thread row. Without this,
+    // "deleting" a chat left the whole conversation behind in the database.
+    try {
+      await postgresCheckpointer.deleteThread(id);
+    } catch (checkpointError) {
+      console.error("Failed to delete checkpoints for thread", id, checkpointError);
+    }
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (e: unknown) {
