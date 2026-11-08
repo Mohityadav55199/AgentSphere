@@ -1,8 +1,6 @@
 # API Documentation (OpenAPI)
 
-> **Note:** This document comes from the [upstream template](https://github.com/agentailor/fullstack-langgraph-nextjs-agent) and covers the parts AgentSphere inherited from it. For what AgentSphere adds (accounts, 5-agent council, POST streaming, security hardening), see the [README](../README.md).
-
-The template ships a machine-readable **OpenAPI 3.1** spec and an interactive explorer so you
+AgentSphere ships a machine-readable **OpenAPI 3.1** spec and an interactive explorer so you
 can see the full HTTP API surface at a glance — and so adopters can expose their own endpoints in
 the same shape.
 
@@ -76,5 +74,5 @@ curl http://localhost:3000/api/openapi -o openapi.json
 npx @redocly/cli lint openapi.json   # uses redocly.yaml at the repo root
 ```
 
-`redocly.yaml` disables a few rules that reflect deliberate template choices (no API auth; the
+`redocly.yaml` disables a few rules that reflect deliberate design choices (no API auth; the
 OAuth callback returns only a 302 redirect).

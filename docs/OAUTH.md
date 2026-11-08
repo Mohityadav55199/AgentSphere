@@ -1,8 +1,6 @@
 # OAuth Support for MCP HTTP Servers
 
-> **Note:** This document comes from the [upstream template](https://github.com/agentailor/fullstack-langgraph-nextjs-agent) and covers the parts AgentSphere inherited from it. For what AgentSphere adds (accounts, 5-agent council, POST streaming, security hardening), see the [README](../README.md).
-
-Some MCP HTTP servers require OAuth 2.0/2.1 authentication. This document explains how OAuth is implemented in this template.
+Some MCP HTTP servers require OAuth 2.0/2.1 authentication. This document explains how OAuth is implemented in AgentSphere.
 
 ## Overview
 
@@ -117,7 +115,7 @@ The `NEXT_PUBLIC_APP_URL` is used to construct the OAuth redirect URI: `{NEXT_PU
 
 ## Production Considerations
 
-> **Important**: This implementation is a starter template. For production deployments, implement the following security enhancements.
+> **Important**: This implementation covers the core OAuth flow. For production deployments, implement the following security enhancements.
 
 ### Token Storage Security
 

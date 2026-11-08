@@ -149,16 +149,4 @@ Key environment variables (see [.env.example](.env.example) for all of them):
 
 ---
 
-## Acknowledgements
-
-AgentSphere started from the open-source
-[fullstack-langgraph-nextjs-agent](https://github.com/agentailor/fullstack-langgraph-nextjs-agent) template
-(MIT License, Copyright (c) 2025 Ali Ibrahim Jr), which provided the base single-agent graph with tool
-approval, MCP loading and OAuth, Postgres-backed memory, SSE streaming, file uploads, Langfuse and the
-OpenAPI setup. On top of it I built the accounts and guest isolation, the 5-agent council and Agent Studio,
-multi-provider support with fallback, web search, Mermaid/Markdown rendering, voice, export, the security
-hardening, the POST streaming client, the test suite and CI, and the Render/Vercel deployment.
-
----
-
 Built by [Mohit Yadav](https://github.com/Mohityadav55199).

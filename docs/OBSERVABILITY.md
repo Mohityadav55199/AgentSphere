@@ -1,8 +1,6 @@
 # Observability with Langfuse
 
-> **Note:** This document comes from the [upstream template](https://github.com/agentailor/fullstack-langgraph-nextjs-agent) and covers the parts AgentSphere inherited from it. For what AgentSphere adds (accounts, 5-agent council, POST streaming, security hardening), see the [README](../README.md).
-
-This document explains how LLM observability is implemented in this template using [Langfuse](https://langfuse.com), and how to configure it for cloud or self-hosted setups.
+This document explains how LLM observability is implemented in AgentSphere using [Langfuse](https://langfuse.com), and how to configure it for cloud or self-hosted setups.
 
 ## What is Langfuse?
 
